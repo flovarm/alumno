@@ -1,0 +1,56 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    
+
+
+    <!-- Card de Login -->
+    <mat-card class="login-card">
+      
+      <!-- Logo El Cultural -->
+      <div class="logo-section">
+        <div class="logo-container">
+          <img src="https://elcultural.edu.pe/Docentes/images/logoActual_azul.png" 
+               alt="El Cultural Logo" 
+               class="cultural-logo">
+        </div>
+      </div>
+
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="login-form">
+          
+          <!-- Campo DNI -->
+          <mat-form-field appearance="outline" class="full-width">
+            <input matInput 
+                   formControlName="username"
+                   type="text"
+                   placeholder="DNI*"
+                   autocomplete="username"
+                   maxlength="8">
+          </mat-form-field>
+
+          <!-- Campo Contraseña -->
+          <mat-form-field appearance="outline" class="full-width">
+            <input matInput 
+                   formControlName="password"
+                   type="password"
+                   placeholder="Contraseña*"
+                   autocomplete="current-password">
+          </mat-form-field>
+
+          <!-- Botón INGRESAR -->
+          <div class="login-actions">
+            <button mat-raised-button 
+                    type="submit"
+                    class="login-button"
+                    [disabled]="loginForm.invalid || isLoading">
+              <span>{{isLoading ? 'INGRESANDO...' : 'INGRESAR'}}</span>
+            </button>
+          </div>
+
+        </form>
+      </mat-card-content>
+
+    </mat-card>
+
+  </div>
+</div>

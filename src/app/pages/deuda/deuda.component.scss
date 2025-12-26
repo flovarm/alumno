@@ -1,0 +1,19 @@
+   .payment-message {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .payment-success {
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      border: 1px solid var(--mat-sys-primary);
+    }
+
+    .payment-error {
+      background: var(--mat-sys-error-container);
+      color: var(--mat-sys-on-error-container);
+      border: 1px solid var(--mat-sys-error);
+    }

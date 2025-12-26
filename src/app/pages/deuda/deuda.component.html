@@ -1,0 +1,120 @@
+ <div class="page-container">
+      <app-page-header
+        title="Pago de Deuda"
+        description="Paga tus deudas pendientes"
+        icon="money_off">
+      </app-page-header>
+
+ <mat-card>
+        <mat-card-header>
+            <mat-card-title>
+           Deuda Registrada
+            </mat-card-title>
+            <mat-card-subtitle></mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+
+            @if (resumen && ultimoRegistro()?.deudaReg > 0) {
+        
+                <mat-list  style="margin-top:1rem;">
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>meeting_room</mat-icon>
+                    <div matListItemTitle>Aula</div>
+                    <div matListItemLine>{{formatearAula(resumen.aula)}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>school</mat-icon>
+                    <div matListItemTitle>Modalidad</div>
+                    <div matListItemLine>{{resumen.modalidad}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>book</mat-icon>
+                    <div matListItemTitle>Curso</div>
+                    <div matListItemLine>{{resumen.curso}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>person</mat-icon>
+                    <div matListItemTitle>Profesor</div>
+                    <div matListItemLine>{{resumen.docente | titlecase}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>schedule</mat-icon>
+                    <div matListItemTitle>Turno</div>
+                    <div matListItemLine>{{resumen.turno}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>event</mat-icon>
+                    <div matListItemTitle>Fecha de Inicio</div>
+                    <div matListItemLine>{{resumen.fechaInicio | date:'dd/MM/yyyy'}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>event_available</mat-icon>
+                    <div matListItemTitle>Fecha de Fin</div>
+                    <div matListItemLine>{{resumen.fechaFinal | date:'dd/MM/yyyy'}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>group</mat-icon>
+                    <div matListItemTitle>Vacantes Disponibles</div>
+                    <div matListItemLine>{{resumen.vacantesDisponibles}}</div>
+                  </mat-list-item>
+                  <mat-divider></mat-divider>
+                  
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>location_on</mat-icon>
+                    <div matListItemTitle>Sede</div>
+                    <div matListItemLine>{{resumen.sede}}</div>
+                  </mat-list-item>
+                </mat-list>
+                
+                <div style="margin-top:2rem; text-align:center;">
+                  <button mat-flat-button color="accent" style="font-size:1.2rem; padding:1rem 2rem;"
+                  (click)="procesarPago(this.ultimoRegistro()?.deudaReg)"
+                  [disabled]="procesandoPago || formularioIziPayAbierto ">
+                  <mat-icon>payment</mat-icon>
+                  {{ 
+                    procesandoPago ? 'Procesando...' : 
+                    formularioIziPayAbierto ? 'Procesando...' : 
+                    'Pagar S/ ' + this.ultimoRegistro()?.deudaReg 
+                  }}
+                </button>
+                </div>
+                
+                <!-- Mensaje de pago -->
+                <div id="payment-message" 
+                     class="payment-message" 
+                     [style.display]="paymentMessage ? 'block' : 'none'"
+                     [ngClass]="paymentMessageClass">
+                  {{ paymentMessage }}
+                </div>
+                
+                <!-- Container para el formulario de IziPay -->
+                <div id="iframeContainer"></div>
+              } @else { 
+                <div style="text-align: center; padding: 2rem;">
+                  <mat-icon style="font-size: 4rem; height: 4rem; width: 4rem; color: #4caf50;">
+                    check_circle
+                  </mat-icon>
+                  <h3 style="color: #4caf50; margin-top: 1rem;">
+                    ¡Felicitaciones!
+                  </h3>
+                  <p style="font-size: 1.1rem; margin-top: 0.5rem;">
+                    No tienes ninguna deuda registrada
+                  </p>
+                </div>
+              }
+        </mat-card-content>
+    </mat-card>

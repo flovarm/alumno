@@ -1,0 +1,51 @@
+<!-- Navbar Component -->
+<app-navbar (toggleSidenavEvent)="onToggleSidenav()"></app-navbar>
+
+<!-- Sidenav principal y contenido -->
+<div>
+  <mat-sidenav-container class="sidenav-container" [hasBackdrop]="isMobile">
+    <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="isSidenavOpen"
+      (backdropClick)="onBackdropClick()" class="custom-sidenav" position="start" [fixedInViewport]="true"
+      [fixedTopGap]="80" style="width: 300px; min-width: 300px; box-shadow: 2px 0 8px rgba(0,0,0,0.08);">
+      <mat-divider></mat-divider>
+      <mat-nav-list class="navigation-list">
+        @for (item of menuItems; track item.route) {
+        <mat-list-item class="nav-item" [routerLink]="item.route" routerLinkActive="active-item"
+          (click)="onNavItemClick(item.route)" [matTooltip]="item.description || ''" matTooltipPosition="right"
+          matTooltipClass="custom-tooltip">
+          <mat-icon matListItemIcon class="sidebar-icon">{{ item.icon }}</mat-icon>
+          <span matListItemTitle class="nav-label">{{ item.label }}</span>
+          @if (item.description) {
+          <span matListItemLine class="nav-description">{{ item.description }}</span>
+          }
+        </mat-list-item>
+        <mat-divider class="item-divider"></mat-divider>
+        }
+      </mat-nav-list>
+      <div class="sidenav-footer">
+        <mat-divider></mat-divider>
+        <div class="footer-content">
+          <div class="footer-info">
+            <div class="footer-text">
+              <span class="footer-title"> </span>
+              <span class="footer-version">Created by El Cultural · © 2025</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="expand-button-container">
+        <button mat-icon-button (click)="onToggleSidenav()" class="expand-button" matTooltip="Ocultar menú"
+          matTooltipPosition="right">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+      </div>
+    </mat-sidenav>
+
+    <!-- Contenido Principal -->
+    <mat-sidenav-content class="main-content">
+      <div class="main-content-wrapper">
+        <router-outlet />
+      </div>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

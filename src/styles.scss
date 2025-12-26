@@ -1,1 +1,157 @@
-/* You can add global styles to this file, and also import other style files */
+// === Angular Material Table Global Styling ===
+@use '@angular/material' as mat;
+
+
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.dev/guide/theming
+@use './_theme-colors' as my-theme;
+@use './app/styles/snackbar.scss';
+
+font-face {
+  font-family: 'MDPrimer';
+  src: url('/fonts/MDPrimer-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MDPrimer';
+  src: url('/fonts/MDPrimer-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MDPrimer';
+  src: url('/fonts/MDPrimer-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MDPrimer';
+  src: url('/fonts/MDPrimer-Regular.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@font-face {
+  font-family: 'MDPrimer';
+  src: url('/fonts/MDPrimer-Semibold.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+
+html {
+  @include mat.theme((
+     color: (
+      primary: my-theme.$primary-palette ,
+      tertiary: my-theme.$tertiary-palette,
+      
+     ),
+     typography: Roboto,
+      theme-type: var(color-scheme),
+      use-system-variables: true,
+    system-variables-prefix: sys
+   ));
+}/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Importar estilos de snackbar
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+  @include mat.sort-overrides((
+    arrow-color: var(--mat-sys-on-primary),
+  ));
+
+ @include mat.table-overrides((
+     background-color: var(--mat-sys-container),
+     row-item-container-height: '55px'
+  ));
+
+   .mat-mdc-header-cell {
+    background-color:var(--mat-sys-primary) !important;
+    color:var(--mat-sys-on-primary)!important;
+    height: 25px;
+  }
+
+  @include mat.form-field-overrides((
+    disabled-input-text-placeholder-color: orange,
+    disabled-leading-icon-color: red,
+  ));
+
+.text-success {
+  color: #388e3c !important; /* verde */
+}
+.text-danger {
+  color: #d32f2f !important; /* rojo */
+}
+.text-warning {
+  color: #fbc02d !important; /* amarillo */
+}
+.text-falta-no-registrada {
+  color: #757575 !important; /* gris */
+  font-style: italic;
+}
+
+
+.fila-green {
+  @include mat.table-overrides((
+    row-item-outline-color: var(--mat-sys-primary),
+    row-item-label-text-color: var(--mat-sys-primary),
+  ));
+}
+.fila-yellow {
+  @include mat.table-overrides((
+    row-item-outline-color: var(--mat-sys-tertiary),
+    row-item-label-text-color: var(--mat-sys-tertiary)
+  ));
+}
+.fila-red {
+  @include mat.table-overrides((
+    row-item-outline-color: var(--mat-sys-error),
+    row-item-label-text-color: var(--mat-sys-error)
+  ));
+}
+
+.search-bar {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-field {
+  min-width: 420px;
+  max-width: 600px;
+  width: 100%;
+  font-size: 1.18rem;
+
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .table-responsive .mat-table,
+  .table-responsive table {
+    min-width: 700px;
+  }
+}

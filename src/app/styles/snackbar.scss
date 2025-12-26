@@ -1,0 +1,107 @@
+/* Estilos para Snackbars usando tokens de Angular Material según documentación oficial */
+
+/* Snackbar de éxito */
+.snack-success {
+  --mdc-snackbar-container-color: var(--mat-sys-primary);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-primary);
+  
+  .mat-mdc-snack-bar-label {
+    color: var(--mat-sys-on-primary);
+  }
+
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    --mdc-text-button-label-text-color: var(--mat-sys-on-primary);
+    --mdc-text-button-hover-state-layer-color: var(--mat-sys-on-primary);
+    --mdc-text-button-hover-state-layer-opacity: 0.08;
+    --mdc-text-button-focus-state-layer-color: var(--mat-sys-on-primary);
+    --mdc-text-button-focus-state-layer-opacity: 0.12;
+    --mdc-text-button-pressed-state-layer-color: var(--mat-sys-on-primary);
+    --mdc-text-button-pressed-state-layer-opacity: 0.12;
+  }
+}
+
+/* Snackbar de error/peligro */
+.snack-danger {
+  --mdc-snackbar-container-color: var(--mat-sys-error);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-error);
+  
+  .mat-mdc-snack-bar-label {
+    color: var(--mat-sys-on-error);
+  }
+
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    --mdc-text-button-label-text-color: var(--mat-sys-on-error);
+    --mdc-text-button-hover-state-layer-color: var(--mat-sys-on-error);
+    --mdc-text-button-hover-state-layer-opacity: 0.08;
+    --mdc-text-button-focus-state-layer-color: var(--mat-sys-on-error);
+    --mdc-text-button-focus-state-layer-opacity: 0.12;
+    --mdc-text-button-pressed-state-layer-color: var(--mat-sys-on-error);
+    --mdc-text-button-pressed-state-layer-opacity: 0.12;
+  }
+}
+
+/* Snackbar de información */
+.snack-info {
+  --mdc-snackbar-container-color: var(--mat-sys-secondary);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-secondary);
+  
+  .mat-mdc-snack-bar-label {
+    color: var(--mat-sys-on-secondary);
+  }
+
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    --mdc-text-button-label-text-color: var(--mat-sys-on-secondary);
+    --mdc-text-button-hover-state-layer-color: var(--mat-sys-on-secondary);
+    --mdc-text-button-hover-state-layer-opacity: 0.08;
+    --mdc-text-button-focus-state-layer-color: var(--mat-sys-on-secondary);
+    --mdc-text-button-focus-state-layer-opacity: 0.12;
+    --mdc-text-button-pressed-state-layer-color: var(--mat-sys-on-secondary);
+    --mdc-text-button-pressed-state-layer-opacity: 0.12;
+  }
+}
+
+/* Snackbar de advertencia */
+.snack-warning {
+  --mdc-snackbar-container-color: var(--mat-sys-tertiary);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-tertiary);
+  
+  .mat-mdc-snack-bar-label {
+    color: var(--mat-sys-on-tertiary);
+  }
+
+  .mat-mdc-button.mat-mdc-snack-bar-action {
+    --mdc-text-button-label-text-color: var(--mat-sys-on-tertiary);
+    --mdc-text-button-hover-state-layer-color: var(--mat-sys-on-tertiary);
+    --mdc-text-button-hover-state-layer-opacity: 0.08;
+    --mdc-text-button-focus-state-layer-color: var(--mat-sys-on-tertiary);
+    --mdc-text-button-focus-state-layer-opacity: 0.12;
+    --mdc-text-button-pressed-state-layer-color: var(--mat-sys-on-tertiary);
+    --mdc-text-button-pressed-state-layer-opacity: 0.12;
+  }
+}
+
+/* Estilos adicionales usando tokens MDC oficiales */
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-shape: 8px;
+  --mdc-snackbar-container-elevation: 6;
+  
+  .mat-mdc-snack-bar-surface {
+    border-radius: var(--mdc-snackbar-container-shape);
+  }
+}
+
+/* Configuración de elevación personalizada */
+.snack-success,
+.snack-danger,
+.snack-info,
+.snack-warning {
+  --mdc-snackbar-container-elevation: 6;
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .mat-mdc-snack-bar-container {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+}

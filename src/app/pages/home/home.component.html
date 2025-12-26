@@ -1,0 +1,54 @@
+<div class="home-container">
+  <app-page-header 
+    title="Dashboard Estudiantil" 
+    subtitle="Bienvenido al portal académico"
+    description="Accede a todas las funcionalidades del sistema desde aquí"
+    icon="home">
+  </app-page-header>
+  
+  <div class="dashboard-grid">
+    <!-- Tarjetas de acceso rápido -->
+    <mat-card class="dashboard-card" routerLink="/historial-academico">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>school</mat-icon>
+        <mat-card-title>Historial Académico</mat-card-title>
+        <mat-card-subtitle>Consulta tus calificaciones y materias</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+    
+    <mat-card class="dashboard-card" routerLink="/historial-pagos">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>payment</mat-icon>
+        <mat-card-title>Historial de Pagos</mat-card-title>
+        <mat-card-subtitle>Revisa tus pagos y pendientes</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+    
+    <mat-card class="dashboard-card" routerLink="/registro-matricula">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>assignment</mat-icon>
+        <mat-card-title>Registro de Matrícula</mat-card-title>
+        <mat-card-subtitle>Gestiona tu matrícula académica</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+    
+    <mat-card class="dashboard-card" routerLink="/compra-libros">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>menu_book</mat-icon>
+        <mat-card-title>Compra de Libros</mat-card-title>
+        <mat-card-subtitle>Adquiere tus materiales de estudio</mat-card-subtitle>
+      </mat-card-header>
+    </mat-card>
+  </div>
+  
+  <!-- Información adicional -->
+  <div class="info-section">
+    <mat-card class="welcome-card">
+      <mat-card-content>
+        <h3>¡Bienvenido de nuevo!</h3>
+        <p>Desde aquí puedes acceder a todas las funcionalidades del portal estudiantil. 
+           Navega a través de las diferentes secciones usando el menú lateral o las tarjetas de acceso rápido.</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

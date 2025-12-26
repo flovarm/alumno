@@ -1,0 +1,108 @@
+<div class="page-container">
+  <app-page-header 
+    title="Historial Académico" 
+    description="Consulta tus calificaciones y materias cursadas" 
+    icon="school">
+  </app-page-header>
+
+  <div class="content-grid">
+    <mat-card class="history-card">
+      <mat-card-content>
+        <div class="mat-elevation-z2">
+          <div class="search-bar">
+            <mat-form-field class="busqueda search-field" >
+              <mat-label>Buscar</mat-label>
+              <input matInput (keyup)="applyFilter($event)" placeholder="Buscar por palabra clave" #input>
+              <button mat-icon-button matSuffix tabindex="-1" disabled style="pointer-events: none; background: transparent; box-shadow: none;">
+                <mat-icon>search</mat-icon>
+              </button>
+            </mat-form-field>
+
+          </div>
+          <div class="mat-elevation-z8">
+            <div class="table-responsive">
+              <table mat-table [dataSource]="dataSource" matSort class="mat-table custom-mat-table">
+                <!-- Descripcion Column -->
+                <ng-container matColumnDef="descripcion">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> CURSO </th>
+                  <td mat-cell *matCellDef="let item">{{ item.descripcion | titlecase}}</td>
+                </ng-container>
+
+                <!-- Año Column -->
+                <ng-container matColumnDef="anio">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> AÑO </th>
+                  <td mat-cell *matCellDef="let item">{{ item.anio }}</td>
+                </ng-container>
+
+                <!-- Mes Column -->
+                <ng-container matColumnDef="mes">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> MES </th>
+                  <td mat-cell *matCellDef="let item">{{ item.mes | titlecase }}</td>
+                </ng-container>
+
+                <!-- Aula Column -->
+                <ng-container matColumnDef="nombreAula">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> AULA </th>
+                  <td mat-cell *matCellDef="let item">{{ item.nombreAula }}</td>
+                </ng-container>
+
+                <!-- Docente Column -->
+                <ng-container matColumnDef="nombreCompleto">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> DOCENTE </th>
+                  <td mat-cell *matCellDef="let item">{{ item.nombreCompleto | titlecase }}</td>
+                </ng-container>
+
+                <!-- Modalidad Column -->
+                <ng-container matColumnDef="modalidad">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> MODALIDAD </th>
+                  <td mat-cell *matCellDef="let item">{{ item.modalidad }}</td>
+                </ng-container>
+
+                <!-- Estado Column -->
+                <ng-container matColumnDef="estado">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> ESTADO </th>
+                  <td mat-cell *matCellDef="let item">{{ item.estado }}</td>
+                </ng-container>
+
+                <!-- Nota Column -->
+                <ng-container matColumnDef="notaReg">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> NOTA </th>
+                  <td mat-cell *matCellDef="let item">{{ item.notaReg }}</td>
+                </ng-container>
+
+                <!-- Acción: Ver detalle -->
+                <ng-container matColumnDef="accion">
+                  <th mat-header-cell *matHeaderCellDef> Detalle </th>
+                  <td mat-cell *matCellDef="let item">
+                    <button mat-icon-button color="primary" (click)="verDetalle(item)" matTooltip="Ver detalle de notas">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns.concat(['accion'])"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns.concat(['accion'])"
+                  [ngClass]="{
+                          'fila-red': row.apruebaReg == 'F',
+                          'fila-green': row.apruebaReg == 'P'
+                          }"></tr>
+                <tr class="mat-row"
+              
+                *matNoDataRow>
+                  <td class="mat-cell" colspan="8">No hay historial académico disponible</td>
+                </tr>
+              </table>
+            </div>
+            <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons aria-label="Seleccionar página"></mat-paginator>
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button (click)="generarPdfHistorial()">
+          <mat-icon>print</mat-icon>
+          Imprimir
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>
