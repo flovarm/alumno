@@ -9,7 +9,7 @@ import { MatTooltipModule } from "@angular/material/tooltip";
 import { ThemeService } from "../../_services/theme.service";
 import { AuthService } from "../../services/auth.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { LoadingService } from "../../services/loading.service";
+import { PaymentSpinnerService } from "../../services/loading.service";
 
 @Component({
   selector: "app-navbar",
@@ -33,7 +33,7 @@ export class NavbarComponent {
   user = JSON.parse(localStorage.getItem("alumno_currentUser"));
 
   // Inyectar servicios
-  public loadingService = inject(LoadingService);
+  paymentSpinner = inject(PaymentSpinnerService);
   private themeService = inject(ThemeService);
   private router = inject(Router);
   private authService = inject(AuthService);

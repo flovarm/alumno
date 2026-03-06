@@ -16,6 +16,7 @@ import { PageHeaderComponent } from "../../components/page-header/page-header.co
 import { PeriodoService } from "../../services/periodo.service";
 import { RegistroService } from "../../services/registro.service";
 import { HorarioService } from "../../services/horario.service";
+import { PaymentSpinnerService } from "../../services/loading.service";
 import { MatTableModule, MatTableDataSource } from "@angular/material/table";
 import { Router, RouterLink } from "@angular/router";
 import { ReactiveFormsModule, FormControl, FormGroup } from "@angular/forms";
@@ -824,6 +825,7 @@ export class RegistroMatriculaComponent implements OnInit {
   private registroService = inject(RegistroService);
   private horarioService = inject(HorarioService);
   private router = inject(Router);
+  private paymentSpinner = inject(PaymentSpinnerService);
 
   cargarHorariosPorUltimoRegistro(idCurso: number, idPeriodo: number) {
     this.horarioService
@@ -1039,6 +1041,9 @@ export class RegistroMatriculaComponent implements OnInit {
     this.procesandoPago = true;
     this.paymentMessage = "";
 
+    // Mostrar spinner de pago
+    this.paymentSpinner.showPaymentSpinner("Iniciando proceso de pago...");
+
     // Pago real
     const transactionId =
       Date.now().toString() + Math.random().toString().substr(2, 5);
@@ -1081,6 +1086,7 @@ export class RegistroMatriculaComponent implements OnInit {
                     orderNumber,
                   );
                 } else {
+                  this.paymentSpinner.hidePaymentSpinner();
                   this.showPaymentMessage(
                     "Error al obtener token de pago",
                     "error",
@@ -1090,6 +1096,7 @@ export class RegistroMatriculaComponent implements OnInit {
                 this.procesandoPago = false;
               },
               error: (err) => {
+                this.paymentSpinner.hidePaymentSpinner();
                 this.showPaymentMessage("Error al procesar el pago", "error");
                 this.procesandoPago = false;
                 this.currentTransactionId = null;
@@ -1097,6 +1104,7 @@ export class RegistroMatriculaComponent implements OnInit {
             });
         },
         error: (err) => {
+          this.paymentSpinner.hidePaymentSpinner();
           this.showPaymentMessage("Error al preparar el pago", "error");
           this.procesandoPago = false;
           this.currentTransactionId = null;
@@ -1221,6 +1229,12 @@ export class RegistroMatriculaComponent implements OnInit {
     try {
       const checkout = new (window as any).Izipay(iziConfig);
 
+      // Ocultar spinner de carga y mostrar spinner de pago
+      this.paymentSpinner.hidePaymentSpinner();
+      this.paymentSpinner.showPaymentSpinner(
+        "Completa tu pago en la ventana emergente...",
+      );
+
       // Bloquear botón cuando se abre el formulario
       this.formularioIziPayAbierto = true;
 
@@ -1228,12 +1242,19 @@ export class RegistroMatriculaComponent implements OnInit {
         authorization: tokenResponse.response.token,
         keyRSA: "RSA",
         callbackResponse: (response: any) => {
+          // Mostrar spinner de procesamiento de matrícula
+          this.paymentSpinner.hidePaymentSpinner();
+          this.paymentSpinner.showMatriculationSpinner(
+            "Procesando matrícula...",
+          );
+
           // Desbloquear botón cuando se recibe respuesta
           this.formularioIziPayAbierto = false;
           this.handlePaymentResponse(response);
         },
       });
     } catch (error) {
+      this.paymentSpinner.hidePaymentSpinner();
       this.formularioIziPayAbierto = false;
 
       // Mensaje específico para errores CORS
@@ -1288,23 +1309,27 @@ export class RegistroMatriculaComponent implements OnInit {
       // Llamar al endpoint de matrícula
       this.registroService.matricularAlumno(matriculaData).subscribe({
         next: (matriculaResponse: any) => {
-          this.showPaymentMessage(
-            "¡Matrícula completada exitosamente!",
-            "success",
+          this.paymentSpinner.hideMatriculationSpinner();
+          this.paymentSpinner.showMatriculationSpinner(
+            "¡Matrícula exitosa! Generando boleta...",
           );
+
           matriculaResponse.fechaInicio = this.resumen.fechaInicio;
           // Redirigir directamente a la boleta electrónica
           setTimeout(() => {
+            this.paymentSpinner.hideMatriculationSpinner();
             this.router.navigate(["/boleta-electronica"], {
               state: matriculaResponse,
-              replaceUrl: true, // Cambiar a true para evitar que regrese a esta página
+              replaceUrl: true,
             });
             // Limpiar flags después de la navegación
             this.procesandoMatricula = false;
             this.currentTransactionId = null;
-          }, 1500);
+          }, 2000);
         },
         error: (matriculaError) => {
+          this.paymentSpinner.hideMatriculationSpinner();
+
           // Si el error es por duplicado, no mostrar error severo
           if (
             matriculaError.status === 409 ||
@@ -1330,11 +1355,11 @@ export class RegistroMatriculaComponent implements OnInit {
         },
       });
     } else {
+      this.paymentSpinner.hideMatriculationSpinner();
       this.showPaymentMessage(
         `Error en el pago: ${response.message || JSON.stringify(response)}`,
         "error",
       );
-      this.currentTransactionId = null;
     }
   }
 

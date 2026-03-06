@@ -12,6 +12,7 @@ import { PageHeaderComponent } from "../../components/page-header/page-header.co
 import { PeriodoService } from "../../services/periodo.service";
 import { RegistroService } from "../../services/registro.service";
 import { LibroService } from "../../services/libro.service";
+import { PaymentSpinnerService } from "../../services/loading.service";
 import { Router } from "@angular/router";
 import { environment } from "../../../environments/environment.development";
 
@@ -129,7 +130,6 @@ import { environment } from "../../../environments/environment.development";
                 pago para recoger el libro</span
               >
             </div>
-            
 
             <div class="libros-grid">
               @for (libro of libros(); track libro.idProducto) {
@@ -208,7 +208,8 @@ import { environment } from "../../../environments/environment.development";
             <div class="importante mt-2">
               <mat-icon>info</mat-icon>
               <span
-                >No cierre la página hasta que se genere su comprobante de pago!</span
+                >No cierre la página hasta que se genere su comprobante de
+                pago!</span
               >
             </div>
           </mat-card-content>
@@ -601,6 +602,7 @@ export class CompraLibrosComponent implements OnInit {
   private registroService = inject(RegistroService);
   private libroService = inject(LibroService);
   private router = inject(Router);
+  private paymentSpinner = inject(PaymentSpinnerService);
 
   user = JSON.parse(localStorage.getItem("alumno_currentUser"));
 
@@ -678,14 +680,17 @@ export class CompraLibrosComponent implements OnInit {
     this.procesandoPago = true;
     this.paymentMessage = "";
 
+    // Mostrar spinner de pago para libros
+    this.paymentSpinner.showBookPurchaseSpinner(
+      "Iniciando proceso de compra...",
+    );
+
     // Pago real - usar el precio total de todos los libros
     const total = this.getPrecioTotal();
     const transactionId =
       Date.now().toString() + Math.random().toString().substr(2, 5);
     const orderNumber =
-      this.periodoActual().idPeriodo +
-      this.librosSeleccionados().values().next().value +
-      this.user.userName;
+      this.ultimoRegistro().idRegistro + this.ultimoRegistro().docid;
 
     this.registroService
       .obtenerTokenPago(total, transactionId, orderNumber)
@@ -699,12 +704,13 @@ export class CompraLibrosComponent implements OnInit {
               orderNumber,
             );
           } else {
+            this.paymentSpinner.hideBookPurchaseSpinner();
             this.showPaymentMessage("Error al obtener token de pago", "error");
           }
           this.procesandoPago = false;
         },
         error: (err) => {
-          console.error("Error al obtener token de pago:", err);
+          this.paymentSpinner.hideBookPurchaseSpinner();
           this.showPaymentMessage("Error al procesar el pago", "error");
           this.procesandoPago = false;
         },
@@ -811,16 +817,30 @@ export class CompraLibrosComponent implements OnInit {
 
     try {
       const checkout = new (window as any).Izipay(iziConfig);
+
+      // Ocultar spinner de carga y mostrar spinner de pago
+      this.paymentSpinner.hideBookPurchaseSpinner();
+      this.paymentSpinner.showBookPurchaseSpinner(
+        "Completa tu pago en la ventana emergente...",
+      );
+
       this.formularioIziPayAbierto = true;
 
       checkout.LoadForm({
         authorization: tokenResponse.response.token,
         keyRSA: "RSA",
         callbackResponse: (response: any) => {
+          // Mostrar spinner de procesamiento
+          this.paymentSpinner.hideBookPurchaseSpinner();
+          this.paymentSpinner.showBookPurchaseSpinner(
+            "Procesando compra de libros...",
+          );
+
           this.formularioIziPayAbierto = false;
           this.handlePaymentResponse(response);
         },
         callbackError: (error: any) => {
+          this.paymentSpinner.hideBookPurchaseSpinner();
           this.formularioIziPayAbierto = false;
           this.showPaymentMessage(
             "Error en el procesamiento del pago. La pasarela de pagos no está disponible temporalmente.",
@@ -832,6 +852,7 @@ export class CompraLibrosComponent implements OnInit {
       // Timeout para cerrar el formulario si no hay respuesta en 5 minutos
       setTimeout(() => {
         if (this.formularioIziPayAbierto) {
+          this.paymentSpinner.hideBookPurchaseSpinner();
           this.formularioIziPayAbierto = false;
           this.showPaymentMessage(
             "El tiempo de espera para el pago ha expirado. Por favor, intente nuevamente.",
@@ -840,6 +861,7 @@ export class CompraLibrosComponent implements OnInit {
         }
       }, 300000); // 5 minutos
     } catch (error) {
+      this.paymentSpinner.hideBookPurchaseSpinner();
       this.formularioIziPayAbierto = false;
       this.showPaymentMessage(
         "Error al inicializar el formulario de pago",
@@ -851,6 +873,7 @@ export class CompraLibrosComponent implements OnInit {
   private handlePaymentResponse(response: any): void {
     // Validar si la respuesta es válida
     if (!response || typeof response !== "object") {
+      this.paymentSpinner.hideBookPurchaseSpinner();
       this.showPaymentMessage(
         "Error: Respuesta inválida del sistema de pagos. Por favor, contacte soporte.",
         "error",
@@ -870,11 +893,13 @@ export class CompraLibrosComponent implements OnInit {
       response.code === "504" ||
       response.message?.includes("timeout")
     ) {
+      this.paymentSpinner.hideBookPurchaseSpinner();
       this.showPaymentMessage(
         "La pasarela de pagos no está respondiendo. Por favor, intente nuevamente en unos minutos.",
         "error",
       );
     } else {
+      this.paymentSpinner.hideBookPurchaseSpinner();
       const errorMessage =
         response.message ||
         response.error ||
@@ -884,6 +909,12 @@ export class CompraLibrosComponent implements OnInit {
   }
 
   private registrarCompraLibros(paymentResponse: any): void {
+    // Cambiar mensaje del spinner
+    this.paymentSpinner.hideBookPurchaseSpinner();
+    this.paymentSpinner.showBookPurchaseSpinner(
+      "Registrando compra de libros...",
+    );
+
     const registro = this.ultimoRegistro();
     const libros = this.getLibrosSeleccionados();
 
@@ -917,12 +948,13 @@ export class CompraLibrosComponent implements OnInit {
     // Enviar una sola petición con todos los libros
     this.libroService.registrarLibro(compraLibrosDto).subscribe({
       next: (boletaData: any) => {
-        this.showPaymentMessage(
-          "¡Compra registrada exitosamente! Generando boleta...",
-          "success",
+        this.paymentSpinner.hideBookPurchaseSpinner();
+        this.paymentSpinner.showBookPurchaseSpinner(
+          "¡Compra exitosa! Generando boleta...",
         );
 
         setTimeout(() => {
+          this.paymentSpinner.hideBookPurchaseSpinner();
           this.router.navigate(["/boleta-electronica"], {
             state: boletaData,
             replaceUrl: false,
@@ -930,7 +962,7 @@ export class CompraLibrosComponent implements OnInit {
         }, 2000);
       },
       error: (error) => {
-        console.error("Error al registrar compra:", error);
+        this.paymentSpinner.hideBookPurchaseSpinner();
         this.showPaymentMessage(
           "Pago exitoso, pero hubo un error al registrar la compra. Contacte soporte.",
           "error",
