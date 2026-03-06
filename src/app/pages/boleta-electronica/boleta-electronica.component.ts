@@ -735,11 +735,11 @@ import { Location } from '@angular/common';
       }
 
       .mat-mdc-raised-button.mat-primary {
-        --mdc-filled-button-container-color: #10b981;
+        --mat-button-filled-container-color: #10b981;
       }
 
       .mat-mdc-raised-button.mat-accent {
-        --mdc-filled-button-container-color: #059669;
+        --mat-button-filled-container-color: #059669;
       }
 
       .mat-divider {
