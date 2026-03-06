@@ -25,12 +25,12 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
   ],
   template: `
     <div class="page-container">
-      <app-page-header 
-        title="Historial de Pagos" 
-        description="Revisa tus pagos y documentos asociados" 
+      <app-page-header
+        title="Historial de Pagos"
+        description="Revisa tus pagos y documentos asociados"
         icon="payment">
       </app-page-header>
-
+    
       <div class="content-grid">
         <mat-card class="history-card">
           <mat-card-content>
@@ -61,11 +61,13 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
                   <ng-container matColumnDef="descargar">
                     <th mat-header-cell *matHeaderCellDef> DESCARGAR PDF </th>
                     <td mat-cell *matCellDef="let doc">
-                      <a *ngIf="doc.urlPdf" [href]="doc.urlPdf" target="_blank" rel="noopener">
-                        <button mat-button >
-                          <mat-icon>picture_as_pdf</mat-icon> Descargar Comprobante
-                        </button>
-                      </a>
+                      @if (doc.urlPdf) {
+                        <a [href]="doc.urlPdf" target="_blank" rel="noopener">
+                          <button mat-button >
+                            <mat-icon>picture_as_pdf</mat-icon> Descargar Comprobante
+                          </button>
+                        </a>
+                      }
                     </td>
                   </ng-container>
                   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -81,7 +83,7 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
         </mat-card>
       </div>
     </div>
-  `,
+    `,
   
 })
 export class HistorialPagosComponent implements OnInit, AfterViewInit {

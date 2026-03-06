@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+
 import { MatDialogRef, MatDialogModule } from "@angular/material/dialog";
 import { MatButtonModule } from "@angular/material/button";
 import { MatIconModule } from "@angular/material/icon";
@@ -13,14 +13,13 @@ import { SnackService } from "../../services/snack.service";
   selector: "app-gmail-dialog",
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   template: `
     <h2 mat-dialog-title class="flex items-center gap-2">
       <mat-icon>alternate_email</mat-icon>

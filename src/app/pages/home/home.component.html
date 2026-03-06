@@ -33,68 +33,69 @@
           </div>
 
           <!-- Botón Teams:
-               - En móvil: ocupa toda la fila y aparece debajo del avatar/título.
-               - En pantallas >= sm: se coloca a la derecha (sin usar ml-auto) -->
+          - En móvil: ocupa toda la fila y aparece debajo del avatar/título.
+          - En pantallas >= sm: se coloca a la derecha (sin usar ml-auto) -->
           <div class="w-full sm:w-auto mt-3 sm:mt-0 flex items-center">
             <button class="w-full" (click)="abrirDialogTeams()" [disabled]="!idteams"
               mat-raised-button>
               <!-- Inline SVG Teams icon (uses currentColor so it appears correctly on the purple button) -->
-             <mat-icon>group</mat-icon>
+              <mat-icon>group</mat-icon>
               Ver cuenta Teams
             </button>
           </div>
           <!-- <div class="w-full sm:w-auto mt-3 sm:mt-0 flex sm:justify-end">
-            <button mat-raised-button (click)="abrirDialogGmail()"
-              class="w-full gmail">
-              <mat-icon>mail</mat-icon>
-              Ver cuenta Gmail
-            </button>
-          </div> -->
-        </div>
-      </mat-card-header>
+          <button mat-raised-button (click)="abrirDialogGmail()"
+            class="w-full gmail">
+            <mat-icon>mail</mat-icon>
+            Ver cuenta Gmail
+          </button>
+        </div> -->
+      </div>
+    </mat-card-header>
 
-      <mat-card-content class="px-6 py-6">
-        <hr class="border-t border-gray-200 my-4" />
-        <form [formGroup]="perfilForm" (ngSubmit)="savePerfil()" class="perfil-form space-y-4">
-          <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
-            <mat-tab>
-              <ng-template mat-tab-label>
-                <span>Datos Personales</span>
-                @if (tieneErroresDatosPersonales && perfilForm.touched) {
-                  <span class="error-indicator ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                    {{ conteoErroresDatosPersonales }}
-                  </span>
-                }
-              </ng-template>
-              <mat-card>
-                <mat-card-content>
-                  <!-- Dirección -->
-                  <div class="w-full mt-2">
-                    <mat-form-field appearance="fill" class="w-full">
-                      <mat-label>Dirección</mat-label>
-                      <input matInput formControlName="direccion" class="w-full" />
-                    </mat-form-field>
-                  </div>
+    <mat-card-content class="px-6 py-6">
+      <hr class="border-t border-gray-200 my-4" />
+      <form [formGroup]="perfilForm" (ngSubmit)="savePerfil()" class="perfil-form space-y-4">
+        <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>Datos Personales</span>
+              @if (tieneErroresDatosPersonales && perfilForm.touched) {
+                <span class="error-indicator ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  {{ conteoErroresDatosPersonales }}
+                </span>
+              }
+            </ng-template>
+            <mat-card>
+              <mat-card-content>
+                <!-- Dirección -->
+                <div class="w-full mt-2">
+                  <mat-form-field appearance="fill" class="w-full">
+                    <mat-label>Dirección</mat-label>
+                    <input matInput formControlName="direccion" class="w-full" />
+                  </mat-form-field>
+                </div>
 
-                  <!-- Email -->
-                  <div class="w-full">
-                    <mat-form-field appearance="fill" class="w-full">
-                      <mat-label>Email</mat-label>
-                      <input matInput type="email" formControlName="email" class="w-full" />
-                      @if (perfilForm.get('email')?.hasError('required')) {
-                        <mat-error>Email es requerido</mat-error>
-                      }
-                      @if (perfilForm.get('email')?.hasError('email')) {
-                        <mat-error>Email no válido</mat-error>
-                      }
-                    </mat-form-field>
-                  </div>
+                <!-- Email -->
+                <div class="w-full">
+                  <mat-form-field appearance="fill" class="w-full">
+                    <mat-label>Email</mat-label>
+                    <input matInput type="email" formControlName="email" class="w-full" />
+                    @if (perfilForm.get('email')?.hasError('required')) {
+                      <mat-error>Email es requerido</mat-error>
+                    }
+                    @if (perfilForm.get('email')?.hasError('email')) {
+                      <mat-error>Email no válido</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
 
-                  <!-- Telefonos: FormArray (múltiples) -->
-                  <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Teléfonos</label>
-                    <div formArrayName="telefonos" class="space-y-4">
-                      <div *ngFor="let tCtrl of telefonos.controls; let i = index" [formGroupName]="i" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                <!-- Telefonos: FormArray (múltiples) -->
+                <div class="w-full">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Teléfonos</label>
+                  <div formArrayName="telefonos" class="space-y-4">
+                    @for (tCtrl of telefonos.controls; track tCtrl; let i = $index) {
+                      <div [formGroupName]="i" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                         <mat-form-field appearance="fill" class="w-full sm:col-span-2">
                           <mat-label>Número de celular</mat-label>
                           <input matInput formControlName="numeroTfno" placeholder="987654321" />
@@ -104,170 +105,169 @@
                             </mat-error>
                           }
                         </mat-form-field>
-
                         <mat-form-field appearance="fill" class="w-full">
                           <mat-label>Tipo</mat-label>
                           <input matInput formControlName="tipoTfno" placeholder="Celular / Casa / Trabajo" />
                         </mat-form-field>
-
                         <mat-form-field appearance="fill" class="w-full">
                           <mat-label>Persona</mat-label>
                           <input matInput formControlName="personaTfno" placeholder="Alumno / Padre / Madre" />
                         </mat-form-field>
                       </div>
-                          <mat-hint class="text-sm text-gray-500">
-                            Formatos permitidos: <strong>987654321</strong>, <strong>51987654321</strong>, <strong>+51987654321</strong>
-                          </mat-hint>
-                    </div>
+                    }
+                    <mat-hint class="text-sm text-gray-500">
+                      Formatos permitidos: <strong>987654321</strong>, <strong>51987654321</strong>, <strong>+51987654321</strong>
+                    </mat-hint>
                   </div>
-                </mat-card-content>
-              </mat-card>
-            </mat-tab>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
 
-            <mat-tab>
-              <ng-template mat-tab-label>
-                <span>Apoderados</span>
-                @if (tieneErroresApoderados && perfilForm.touched) {
-                  <span class="error-indicator ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                    {{ conteoErroresApoderados }}
-                  </span>
-                }
-              </ng-template>
-              <mat-card>
-                <mat-card-content>
-                  <div class="w-full">
-                    <!-- Apoderados: FormGroup con controles nombrados (2 apoderados) -->
-                    <div formGroupName="apoderados" class="space-y-6">
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>Apoderados</span>
+              @if (tieneErroresApoderados && perfilForm.touched) {
+                <span class="error-indicator ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  {{ conteoErroresApoderados }}
+                </span>
+              }
+            </ng-template>
+            <mat-card>
+              <mat-card-content>
+                <div class="w-full">
+                  <!-- Apoderados: FormGroup con controles nombrados (2 apoderados) -->
+                  <div formGroupName="apoderados" class="space-y-6">
 
-                      <!-- Apoderado 1 -->
-                      <div class="border rounded p-4">
-                        <div class="flex items-center justify-between mb-3">
-                          <div class="text-sm font-medium">Apoderado 1</div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Nombre</mat-label>
-                            <input matInput formControlName="nombre1Apo" />
-                          </mat-form-field>
-
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Apellidos</mat-label>
-                            <input matInput formControlName="apellidos1Apo" />
-                          </mat-form-field>
-
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Email principal</mat-label>
-                            <input matInput formControlName="email1Apo" type="email" />
-                            @if (perfilForm.get('apoderados.email1Apo')?.hasError('email')) {
-                              <mat-error>Email no válido</mat-error>
-                            }
-                          </mat-form-field>
-
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Teléfono</mat-label>
-                            <input matInput formControlName="tfno1Apo" placeholder="987654321" (input)="onApoderadoPhoneInput($event, 'tfno1Apo')" />
-                            @if ((perfilForm.get('apoderados.tfno1Apo')?.touched || perfilForm.get('apoderados.tfno1Apo')?.dirty) && perfilForm.get('apoderados.tfno1Apo')?.invalid) {
-                              <mat-error>{{ getPhoneControlErrorMessage(perfilForm.get('apoderados.tfno1Apo')) }}</mat-error>
-                            }
-                          </mat-form-field>
-
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Tipo</mat-label>
-                            <input matInput formControlName="tipo1Apo" placeholder="PAPA / MAMA / OTRO" />
-                          </mat-form-field>
-                        </div>
+                    <!-- Apoderado 1 -->
+                    <div class="border rounded p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="text-sm font-medium">Apoderado 1</div>
                       </div>
 
-                      <!-- Apoderado 2 -->
-                      <div class="border rounded p-4">
-                        <div class="flex items-center justify-between mb-3">
-                          <div class="text-sm font-medium">Apoderado 2</div>
-                        </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Nombre</mat-label>
+                          <input matInput formControlName="nombre1Apo" />
+                        </mat-form-field>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Nombre</mat-label>
-                            <input matInput formControlName="nombre2Apo" />
-                          </mat-form-field>
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Apellidos</mat-label>
+                          <input matInput formControlName="apellidos1Apo" />
+                        </mat-form-field>
 
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Apellidos</mat-label>
-                            <input matInput formControlName="apellidos2Apo" />
-                          </mat-form-field>
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Email principal</mat-label>
+                          <input matInput formControlName="email1Apo" type="email" />
+                          @if (perfilForm.get('apoderados.email1Apo')?.hasError('email')) {
+                            <mat-error>Email no válido</mat-error>
+                          }
+                        </mat-form-field>
 
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Email principal</mat-label>
-                            <input matInput formControlName="email2Apo" type="email" />
-                            @if (perfilForm.get('apoderados.email2Apo')?.hasError('email')) {
-                              <mat-error>Email no válido</mat-error>
-                            }
-                          </mat-form-field>
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Teléfono</mat-label>
+                          <input matInput formControlName="tfno1Apo" placeholder="987654321" (input)="onApoderadoPhoneInput($event, 'tfno1Apo')" />
+                          @if ((perfilForm.get('apoderados.tfno1Apo')?.touched || perfilForm.get('apoderados.tfno1Apo')?.dirty) && perfilForm.get('apoderados.tfno1Apo')?.invalid) {
+                            <mat-error>{{ getPhoneControlErrorMessage(perfilForm.get('apoderados.tfno1Apo')) }}</mat-error>
+                          }
+                        </mat-form-field>
 
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Teléfono</mat-label>
-                            <input matInput formControlName="tfno2Apo" placeholder="987654321" (input)="onApoderadoPhoneInput($event, 'tfno2Apo')" />
-                            @if ((perfilForm.get('apoderados.tfno2Apo')?.touched || perfilForm.get('apoderados.tfno2Apo')?.dirty) && perfilForm.get('apoderados.tfno2Apo')?.invalid) {
-                              <mat-error>{{ getPhoneControlErrorMessage(perfilForm.get('apoderados.tfno2Apo')) }}</mat-error>
-                            }
-                          </mat-form-field>
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Tipo</mat-label>
+                          <input matInput formControlName="tipo1Apo" placeholder="PAPA / MAMA / OTRO" />
+                        </mat-form-field>
+                      </div>
+                    </div>
 
-                          <mat-form-field appearance="fill" class="w-full">
-                            <mat-label>Tipo</mat-label>
-                            <input matInput formControlName="tipo2Apo" placeholder="PAPA / MAMA / OTRO" />
-                          </mat-form-field>
-                        </div>
+                    <!-- Apoderado 2 -->
+                    <div class="border rounded p-4">
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="text-sm font-medium">Apoderado 2</div>
                       </div>
 
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Nombre</mat-label>
+                          <input matInput formControlName="nombre2Apo" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Apellidos</mat-label>
+                          <input matInput formControlName="apellidos2Apo" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Email principal</mat-label>
+                          <input matInput formControlName="email2Apo" type="email" />
+                          @if (perfilForm.get('apoderados.email2Apo')?.hasError('email')) {
+                            <mat-error>Email no válido</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Teléfono</mat-label>
+                          <input matInput formControlName="tfno2Apo" placeholder="987654321" (input)="onApoderadoPhoneInput($event, 'tfno2Apo')" />
+                          @if ((perfilForm.get('apoderados.tfno2Apo')?.touched || perfilForm.get('apoderados.tfno2Apo')?.dirty) && perfilForm.get('apoderados.tfno2Apo')?.invalid) {
+                            <mat-error>{{ getPhoneControlErrorMessage(perfilForm.get('apoderados.tfno2Apo')) }}</mat-error>
+                          }
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="w-full">
+                          <mat-label>Tipo</mat-label>
+                          <input matInput formControlName="tipo2Apo" placeholder="PAPA / MAMA / OTRO" />
+                        </mat-form-field>
+                      </div>
                     </div>
+
                   </div>
-                </mat-card-content>
-              </mat-card>
-            </mat-tab>
-          </mat-tab-group>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
+        </mat-tab-group>
 
-          <!-- Acciones -->
-          <div class="form-actions mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <!-- Indicador de estado del formulario -->
-            <div class="text-sm text-gray-600">
-              @if (perfilForm.valid) {
-                <span class="flex items-center text-green-600">
-                  <mat-icon class="mr-1 text-base">check_circle</mat-icon>
-                  Formulario válido
-                </span>
-              }
-              @if (perfilForm.invalid && perfilForm.touched) {
-                <span class="flex items-center text-red-600">
-                  <mat-icon class="mr-1 text-base">error</mat-icon>
-                  {{ (conteoErroresDatosPersonales + conteoErroresApoderados) }} error(es) encontrado(s)
-                </span>
-              }
-              @if (!perfilForm.touched) {
-                <span class="flex items-center text-gray-500">
-                  <mat-icon class="mr-1 text-base">info</mat-icon>
-                  Complete los campos requeridos
-                </span>
-              }
-            </div>
-
-            <!-- Botón de actualizar -->
-            <button mat-flat-button type="submit">
-              @if (isUpdating) {
-                <span class="flex items-center">
-                  <mat-icon class="mr-2 animate-spin text-base">refresh</mat-icon>
-                  Actualizando...
-                </span>
-              }
-              @if (!isUpdating) {
-                <span class="flex items-center">
-                  <mat-icon class="mr-2 text-base">save</mat-icon>
-                  Actualizar Datos
-                </span>
-              }
-            </button>
+        <!-- Acciones -->
+        <div class="form-actions mt-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <!-- Indicador de estado del formulario -->
+          <div class="text-sm text-gray-600">
+            @if (perfilForm.valid) {
+              <span class="flex items-center text-green-600">
+                <mat-icon class="mr-1 text-base">check_circle</mat-icon>
+                Formulario válido
+              </span>
+            }
+            @if (perfilForm.invalid && perfilForm.touched) {
+              <span class="flex items-center text-red-600">
+                <mat-icon class="mr-1 text-base">error</mat-icon>
+                {{ (conteoErroresDatosPersonales + conteoErroresApoderados) }} error(es) encontrado(s)
+              </span>
+            }
+            @if (!perfilForm.touched) {
+              <span class="flex items-center text-gray-500">
+                <mat-icon class="mr-1 text-base">info</mat-icon>
+                Complete los campos requeridos
+              </span>
+            }
           </div>
-        </form>
-      </mat-card-content>
-    </mat-card>
-  </section>
+
+          <!-- Botón de actualizar -->
+          <button mat-flat-button type="submit">
+            @if (isUpdating) {
+              <span class="flex items-center">
+                <mat-icon class="mr-2 animate-spin text-base">refresh</mat-icon>
+                Actualizando...
+              </span>
+            }
+            @if (!isUpdating) {
+              <span class="flex items-center">
+                <mat-icon class="mr-2 text-base">save</mat-icon>
+                Actualizar Datos
+              </span>
+            }
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</section>
 </div>

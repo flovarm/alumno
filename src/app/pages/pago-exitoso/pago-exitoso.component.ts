@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,12 +10,11 @@ import { PageHeaderComponent } from '../../components/page-header/page-header.co
   selector: 'app-pago-exitoso',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
     PageHeaderComponent
-  ],
+],
   template: `
     <div class="page-container">
       <app-page-header

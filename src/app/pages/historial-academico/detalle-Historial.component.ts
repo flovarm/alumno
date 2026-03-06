@@ -4,7 +4,7 @@ import {
   MatDialogModule,
   MatDialogRef,
 } from "@angular/material/dialog";
-import { NgIf, NgFor, CommonModule } from "@angular/common";
+import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { MatDivider, MatDividerModule } from "@angular/material/divider";
 import { MatButtonModule } from "@angular/material/button";
@@ -24,35 +24,40 @@ import { AlumnoService } from "../../services/alumno.service";
   template: `
     <h3 mat-dialog-title class="nota-vertical-title text-center">
       <!-- <div class="nota-vertical-title text-center mb-2">
-        {{ data?.element?.completo | titlecase }}
-      </div> -->
-      {{ data?.element?.descripcion || "" }}
-      <span *ngIf="data?.element?.nombre"> - {{ data?.element?.nombre }}</span>
-      <span *ngIf="data?.element?.nombreAula">
+      {{ data?.element?.completo | titlecase }}
+    </div> -->
+    {{ data?.element?.descripcion || "" }}
+    @if (data?.element?.nombre) {
+      <span> - {{ data?.element?.nombre }}</span>
+    }
+    @if (data?.element?.nombreAula) {
+      <span>
         - {{ data?.element?.nombreAula }} -
         {{ data?.element?.nombreCompleto }}</span
-      >
+        >
+      }
     </h3>
     <mat-dialog-content>
-      <ng-container *ngIf="dataSource().length > 0; else noNotas">
+      @if (dataSource().length > 0) {
         <div class="notas-asistencia-row">
           <!-- Notas -->
           <div class="notas-col">
             <h3 class="nota-vertical-title text-center mt-3 mb-2">Notas</h3>
             <table class="table-EC" style="width:100%">
-              <tr *ngFor="let col of columns()">
-                <th
-                  class="mt-2 mb-2 nota-vertical-header"
+              @for (col of columns(); track col) {
+                <tr>
+                  <th
+                    class="mt-2 mb-2 nota-vertical-header"
                   [ngClass]="{
                     'text-promedio':
                       formatColumnNameLine1(col) === 'finalGrade',
                   }"
-                >
-                  {{ formatColumnNameLine1(col) }}
-                  {{ formatColumnNameLine2(col) }}
-                  <mat-divider></mat-divider>
-                </th>
-                <td
+                    >
+                    {{ formatColumnNameLine1(col) }}
+                    {{ formatColumnNameLine2(col) }}
+                    <mat-divider></mat-divider>
+                  </th>
+                  <td
                   [ngClass]="{
                     'text-success':
                       formatColumnNameLine1(col) === 'finalGrade' &&
@@ -61,36 +66,38 @@ import { AlumnoService } from "../../services/alumno.service";
                       formatColumnNameLine1(col) === 'finalGrade' &&
                       data?.element?.apruebaReg !== 'P',
                   }"
-                >
-                  {{
+                    >
+                    {{
                     dataSource()[0][col] !== undefined &&
                     dataSource()[0][col] !== null &&
                     dataSource()[0][col] !== ""
-                      ? dataSource()[0][col]
-                      : 0
-                  }}
-                  <mat-divider></mat-divider>
-                </td>
-              </tr>
+                    ? dataSource()[0][col]
+                    : 0
+                    }}
+                    <mat-divider></mat-divider>
+                  </td>
+                </tr>
+              }
             </table>
           </div>
           <!-- Asistencia -->
-          <div
-            class="asistencia-col"
-            *ngIf="
-              asistenciaFechas().length > 0 && asistenciaData() as asistencia
-            "
-          >
-            <h3 class="nota-vertical-title text-center mt-3 mb-2">
-              Asistencia
-            </h3>
-            <table class="table-EC" style="width:100%">
-              <tr *ngFor="let fecha of asistenciaFechas()">
-                <th class="nota-vertical-header">
-                  {{ fecha | date: "dd-MM-yyyy" }}
-                  <mat-divider></mat-divider>
-                </th>
-                <td
+          @if (
+            asistenciaFechas().length > 0 && asistenciaData(); as asistencia
+            ) {
+            <div
+              class="asistencia-col"
+              >
+              <h3 class="nota-vertical-title text-center mt-3 mb-2">
+                Asistencia
+              </h3>
+              <table class="table-EC" style="width:100%">
+                @for (fecha of asistenciaFechas(); track fecha) {
+                  <tr>
+                    <th class="nota-vertical-header">
+                      {{ fecha | date: "dd-MM-yyyy" }}
+                      <mat-divider></mat-divider>
+                    </th>
+                    <td
                   [ngClass]="{
                     'text-asistencia': isPresente(asistencia[fecha]),
                     'text-falta': isFalta(asistencia[fecha]),
@@ -100,24 +107,27 @@ import { AlumnoService } from "../../services/alumno.service";
                     ),
                     'asistencia-right': true,
                   }"
-                >
-                  {{ formatAsistencia(asistencia[fecha]) }}
-                  <mat-divider></mat-divider>
-                </td>
-              </tr>
-            </table>
-            <!-- Recuperaciones -->
-            <div *ngIf="recuperacionesList().length > 0">
-              <h3 class="nota-vertical-title text-center mt-3 mb-2">
-                Recuperación
-              </h3>
-              <table class="table-EC" style="width:100%">
-                <tr *ngFor="let rec of recuperacionesList()">
-                  <th class="nota-vertical-header">
-                    {{ rec.fecha | date: "dd-MM-yyyy" }}
-                    <mat-divider></mat-divider>
-                  </th>
-                  <td
+                      >
+                      {{ formatAsistencia(asistencia[fecha]) }}
+                      <mat-divider></mat-divider>
+                    </td>
+                  </tr>
+                }
+              </table>
+              <!-- Recuperaciones -->
+              @if (recuperacionesList().length > 0) {
+                <div>
+                  <h3 class="nota-vertical-title text-center mt-3 mb-2">
+                    Recuperación
+                  </h3>
+                  <table class="table-EC" style="width:100%">
+                    @for (rec of recuperacionesList(); track rec) {
+                      <tr>
+                        <th class="nota-vertical-header">
+                          {{ rec.fecha | date: "dd-MM-yyyy" }}
+                          <mat-divider></mat-divider>
+                        </th>
+                        <td
                     [ngClass]="{
                       'text-asistencia': isPresente(rec.estado),
                       'text-falta': isFalta(rec.estado),
@@ -125,38 +135,40 @@ import { AlumnoService } from "../../services/alumno.service";
                       'text-falta-no-registrada': isNoRegistrado(rec.estado),
                       'asistencia-right': true,
                     }"
-                  >
-                    {{ formatAsistencia(rec.estado) }}
-                    <mat-divider></mat-divider>
-                  </td>
-                </tr>
-              </table>
+                          >
+                          {{ formatAsistencia(rec.estado) }}
+                          <mat-divider></mat-divider>
+                        </td>
+                      </tr>
+                    }
+                  </table>
+                </div>
+              }
             </div>
-          </div>
+          }
         </div>
         <!-- Resumen de asistencia -->
         <div class="asistencia-resumen mt-3 mb-2">
           <span class="text-asistencia"
             >Asistencias: {{ resumenAsistencia().asistio }}</span
-          >
-          |
-          <span class="text-tardanza"
-            >Tardanzas: {{ resumenAsistencia().tardanza }}</span
-          >
-          |
-          <span class="text-falta"
-            >Faltas: {{ resumenAsistencia().falta }}</span
-          >
-        </div>
-      </ng-container>
-      <ng-template #noNotas>
-        <div>No se encontraron notas para este registro.</div>
-      </ng-template>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cerrar</button>
-    </mat-dialog-actions>
-  `,
+            >
+            |
+            <span class="text-tardanza"
+              >Tardanzas: {{ resumenAsistencia().tardanza }}</span
+              >
+              |
+              <span class="text-falta"
+                >Faltas: {{ resumenAsistencia().falta }}</span
+                >
+              </div>
+            } @else {
+              <div>No se encontraron notas para este registro.</div>
+            }
+          </mat-dialog-content>
+          <mat-dialog-actions align="end">
+            <button mat-button mat-dialog-close>Cerrar</button>
+          </mat-dialog-actions>
+    `,
   styles: [
     `
       .notas-asistencia-row {

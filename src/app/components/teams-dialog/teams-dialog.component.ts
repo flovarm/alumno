@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
+
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
@@ -17,14 +17,13 @@ import { SnackService } from "../../services/snack.service";
   selector: "app-teams-dialog",
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   template: `
     <h2 mat-dialog-title class="flex items-center gap-2">
       <mat-icon>groups</mat-icon>

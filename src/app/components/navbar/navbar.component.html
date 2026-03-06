@@ -1,86 +1,88 @@
 <nav class="navbar-simplified" style="padding-left: 0; padding-right: 0;">
   <div class="navbar-content">
     <!-- Progress bar for HTTP requests -->
-    <mat-progress-bar *ngIf="loadingService.loading$ | async" mode="indeterminate" class="flotante"></mat-progress-bar>
+    @if (loadingService.loading$ | async) {
+      <mat-progress-bar mode="indeterminate" class="flotante"></mat-progress-bar>
+    }
     <!-- Botón de menú -->
-    <button mat-icon-button 
-            class="menu-toggle-btn"
-            (click)="onToggleMenu()"
-            matTooltip="Abrir menú"
-            matTooltipPosition="below"
-            style="display: flex; align-items: center; justify-content: center;">
+    <button mat-icon-button
+      class="menu-toggle-btn"
+      (click)="onToggleMenu()"
+      matTooltip="Abrir menú"
+      matTooltipPosition="below"
+      style="display: flex; align-items: center; justify-content: center;">
       <mat-icon>menu</mat-icon>
     </button>
-    
+
     <!-- Logo -->
     <div class="logo-section">
-      <img [src]="isDarkTheme() ? '/images/navbarLogo.png' : '/images/asset6.png'" 
-           class="logo navbar-logo"
-           style="height: 56px; width: auto;" 
-           loading="lazy" 
-           alt="Logo Alumno" />
+      <img [src]="isDarkTheme() ? '/images/navbarLogo.png' : '/images/asset6.png'"
+        class="logo navbar-logo"
+        style="height: 56px; width: auto;"
+        loading="lazy"
+        alt="Logo Alumno" />
+      </div>
+
+      <!-- Acciones de la derecha -->
+      <div class="navbar-actions">
+
+        <!-- Cambio de Tema -->
+        <button mat-icon-button
+          [matMenuTriggerFor]="themeMenu"
+          class="theme-btn"
+          [matTooltip]="'Tema: ' + (currentTheme?.name === 'system' ? 'Sistema' : currentTheme?.name === 'dark' ? 'Oscuro' : 'Claro')"
+          matTooltipPosition="below">
+          <mat-icon>{{ currentTheme?.icon || 'light_mode' }}</mat-icon>
+        </button>
+
+        <!-- Menú de Temas -->
+        <mat-menu #themeMenu="matMenu" class="theme-dropdown">
+          @for (theme of availableThemes; track theme.name) {
+            <button mat-menu-item
+              (click)="onThemeChange(theme.name)"
+              [class.active-theme]="currentTheme?.name === theme.name">
+              <mat-icon>{{ theme.icon }}</mat-icon>
+              <span>{{ theme.name === 'system' ? 'Sistema' : theme.name === 'dark' ? 'Oscuro' : 'Claro' }}</span>
+              @if (currentTheme?.name === theme.name) {
+                <mat-icon class="check-icon">check</mat-icon>
+              }
+            </button>
+          }
+        </mat-menu>
+
+        <!-- Notificaciones -->
+        <button mat-icon-button
+          class="notification-btn"
+          (click)="onNotificationClick()"
+          [matBadge]="notificationCount"
+          [matBadgeHidden]="notificationCount === 0"
+          matBadgeColor="warn">
+          <mat-icon>notifications</mat-icon>
+        </button>
+
+        <!-- Menú de Estudiante -->
+        <button mat-button
+          [matMenuTriggerFor]="studentMenu"
+          class="student-menu-btn">
+          <span class="student-avatar-initials">{{ userInitials }}</span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
+
+        <!-- Material Menu -->
+        <mat-menu #studentMenu="matMenu" class="student-dropdown">
+          @for (item of profileMenuItems; track item.route) {
+            <button mat-menu-item
+              (click)="onProfileMenuClick(item.route)"
+              [class.menu-item-danger]="item.route === '/logout'">
+              <mat-icon>{{ item.icon }}</mat-icon>
+              <span>{{ item.label }}</span>
+            </button>
+          }
+        </mat-menu>
+
+      </div>
     </div>
+  </nav>
 
-    <!-- Acciones de la derecha -->
-    <div class="navbar-actions">
-      
-      <!-- Cambio de Tema -->
-      <button mat-icon-button 
-              [matMenuTriggerFor]="themeMenu"
-              class="theme-btn"
-              [matTooltip]="'Tema: ' + (currentTheme?.name === 'system' ? 'Sistema' : currentTheme?.name === 'dark' ? 'Oscuro' : 'Claro')"
-              matTooltipPosition="below">
-        <mat-icon>{{ currentTheme?.icon || 'light_mode' }}</mat-icon>
-      </button>
-
-      <!-- Menú de Temas -->
-      <mat-menu #themeMenu="matMenu" class="theme-dropdown">
-        @for (theme of availableThemes; track theme.name) {
-          <button mat-menu-item 
-                  (click)="onThemeChange(theme.name)"
-                  [class.active-theme]="currentTheme?.name === theme.name">
-            <mat-icon>{{ theme.icon }}</mat-icon>
-            <span>{{ theme.name === 'system' ? 'Sistema' : theme.name === 'dark' ? 'Oscuro' : 'Claro' }}</span>
-            @if (currentTheme?.name === theme.name) {
-              <mat-icon class="check-icon">check</mat-icon>
-            }
-          </button>
-        }
-      </mat-menu>
-      
-      <!-- Notificaciones -->
-      <button mat-icon-button 
-              class="notification-btn"
-              (click)="onNotificationClick()"
-              [matBadge]="notificationCount" 
-              [matBadgeHidden]="notificationCount === 0"
-              matBadgeColor="warn">
-        <mat-icon>notifications</mat-icon>
-      </button>
-
-      <!-- Menú de Estudiante -->
-      <button mat-button 
-              [matMenuTriggerFor]="studentMenu" 
-              class="student-menu-btn">
-        <span class="student-avatar-initials">{{ userInitials }}</span>
-        <mat-icon>expand_more</mat-icon>
-      </button>
-
-      <!-- Material Menu -->
-      <mat-menu #studentMenu="matMenu" class="student-dropdown">
-        @for (item of profileMenuItems; track item.route) {
-          <button mat-menu-item 
-                  (click)="onProfileMenuClick(item.route)"
-                  [class.menu-item-danger]="item.route === '/logout'">
-            <mat-icon>{{ item.icon }}</mat-icon>
-            <span>{{ item.label }}</span>
-          </button>
-        }
-      </mat-menu>
-      
-    </div>
-  </div>
-</nav>
-
-<!-- Espaciador para compensar el navbar fijo -->
-<div class="navbar-spacer"></div>
+  <!-- Espaciador para compensar el navbar fijo -->
+  <div class="navbar-spacer"></div>

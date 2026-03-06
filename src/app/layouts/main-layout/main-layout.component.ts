@@ -1,5 +1,5 @@
 import { Component, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common'; // <-- Importa CommonModule
+ // <-- Importa CommonModule
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { Router } from '@angular/router';
@@ -19,7 +19,6 @@ interface MenuItem {
   selector: 'app-main-layout',
   standalone: true,
   imports: [
-    CommonModule, // <-- Agrega aquí
     RouterOutlet,
     NavbarComponent,
     MatSidenavModule,
@@ -27,7 +26,7 @@ interface MenuItem {
     RouterModule,
     MatTooltipModule,
     MatIconModule
-  ],
+],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
 })
