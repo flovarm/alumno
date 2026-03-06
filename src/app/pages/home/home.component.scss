@@ -1,9 +1,20 @@
+@use "@angular/material" as mat;
+
+.gmail {
+  container-color: var(--mat-sys-secondary);
+  color: var(--mat-sys-secondary);
+}
+
+/* Layout wrapper */
 .home-container {
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
+  color: var(--mat-sys-on-surface);
 }
 
+/* Dashboard grid (kept for potential cards) */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -11,80 +22,398 @@
   margin-bottom: 2rem;
 }
 
+/* Dashboard card hover styles preserved for consistency */
 .dashboard-card {
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   }
-  
+
   mat-card-header {
     padding: 1.5rem;
   }
-  
+
   mat-icon[mat-card-avatar] {
     font-size: 2rem;
     width: 2rem;
     height: 2rem;
     color: var(--mat-sys-primary);
   }
-  
+
   mat-card-title {
     color: var(--mat-sys-primary);
     font-weight: 600;
   }
-  
+
   mat-card-subtitle {
     color: var(--mat-sys-on-surface-variant);
     margin-top: 0.5rem;
   }
 }
 
+/* Info & profile section */
 .info-section {
   margin-top: 2rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
+/* Profile card styling */
+.profile-card,
 .welcome-card {
-  mat-card-content {
-    padding: 2rem;
-    text-align: center;
-    
-    h3 {
-      color: var(--mat-sys-primary);
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    
-    p {
-      color: var(--mat-sys-on-surface-variant);
-      line-height: 1.6;
-      max-width: 600px;
-      margin: 0 auto;
-    }
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(9, 30, 66, 0.08);
+}
+
+.profile-card mat-card-header,
+.welcome-card mat-card-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.profile-card mat-card-content,
+.welcome-card mat-card-content {
+  padding: 1.5rem;
+}
+
+/* Profile display (readonly fields) */
+.profile-display {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Label style on the left */
+.profile-label {
+  min-width: 140px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Readonly field appearance using mat-form-field class target */
+.profile-value-field {
+  flex: 1;
+  margin: 0;
+}
+
+/* Divider line */
+.divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.02));
+  margin: 1rem 0;
+}
+
+/* Editable form grid for inputs */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+/* Make mat-form-fields comfortable and responsive */
+.form-field {
+  width: 100%;
+}
+
+/* Form action alignment */
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* Note text */
+.nota {
+  margin-top: 1rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+/* Small screens: stack and optimize spacing */
+@media (max-width: 900px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .profile-label {
+    min-width: 120px;
+    font-size: 0.92rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .home-container {
     padding: 1rem;
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
-  .dashboard-card mat-card-header {
-    padding: 1rem;
+
+  .info-section {
+    flex-direction: column;
   }
-  
-  .welcome-card mat-card-content {
-    padding: 1.5rem;
-    
-    h3 {
-      font-size: 1.25rem;
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-label {
+    min-width: 100px;
+    font-size: 0.9rem;
+  }
+
+  .profile-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Visual tweaks for readonly inputs inside mat-form-field */
+.mat-form-field .mat-input-element[readonly] {
+  color: rgba(0, 0, 0, 0.87);
+  font-weight: 600;
+  background: transparent;
+}
+
+/* Subtle focus / hover for fields */
+.mat-form-field-appearance-fill .mat-form-field-flex,
+.mat-form-field-appearance-outline .mat-form-field-flex {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+}
+
+/* Accessibility: increased contrast for labels on hover */
+.profile-row:hover .profile-label {
+  color: var(--mat-sys-primary);
+}
+
+/* Animación para el spinner del botón de actualizar */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos para campos con errores */
+.mat-form-field.mat-form-field-invalid {
+  .mat-form-field-outline {
+    border-color: var(--mat-sys-error) !important;
+    border-width: 2px !important;
+  }
+
+  .mat-form-field-fill {
+    background-color: rgba(244, 67, 54, 0.04) !important;
+  }
+
+  .mat-form-field-label {
+    color: var(--mat-sys-error) !important;
+  }
+}
+
+/* Animación de pulsado para campos con errores */
+@keyframes error-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(244, 67, 54, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+.mat-form-field.mat-form-field-invalid .mat-form-field-wrapper {
+  animation: error-pulse 1s ease-in-out;
+}
+
+/* Estilo para el botón de actualizar cuando hay errores */
+.form-actions button[type="submit"] {
+  position: relative;
+  overflow: hidden;
+
+  &:not([disabled]) {
+    background: linear-gradient(
+      45deg,
+      var(--mat-sys-on-primary),
+      var(--mat-sys-primary)
+    );
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+/* Mejora visual para tabs con errores */
+.mat-tab-group .mat-tab-label.mat-tab-label-has-errors {
+  color: var(--mat-sys-error);
+
+  &::after {
+    content: "!";
+    background: var(--mat-sys-error);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    font-weight: bold;
+  }
+}
+
+/* Estilo para mensajes de error más prominentes */
+.mat-error {
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: "⚠";
+    margin-right: 4px;
+    font-size: 1rem;
+  }
+}
+
+/* Resaltado suave para campos touched con errores */
+.mat-form-field-invalid.ng-touched {
+  .mat-form-field-outline {
+    animation: error-glow 2s ease-in-out;
+  }
+}
+
+@keyframes error-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 0 rgba(244, 67, 54, 0.3);
+  }
+}
+
+/* Estilos para indicadores de error en pestañas */
+.error-indicator {
+  font-size: 10px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  animation: error-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes error-badge-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Mejoras para el estado del formulario */
+.form-actions {
+  .text-green-600 mat-icon {
+    color: var(--mat-sys-primary);
+  }
+
+  .text-red-600 mat-icon {
+    color: var(--mat-sys-error);
+  }
+
+  .text-gray-500 mat-icon {
+    color: #6b7280;
+  }
+}
+
+/* Animación para el ícono de carga */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Mejora visual para botones con estado */
+.form-actions button {
+  transition: all 0.3s ease;
+
+  &:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+/* Responsive adjustments for form actions */
+@media (max-width: 640px) {
+  .form-actions {
+    flex-direction: column !important;
+
+    & > div:first-child {
+      text-align: center;
+      margin-bottom: 0.75rem;
+    }
+
+    button {
+      width: 100%;
     }
   }
 }

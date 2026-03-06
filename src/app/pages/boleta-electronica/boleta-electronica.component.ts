@@ -70,7 +70,9 @@ import { Location } from '@angular/common';
               <div class="message-text">
                 <p><strong>{{ esVentaLibro() ? '¡Tu libro ha sido adquirido!' : '¡Tu matrícula está confirmada!' }}</strong></p>
                 <p>Hemos enviado la confirmación a tu correo electrónico.</p>
-                <p>{{ esVentaLibro() ? 'Puedes recoger tu libro en nuestras instalaciones.' : '¡Éxitos en tus estudios!' }}</p>
+                <p>{{ esVentaLibro() ? 'Puedes recoger tu libro en nuestras instalaciones. Recuerda presentar el DNI del estudiante o comprobante de pago ' : '¡Éxitos en tus estudios!' }}</p>
+                <p><strong>Horario de atención:</strong></p>
+                <p>Lunes a viernes de 8am a 7.15pm  y sábado de 8am a 3.45pm</p>
               </div>
             </div>
           </div>
@@ -194,7 +196,7 @@ import { Location } from '@angular/common';
               <td>1</td>
               <td>S/ {{ boletaData?.costo | number:'1.2-2' }}</td>
               <td>S/ {{ boletaData?.descuento | number:'1.2-2' }}</td>
-              <td>S/ {{ boletaData?.total | number:'1.2-2' }}</td>
+              <td>S/ {{ boletaData?.costo | number:'1.2-2' }}</td>
             </tr>
           </tbody>
         </table>
@@ -237,7 +239,6 @@ import { Location } from '@angular/common';
     </div>
   `,
   styles: [`
-    /* Variables CSS por defecto (modo claro) */
     :host {
       --success-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
       --card-bg: #ffffff;
@@ -253,7 +254,6 @@ import { Location } from '@angular/common';
       --message-icon: #3b82f6;
     }
 
-    /* Variables para modo oscuro */
     @media (prefers-color-scheme: dark) {
       :host {
         --success-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -271,7 +271,6 @@ import { Location } from '@angular/common';
       }
     }
 
-    /* Estilos para la vista de pago exitoso */
     .pago-exitoso-container {
       display: flex;
       justify-content: center;
@@ -287,7 +286,7 @@ import { Location } from '@angular/common';
       border-radius: 16px;
       box-shadow: var(--card-shadow);
       overflow: hidden;
-      animation: slideIn 0.6s ease-out;
+      animation: slideIn .6s ease-out;
       background: var(--card-bg);
       border: 1px solid transparent;
     }
@@ -311,7 +310,7 @@ import { Location } from '@angular/common';
 
     .success-header {
       background: var(--header-bg);
-      color: white;
+      color: #fff;
       padding: 2rem;
       display: flex;
       align-items: center;
@@ -326,8 +325,8 @@ import { Location } from '@angular/common';
 
     .checkmark-icon {
       font-size: 4rem;
-      color: white;
-      animation: checkmark 0.8s ease-in-out 0.3s both;
+      color: #fff;
+      animation: checkmark .8s ease-in-out .3s both;
     }
 
     @keyframes checkmark {
@@ -352,15 +351,15 @@ import { Location } from '@angular/common';
     .success-title {
       font-size: 1.75rem;
       font-weight: 700;
-      margin: 0 0 0.5rem 0;
-      color: white;
+      margin: 0 0 .5rem;
+      color: #fff;
     }
 
     .success-subtitle {
       font-size: 1.1rem;
-      opacity: 0.9;
+      opacity: .9;
       margin: 0;
-      color: white;
+      color: #fff;
     }
 
     .success-details {
@@ -464,13 +463,16 @@ import { Location } from '@angular/common';
       min-width: 160px;
     }
 
-    /* Estilos para impresión (contenido oculto) */
     #boleta-content {
       max-width: 800px;
       margin: 0 auto;
       padding: 2rem;
       background: white;
-      color: black;
+      color: black !important;
+    }
+
+    #boleta-content * {
+      color: black !important;
     }
 
     .boleta-header {
@@ -495,31 +497,33 @@ import { Location } from '@angular/common';
       margin: 0 0 0.5rem 0;
       font-size: 1.5rem;
       font-weight: bold;
-      color: var(--mat-sys-primary);
+      color: black !important;
     }
 
     .company-details p {
       margin: 0.2rem 0;
       font-size: 0.9rem;
+      color: black !important;
     }
 
     .document-info {
       text-align: center;
-      border: 2px solid var(--mat-sys-primary);
+      border: 2px solid black;
       padding: 1rem;
       border-radius: 8px;
+      background: #f8f9fa;
     }
 
     .document-type h2 {
       margin: 0 0 0.5rem 0;
       font-size: 1.2rem;
-      color: var(--mat-sys-primary);
+      color: black !important;
     }
 
     .document-number {
       font-size: 1.1rem;
       font-weight: bold;
-      color: var(--mat-sys-primary);
+      color: black !important;
     }
 
     .client-info, .course-info {
@@ -529,8 +533,8 @@ import { Location } from '@angular/common';
     .client-info h3, .course-info h3 {
       margin: 0 0 1rem 0;
       font-size: 1.1rem;
-      color: var(--mat-sys-primary);
-      border-bottom: 2px solid var(--mat-sys-primary);
+      color: black !important;
+      border-bottom: 2px solid black;
       padding-bottom: 0.5rem;
     }
 
@@ -560,15 +564,17 @@ import { Location } from '@angular/common';
 
     .service-table th,
     .service-table td {
-      border: 1px solid #ddd;
+      border: 1px solid #000;
       padding: 0.75rem;
       text-align: left;
+      color: black !important;
     }
 
     .service-table th {
       background-color: #f5f5f5;
       font-weight: bold;
       text-align: center;
+      color: black !important;
     }
 
     .service-table td:nth-child(2),
@@ -599,22 +605,25 @@ import { Location } from '@angular/common';
     }
 
     .total-row.final-total {
-      border-top: 2px solid var(--mat-sys-primary);
-      border-bottom: 2px solid var(--mat-sys-primary);
+      border-top: 2px solid black;
+      border-bottom: 2px solid black;
       font-weight: bold;
       font-size: 1.1rem;
       margin-top: 0.5rem;
       padding: 0.5rem 0;
+      background: #f8f9fa;
     }
 
     .total-label {
       font-weight: 500;
+      color: black !important;
     }
 
     .total-value {
       font-weight: bold;
       min-width: 100px;
       text-align: right;
+      color: black !important;
     }
 
     .footer-info {
@@ -627,12 +636,13 @@ import { Location } from '@angular/common';
     .emission-date {
       margin-bottom: 1rem;
       font-size: 0.9rem;
+      font-weight: bold;
     }
 
     .footer-text p {
       margin: 0.5rem 0;
       font-style: italic;
-      color: #666;
+      color: black !important;
     }
 
     @media (max-width: 768px) {
@@ -701,15 +711,12 @@ import { Location } from '@angular/common';
       }
     }
 
-    /* Estilos adicionales para modo oscuro */
     @media (prefers-color-scheme: dark) {
-      /* Contenido de boleta oculto - mantener colores para impresión */
       #boleta-content {
         background: white !important;
         color: black !important;
       }
 
-      /* Scrollbar personalizado para modo oscuro */
       ::-webkit-scrollbar {
         width: 8px;
       }
@@ -727,7 +734,6 @@ import { Location } from '@angular/common';
         background: #9ca3af;
       }
 
-      /* Material buttons en modo oscuro */
       .mat-mdc-raised-button.mat-primary {
         --mdc-filled-button-container-color: #10b981;
       }
@@ -736,13 +742,11 @@ import { Location } from '@angular/common';
         --mdc-filled-button-container-color: #059669;
       }
 
-      /* Dividers en modo oscuro */
       .mat-divider {
         border-top-color: #4b5563;
       }
     }
 
-    /* Estilos base para elementos adicionales */
     .success-details {
       background: var(--card-bg);
       color: var(--text-primary);
@@ -752,8 +756,6 @@ import { Location } from '@angular/common';
       background: var(--card-bg);
     }
 
-    /* Soporte para tema forzado mediante clases CSS del ThemeService */
-    /* Angular Material classes */
     :host-context(.light-theme),
     :host-context(.light) {
       --success-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -999,10 +1001,14 @@ export class BoletaElectronicaComponent implements OnInit {
             margin: 20px;
             padding: 0;
             background: white;
-            color: black;
+            color: black !important;
             line-height: 1.4;
           }
           
+          * {
+            color: black !important;
+          }
+
           .boleta-container {
             max-width: 800px;
             margin: 0 auto;
@@ -1035,17 +1041,18 @@ export class BoletaElectronicaComponent implements OnInit {
             margin: 0 0 0.5rem 0;
             font-size: 1.5rem;
             font-weight: bold;
-            color: #002b73;
+            color: black !important;
           }
 
           .company-details p {
             margin: 0.2rem 0;
             font-size: 0.9rem;
+            color: black !important;
           }
 
           .document-info {
             text-align: center;
-            border: 2px solid #002b73;
+            border: 2px solid black;
             padding: 1rem;
             border-radius: 8px;
             background: #f8f9fa;
@@ -1054,24 +1061,24 @@ export class BoletaElectronicaComponent implements OnInit {
           .document-type h2 {
             margin: 0 0 0.5rem 0;
             font-size: 1.2rem;
-            color: #002b73;
+            color: black !important;
           }
 
           .document-number {
             font-size: 1.1rem;
             font-weight: bold;
-            color: #002b73;
+            color: black !important;
           }
 
           .client-info, .course-info {
             margin: 1.5rem 0;
           }
 
-          .client-info h3, .course_info h3 {
+          .client-info h3, .course-info h3 {
             margin: 0 0 1rem 0;
             font-size: 1.1rem;
-            color: #002b73;
-            border-bottom: 2px solid #002b73;
+            color: black !important;
+            border-bottom: 2px solid black;
             padding-bottom: 0.5rem;
           }
 
@@ -1101,15 +1108,17 @@ export class BoletaElectronicaComponent implements OnInit {
 
           .service-table th,
           .service-table td {
-            border: 1px solid #ddd;
+            border: 1px solid #000;
             padding: 0.75rem;
             text-align: left;
+            color: black !important;
           }
 
           .service-table th {
             background-color: #f5f5f5;
             font-weight: bold;
             text-align: center;
+            color: black !important;
           }
 
           .service-table td:nth-child(2),
@@ -1140,8 +1149,8 @@ export class BoletaElectronicaComponent implements OnInit {
           }
 
           .total-row.final-total {
-            border-top: 2px solid #002b73;
-            border-bottom: 2px solid #002b73;
+            border-top: 2px solid black;
+            border-bottom: 2px solid black;
             font-weight: bold;
             font-size: 1.1rem;
             margin-top: 0.5rem;
@@ -1151,12 +1160,14 @@ export class BoletaElectronicaComponent implements OnInit {
 
           .total-label {
             font-weight: 500;
+            color: black !important;
           }
 
           .total-value {
             font-weight: bold;
             min-width: 100px;
             text-align: right;
+            color: black !important;
           }
 
           .footer-info {
@@ -1175,7 +1186,7 @@ export class BoletaElectronicaComponent implements OnInit {
           .footer-text p {
             margin: 0.5rem 0;
             font-style: italic;
-            color: #666;
+            color: black !important;
           }
 
           @media print {

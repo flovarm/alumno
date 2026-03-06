@@ -14,7 +14,7 @@
         </mat-card-header>
         <mat-card-content>
 
-            @if (resumen && ultimoRegistro()?.deudaReg > 0) {
+            @if (resumen) {
         
                 <mat-list  style="margin-top:1rem;">
                   <mat-list-item>
@@ -82,13 +82,13 @@
                 
                 <div style="margin-top:2rem; text-align:center;">
                   <button mat-flat-button color="accent" style="font-size:1.2rem; padding:1rem 2rem;"
-                  (click)="procesarPago(this.ultimoRegistro()?.deudaReg)"
+                  (click)="procesarPago(this.resumen.costo)"
                   [disabled]="procesandoPago || formularioIziPayAbierto ">
                   <mat-icon>payment</mat-icon>
                   {{ 
                     procesandoPago ? 'Procesando...' : 
                     formularioIziPayAbierto ? 'Procesando...' : 
-                    'Pagar S/ ' + this.ultimoRegistro()?.deudaReg 
+                    'Pagar S/ ' + this.resumen.costo
                   }}
                 </button>
                 </div>

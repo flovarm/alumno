@@ -94,26 +94,13 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Obtener el DNI del usuario logueado
-    let dni: number | null = null;
-    try {
-      const userStr = localStorage.getItem('alumno_currentUser');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user && user.userName) {
-          dni = Number(user.userName);
-        }
-      }
-    } catch (e) {
-      console.error('No se pudo obtener el usuario logueado:', e);
-    }
-    if (dni) {
-      // Obtener el código del alumno y luego los documentos
-      this.alumnoService.verificarDni(dni).subscribe({
+    const user = JSON.parse(localStorage.getItem('alumno_currentUser'));
+    if (user) {
+      this.alumnoService.verificarDni(user.userName).subscribe({
         next: (resp) => {
           if (resp.existe && resp.codigo) {
             this.documentoService.getDocumentosByAlumnoId(+resp.codigo).subscribe({
               next: (docs) => {
-                console.log('Documentos recibidos:', docs);
                 this.dataSource.data = docs;
               },
               error: (err) => {

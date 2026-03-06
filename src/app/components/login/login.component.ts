@@ -43,7 +43,7 @@ export class LoginComponent {
 
   constructor() {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(8)]], // DNI de 8 dígitos
+      username: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(11)]], // DNI de 8 dígitos
       password: ['', [Validators.required, Validators.minLength(3)]]
     });
   }
