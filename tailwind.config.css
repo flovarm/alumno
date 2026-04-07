@@ -1,0 +1,368 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  /* Fuentes personalizadas */
+  --font-family-mdprimer: "MDPrimer", sans-serif;
+
+  /* Colores personalizados que se integran con Angular Material */
+  --color-brand-primary: #003384;
+  --color-brand-secondary: #C50E08;
+  --color-brand-tertiary: #FAC52A;
+  --color-brand-neutral: #F6F6FA;
+
+  /* Espaciado personalizado */
+  --spacing-xs: 0.125rem;
+  --spacing-sm: 0.25rem;
+  --spacing-md: 0.5rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 4rem;
+
+  /* Bordes redondeados personalizados */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+@config {
+  theme: {
+    daisyui: {
+      themes: [
+        {
+          light: {
+            primary: "#003384",
+            secondary: "#C50E08",
+            accent: "#FAC52A",
+            neutral: "#F6F6FA",
+            "base-100": "#FFFFFF",
+            "base-200": "#F6F6FA",
+            "base-300": "#E5E5E9",
+            info: "#3ABFF8",
+            success: "#36D399",
+            warning: "#FBBD23",
+            error: "#F87272"
+          },
+          dark: {
+            primary: "#b2c5ff",
+            secondary: "#ffb4a8",
+            accent: "#f4bf23",
+            neutral: "#1a1c1f",
+            "base-100": "#111416",
+            "base-200": "#1e2023",
+            "base-300": "#282a2d",
+            info: "#3ABFF8",
+            success: "#36D399",
+            warning: "#FBBD23",
+            error: "#F87272"
+          }
+        },
+        "light",
+        "dark"
+      ],
+      darkTheme: "dark",
+      base: true,
+      styled: true,
+      utils: true,
+      prefix: "",
+      logs: false
+    }
+  }
+}
+
+/* Utilidades personalizadas */
+@layer utilities {
+  .font-mdprimer {
+    font-family: var(--font-family-mdprimer);
+  }
+
+  .text-brand-primary {
+    color: var(--color-brand-primary);
+  }
+
+  .text-brand-secondary {
+    color: var(--color-brand-secondary);
+  }
+
+  .bg-brand-primary {
+    background-color: var(--color-brand-primary);
+  }
+
+  .bg-brand-secondary {
+    background-color: var(--color-brand-secondary);
+  }
+
+  /* Animaciones personalizadas */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.5s ease-out;
+  }
+}
+
+/* Componentes personalizados usando DaisyUI */
+@layer components {
+  .btn-custom {
+    @apply btn btn-primary;
+  }
+
+  .btn-secondary-custom {
+    @apply btn btn-secondary;
+  }
+
+  .card-custom {
+    @apply card bg-base-100 shadow-xl;
+  }
+
+  .alert-custom {
+    @apply alert alert-info;
+  }
+
+  .badge-custom {
+    @apply badge badge-secondary;
+  }
+
+  .hero-custom {
+    @apply hero min-h-screen bg-base-200;
+  }
+
+  .navbar-custom {
+    @apply navbar bg-base-100;
+  }
+
+  .menu-custom {
+    @apply menu bg-base-100 rounded-box;
+  }
+
+  .modal-custom {
+    @apply modal;
+  }
+
+  .drawer-custom {
+    @apply drawer;
+  }
+
+  .stats-custom {
+    @apply stats shadow;
+  }
+
+  /* Combinación con Angular Material */
+  .mat-daisy-card {
+    @apply card bg-base-100 shadow-lg;
+
+    .mat-card-header {
+      @apply card-title;
+    }
+
+    .mat-card-content {
+      @apply card-body;
+    }
+
+    .mat-card-actions {
+      @apply card-actions justify-end;
+    }
+  }
+
+  .mat-daisy-button {
+    @apply btn;
+
+    &.mat-primary {
+      @apply btn-primary;
+    }
+
+    &.mat-accent {
+      @apply btn-secondary;
+    }
+
+    &.mat-warn {
+      @apply btn-error;
+    }
+  }
+
+  /* Formularios híbridos */
+  .form-group-daisy {
+    @apply form-control w-full;
+
+    label {
+      @apply label;
+
+      .label-text {
+        @apply label-text;
+      }
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"] {
+      @apply input input-bordered w-full;
+
+      &:focus {
+        @apply input-primary;
+      }
+
+      &.error {
+        @apply input-error;
+      }
+    }
+
+    select {
+      @apply select select-bordered w-full;
+
+      &:focus {
+        @apply select-primary;
+      }
+    }
+
+    textarea {
+      @apply textarea textarea-bordered w-full;
+
+      &:focus {
+        @apply textarea-primary;
+      }
+    }
+  }
+
+  /* Tablas mejoradas */
+  .table-enhanced {
+    @apply table table-zebra;
+
+    th {
+      @apply bg-base-200 font-bold;
+    }
+
+    tr:hover {
+      @apply bg-base-100;
+    }
+  }
+
+  /* Navegación responsive */
+  .nav-responsive {
+    @apply navbar bg-base-100 shadow-lg;
+
+    .navbar-start {
+      @apply navbar-start;
+    }
+
+    .navbar-center {
+      @apply navbar-center hidden lg:flex;
+    }
+
+    .navbar-end {
+      @apply navbar-end;
+    }
+
+    .menu-horizontal {
+      @apply menu menu-horizontal px-1;
+    }
+  }
+
+  /* Sidebar con drawer */
+  .sidebar-layout {
+    @apply drawer lg:drawer-open;
+
+    .drawer-toggle {
+      @apply drawer-toggle;
+    }
+
+    .drawer-content {
+      @apply drawer-content flex flex-col;
+    }
+
+    .drawer-side {
+      @apply drawer-side;
+
+      .drawer-overlay {
+        @apply drawer-overlay;
+      }
+
+      .menu-sidebar {
+        @apply menu min-h-full w-64 bg-base-200 text-base-content;
+      }
+    }
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modo oscuro personalizado */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-brand-primary: #3b82f6;
+    --color-brand-secondary: #8b5cf6;
+  }
+}
+
+/* Responsive breakpoints personalizados */
+@media (max-width: 768px) {
+  .card-custom {
+    @apply mx-2;
+  }
+
+  .navbar-custom {
+    @apply px-2;
+  }
+
+  .hero-custom {
+    @apply min-h-[50vh];
+  }
+}
+
+/* Print styles */
+@media print {
+  .btn,
+  .modal,
+  .drawer-toggle,
+  .navbar {
+    @apply hidden;
+  }
+
+  .card {
+    @apply border border-gray-300 shadow-none;
+  }
+}

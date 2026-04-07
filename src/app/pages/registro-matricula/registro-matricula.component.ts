@@ -27,10 +27,12 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { environment } from "../../../environments/environment.development";
 import { MatOption, MatSelectModule } from "@angular/material/select";
+import { PostulanteService } from "../../_services/postulante.service";
 
 @Component({
   selector: "app-registro-matricula",
   standalone: true,
+  styleUrls: ["./registro-matricula.component.scss"],
   imports: [
     CommonModule,
     MatCardModule,
@@ -59,7 +61,7 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
 
       <!-- Último Registro -->
       @if (ultimoRegistro()) {
-        <mat-card class="ultimo-registro-card" style="margin-bottom: 2rem;">
+        <mat-card class="ultimo-registro-card">
           <mat-card-header>
             <mat-icon mat-card-avatar>history</mat-icon>
             <mat-card-title>Último Registro Académico</mat-card-title>
@@ -125,7 +127,7 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
             </div>
           </mat-card-content>
         </mat-card>
-        <div class="registro-lienal">
+        <div class="curso-calificacion">
           Nota mínima aprobatoria: {{ ultimoRegistro()?.notaMinimaAprobatoria }}
         </div>
         @if (!ultimoRegistro()?.registroCerrado) {
@@ -152,6 +154,12 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
             <a [routerLink]="['/pago-deuda']">Desde aquí</a>.
           </div>
         }
+      }
+
+      @if (examenCalificacion()?.idCurso) {
+        <div class="curso-calificacion">
+          Cargando Horarios según examen de clasificación 
+        </div>
       }
 
       <mat-horizontal-stepper
@@ -229,15 +237,12 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
                   <th mat-header-cell *matHeaderCellDef>TURNO</th>
                   <td mat-cell *matCellDef="let h">{{ h.turno }}</td>
                 </ng-container>
-                <!-- VACANTES -->
-                <ng-container matColumnDef="vacantes">
-                  <th mat-header-cell *matHeaderCellDef>VACANTES</th>
-                  <td mat-cell *matCellDef="let h">{{ h.vacantes }}</td>
-                </ng-container>
-                <!-- MATRICULADOS -->
-                <ng-container matColumnDef="matriculados">
-                  <th mat-header-cell *matHeaderCellDef>MATRICULADOS</th>
-                  <td mat-cell *matCellDef="let h">{{ h.matriculados }}</td>
+                <!-- VACANTES DISPONIBLES -->
+                <ng-container matColumnDef="vacantesDisponibles">
+                  <th mat-header-cell *matHeaderCellDef>DISPONIBLES</th>
+                  <td mat-cell *matCellDef="let h">
+                    {{ h.vacantes - h.matriculados }}
+                  </td>
                 </ng-container>
                 <!-- ACCIONES -->
                 <ng-container matColumnDef="acciones">
@@ -247,7 +252,7 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
                       mat-flat-button
                       color="primary"
                       [disabled]="
-                        h.vacantes <= h.matriculados ||
+                        h.vacantes - h.matriculados <= 0 ||
                         !h.cursoAbierto ||
                         (ultimoRegistro()?.mesesDejoEstudiar > 6 &&
                           !examenCalificacion()) ||
@@ -272,126 +277,165 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
         </mat-step>
         <mat-step label="Realizar Pago">
           @if (selectedHorario?.idHorario && user?.userName) {
-            <div>
-              <mat-card>
-                <mat-card-header>
-                  <mat-card-title> Horario Seleccionado </mat-card-title>
-                  <mat-card-subtitle></mat-card-subtitle>
-                </mat-card-header>
-                <mat-card-content>
-                  @if (resumen) {
-                    <mat-list style="margin-top:1rem;">
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>meeting_room</mat-icon>
-                        <div matListItemTitle>Aula</div>
-                        <div matListItemLine>
-                          {{ formatearAula(resumen.aula) }}
+            <div class="payment-container">
+              @if (resumen) {
+                <div class="payment-grid">
+                  <!-- Columna izquierda: Resumen (8 columnas) -->
+                  <div class="payment-summary">
+                    <mat-card>
+                      <mat-card-header>
+                        <mat-card-title>Horario Seleccionado</mat-card-title>
+                      </mat-card-header>
+                      <mat-card-content>
+                        <mat-list style="margin-top:1rem;">
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>meeting_room</mat-icon>
+                            <div matListItemTitle>Aula</div>
+                            <div matListItemLine>
+                              {{ formatearAula(resumen.aula) }}
+                            </div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>school</mat-icon>
+                            <div matListItemTitle>Modalidad</div>
+                            <div matListItemLine>{{ resumen.modalidad }}</div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>book</mat-icon>
+                            <div matListItemTitle>Curso</div>
+                            <div matListItemLine>{{ resumen.curso }}</div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>person</mat-icon>
+                            <div matListItemTitle>Docente</div>
+                            <div matListItemLine>{{ resumen.docente }}</div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>schedule</mat-icon>
+                            <div matListItemTitle>Horario</div>
+                            <div matListItemLine>
+                              {{ resumen.turno }}
+                            </div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <!-- <mat-list-item>
+                            <mat-icon matListItemIcon>calendar_today</mat-icon>
+                            <div matListItemTitle>Días</div>
+                            <div matListItemLine>{{ resumen.dias }}</div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider> -->
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>date_range</mat-icon>
+                            <div matListItemTitle>Fecha de inicio</div>
+                            <div matListItemLine>
+                              {{ resumen.fechaInicio | date: "dd/MM/yyyy" }}
+                            </div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>attach_money</mat-icon>
+                            <div matListItemTitle>Costo</div>
+                            <div matListItemLine>S/ {{ resumen.costo }}</div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
+
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>location_on</mat-icon>
+                            <div matListItemTitle>Sede</div>
+                            <div matListItemLine>{{ resumen.sede }}</div>
+                          </mat-list-item>
+                        </mat-list>
+
+                        <div class="terms-notice">
+                          <mat-icon class="terms-icon">info</mat-icon>
+                          <span>
+                            Al registrar tu matrícula estás aceptando nuestros
+                            <a
+                              href="https://www.elcultural.com.pe/terminos-y-condiciones-del-servicio/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="terms-link"
+                            >
+                              Términos y Condiciones
+                              <mat-icon class="external-link-icon"
+                                >open_in_new</mat-icon
+                              >
+                            </a>
+                          </span>
                         </div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
 
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>school</mat-icon>
-                        <div matListItemTitle>Modalidad</div>
-                        <div matListItemLine>{{ resumen.modalidad }}</div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
-
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>book</mat-icon>
-                        <div matListItemTitle>Curso</div>
-                        <div matListItemLine>{{ resumen.curso }}</div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
-
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>person</mat-icon>
-                        <div matListItemTitle>Profesor</div>
-                        <div matListItemLine>
-                          {{ resumen.docente | titlecase }}
+                        <div style="margin-top:1rem; text-align:center;">
+                          <div class="payment-status">
+                            @if (procesandoPago) {
+                              <mat-icon class="spinning"
+                                >hourglass_empty</mat-icon
+                              >
+                              <span>Preparando formulario de pago...</span>
+                            } @else if (formularioIziPayAbierto) {
+                              <mat-icon color="primary">payment</mat-icon>
+                              <span>Complete el formulario de pago →</span>
+                            }
+                          </div>
                         </div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
 
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>schedule</mat-icon>
-                        <div matListItemTitle>Turno</div>
-                        <div matListItemLine>{{ resumen.turno }}</div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
-
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>event</mat-icon>
-                        <div matListItemTitle>Fecha de Inicio</div>
-                        <div matListItemLine>
-                          {{ resumen.fechaInicio | date: "dd/MM/yyyy" }}
+                        <!-- Mensaje de pago -->
+                        <div
+                          id="payment-message"
+                          class="payment-message"
+                          [style.display]="paymentMessage ? 'block' : 'none'"
+                          [ngClass]="paymentMessageClass"
+                        >
+                          {{ paymentMessage }}
                         </div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
 
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>event_available</mat-icon>
-                        <div matListItemTitle>Fecha de Fin</div>
-                        <div matListItemLine>
-                          {{ resumen.fechaFinal | date: "dd/MM/yyyy" }}
-                        </div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
+                  <!-- Columna derecha: Formulario de pago (4 columnas) -->
+                  <div
+                    class="payment-form-container"
+                    [class.visible]="formularioIziPayAbierto || procesandoPago"
+                  >
+                    <mat-card>
+                      <mat-card-content>
+                        @if (procesandoPago && !formularioIziPayAbierto) {
+                          <div class="loading-payment">
+                            <mat-spinner diameter="40"></mat-spinner>
+                            <p>Preparando formulario de pago seguro...</p>
+                          </div>
+                        } @else {
+                          <div class="payment-form-info">
+                            <mat-icon color="primary">security</mat-icon>
+                            <span>Formulario seguro procesado por IziPay</span>
+                          </div>
+                          <!-- Container para el formulario de IziPay -->
+                          <div id="iframeContainer"></div>
 
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>group</mat-icon>
-                        <div matListItemTitle>Vacantes Disponibles</div>
-                        <div matListItemLine>
-                          {{ resumen.vacantesDisponibles }}
-                        </div>
-                      </mat-list-item>
-                      <mat-divider></mat-divider>
-
-                      <mat-list-item>
-                        <mat-icon matListItemIcon>location_on</mat-icon>
-                        <div matListItemTitle>Sede</div>
-                        <div matListItemLine>{{ resumen.sede }}</div>
-                      </mat-list-item>
-                    </mat-list>
-                    <div class="importante">
-                      <mat-icon>warning</mat-icon>
-                      No cierre está página hasta que se genere su comprobante
-                      de pago!
-                    </div>
-                    <div style="margin-top:2rem; text-align:center;">
-                      <button
-                        mat-flat-button
-                        color="accent"
-                        style="font-size:1.2rem; padding:1rem 2rem;"
-                        (click)="procesarPago(resumen.costo)"
-                        [disabled]="procesandoPago || formularioIziPayAbierto"
-                      >
-                        <mat-icon>payment</mat-icon>
-                        {{
-                          procesandoPago
-                            ? "Procesando..."
-                            : formularioIziPayAbierto
-                              ? "Procesando..."
-                              : "Pagar S/ " + resumen.costo
-                        }}
-                      </button>
-                    </div>
-
-                    <!-- Mensaje de pago -->
-                    <div
-                      id="payment-message"
-                      class="payment-message"
-                      [style.display]="paymentMessage ? 'block' : 'none'"
-                      [ngClass]="paymentMessageClass"
-                    >
-                      {{ paymentMessage }}
-                    </div>
-
-                    <!-- Container para el formulario de IziPay -->
-                    <div id="iframeContainer"></div>
-                  }
-                </mat-card-content>
-              </mat-card>
+                          <!-- Mensaje importante debajo del formulario -->
+                          <div class="payment-footer-messages">
+                            <div class="importante">
+                              <mat-icon>warning</mat-icon>
+                              No cierre está página hasta que se genere su
+                              comprobante de pago!
+                            </div>
+                          </div>
+                        }
+                      </mat-card-content>
+                    </mat-card>
+                  </div>
+                </div>
+              }
             </div>
           } @else {
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
@@ -431,356 +475,7 @@ import { MatOption, MatSelectModule } from "@angular/material/select";
       </mat-horizontal-stepper>
     </div>
   `,
-  styles: [
-    `
-      .page-container {
-        max-width: 1200px;
-        margin: 0 auto;
-      }
 
-      .filter-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .filter-field {
-        width: 100%;
-      }
-
-      @media (max-width: 768px) {
-        .filter-container {
-          grid-template-columns: 1fr;
-          gap: 0.75rem;
-        }
-
-        .filter-field {
-          width: 100%;
-        }
-      }
-
-      .content-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-
-      .info-card {
-        background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-      }
-
-      .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--mat-sys-primary);
-        margin: 0.5rem 0;
-      }
-
-      .metric-label {
-        color: var(--mat-sys-on-surface-variant);
-        margin: 0;
-        font-size: 0.875rem;
-      }
-
-      .registro-lienal {
-        background: var(--mat-sys-tertiary);
-        color: var(--mat-sys-on-tertiary);
-        padding: 0.25rem 0.5rem;
-        margin-bottom: 2rem;
-        width: fit-content;
-      }
-
-      .schedule-card {
-        background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-      }
-
-      .schedule-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-      }
-
-      .schedule-day {
-        background: var(--mat-sys-surface-container-high);
-        border-radius: 12px;
-        padding: 1rem;
-        border: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      .schedule-day h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--mat-sys-primary);
-        text-align: center;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid var(--mat-sys-primary-container);
-      }
-
-      .schedule-item {
-        background: var(--mat-sys-surface);
-        border-radius: 8px;
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-        border: 1px solid var(--mat-sys-outline-variant);
-        box-shadow: 0 1px 3px var(--mat-sys-shadow);
-      }
-
-      .schedule-item:last-child {
-        margin-bottom: 0;
-      }
-
-      .time {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--mat-sys-primary);
-        margin-bottom: 0.25rem;
-      }
-
-      .subject {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--mat-sys-on-surface);
-        margin-bottom: 0.25rem;
-        line-height: 1.2;
-      }
-
-      .room {
-        font-size: 0.8rem;
-        color: var(--mat-sys-on-surface-variant);
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-      }
-
-      .room::before {
-        content: "📍";
-        font-size: 0.7rem;
-      }
-
-      .mdc-list-item--with-trailing-radio.mdc-list-item,
-      .mdc-list-item--with-trailing-checkbox.mdc-list-item {
-        padding-left: 16px;
-        padding-right: 0;
-        height: 180px;
-      }
-
-      ::ng-deep mat-list-option .horario-card {
-        min-height: var(--mat-list-item-min-height, 120px);
-        margin-bottom: var(--mat-list-item-spacing, 16px);
-        display: block;
-        background: var(--mat-sys-surface);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-        border: 1px solid var(--mat-sys-outline-variant);
-        transition: box-shadow 0.2s;
-      }
-
-      ::ng-deep mat-list-option.mat-list-item-selected .horario-card {
-        box-shadow: 0 4px 16px var(--mat-sys-shadow);
-        border: 2px solid var(--mat-sys-primary);
-      }
-
-      .horario-atributo {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-        margin-bottom: 6px;
-      }
-
-      .horario-atributo mat-icon {
-        font-size: 1.3rem;
-        vertical-align: middle;
-        color: var(--mat-sys-primary);
-      }
-
-      .horario-card-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-      }
-      @media (max-width: 700px) {
-        .horario-card-grid {
-          grid-template-columns: 1fr;
-          gap: 0.5rem;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .content-grid {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-
-        .mdc-list-item--with-trailing-radio.mdc-list-item,
-        .mdc-list-item--with-trailing-checkbox.mdc-list-item {
-          padding-left: 8px;
-          padding-right: 0;
-          height: 300px;
-        }
-
-        .schedule-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .schedule-day {
-          padding: 0.75rem;
-        }
-      }
-
-      .row-disabled {
-        pointer-events: none;
-        opacity: 0.5;
-        background: var(--mat-sys-surface-variant);
-      }
-
-      .table-container {
-        overflow-x: auto;
-        width: 100%;
-      }
-
-      @media (max-width: 768px) {
-        .table-container {
-          overflow-x: scroll;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-          min-width: 800px;
-        }
-      }
-
-      .ultimo-registro-card {
-        background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-      }
-
-      .ultimo-registro-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1rem;
-      }
-
-      .registro-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
-        background: var(--mat-sys-surface-container-high);
-        border-radius: 12px;
-        border: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      .registro-item mat-icon {
-        color: var(--mat-sys-primary);
-        font-size: 1.5rem;
-      }
-
-      .registro-label {
-        font-size: 0.875rem;
-        color: var(--mat-sys-on-surface-variant);
-        margin-bottom: 0.25rem;
-      }
-
-      .registro-value {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--mat-sys-on-surface);
-      }
-
-      @media (max-width: 768px) {
-        .ultimo-registro-grid {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-      }
-
-      .curso-warning {
-        background: var(--mat-sys-tertiary-container);
-        color: var(--mat-sys-on-tertiary-container);
-        border-left: 4px solid var(--mat-sys-tertiary);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .curso-calificacion {
-        background: var(--mat-sys-primary-container);
-        color: var(--mat-sys-on-primary-container);
-        border-left: 4px solid var(--mat-sys-primary);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .curso-warning mat-icon {
-        color: var(--mat-sys-tertiary);
-      }
-      .curso-danger {
-        background: var(--mat-sys-secondary-container);
-        color: var(--mat-sys-on-secondary-container);
-        border-left: 4px solid var(--mat-sys-secondary);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .curso-danger mat-icon {
-        color: var(--mat-sys-secondary);
-      }
-
-      .payment-message {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 8px;
-        text-align: center;
-        font-weight: 500;
-      }
-
-      .payment-success {
-        background: var(--mat-sys-primary-container);
-        color: var(--mat-sys-on-primary-container);
-        border: 1px solid var(--mat-sys-primary);
-      }
-
-      .payment-error {
-        background: var(--mat-sys-error-container);
-        color: var(--mat-sys-on-error-container);
-        border: 1px solid var(--mat-sys-error);
-      }
-
-      .stepper-actions {
-        display: flex;
-        justify-content: flex-start;
-        padding: 1rem 0;
-        border-top: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      .stepper-actions button {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-    `,
-  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class RegistroMatriculaComponent implements OnInit {
@@ -800,8 +495,7 @@ export class RegistroMatriculaComponent implements OnInit {
     "nombreProfesor",
     "nombreSede",
     "turno",
-    "vacantes",
-    "matriculados",
+    "vacantesDisponibles",
     "acciones",
   ];
   form = new FormGroup({
@@ -820,7 +514,7 @@ export class RegistroMatriculaComponent implements OnInit {
   private currentTransactionId: string | null = null; // Para rastrear transacción actual
   private currentOrderNumber: string | null = null; // Para rastrear order number actual
   private processedTransactions = new Set<string>(); // Para rastrear transacciones ya procesadas
-
+  private postulanteService = inject(PostulanteService);
   private periodoService = inject(PeriodoService);
   private registroService = inject(RegistroService);
   private horarioService = inject(HorarioService);
@@ -878,28 +572,53 @@ export class RegistroMatriculaComponent implements OnInit {
       }
     });
 
-    this.registroService
-      .obtenerUltimoRegistroPorAlumno(this.user.userName)
-      .subscribe((registro: any) => {
-        this.ultimoRegistro.set(registro);
-        let idCurso: number | undefined;
-        if (registro) {
-          if (registro.apruebaReg === "P") {
-            idCurso = registro.idCursoAprobado;
-          } else if (registro.apruebaReg === "F") {
-            idCurso = registro.idCursoDesaprobado;
+    this.obtenerExamenCalificacion((examen: any) => {
+      this.registroService
+        .obtenerUltimoRegistroPorAlumno(this.user.userName)
+        .subscribe((registro: any) => {
+          this.ultimoRegistro.set(registro);
+
+          let idUltimoCurso: number | undefined;
+          if (registro) {
+            if (registro.apruebaReg === "P") {
+              idUltimoCurso = registro.idCursoAprobado;
+            } else if (registro.apruebaReg === "F") {
+              idUltimoCurso = registro.idCursoDesaprobado;
+            }
           }
 
-          this.cargarHorariosPorUltimoRegistro(
-            idCurso,
-            this.periodoActual().idPeriodo,
-          );
-          // Siempre permitir examen de calificación sin restricción de tiempo
-          this.obtenerExamenCalificacion();
-        } else {
-          this.obtenerExamenCalificacion();
-        }
-      });
+          const idCursoExamen = examen?.idCurso;
+          let idCursoSeleccionado: number | undefined;
+
+          if (typeof idCursoExamen === "number" && typeof idUltimoCurso === "number") {
+            idCursoSeleccionado = Math.max(idCursoExamen, idUltimoCurso);
+          } else {
+            idCursoSeleccionado = idCursoExamen ?? idUltimoCurso;
+          }
+
+          if (typeof idCursoSeleccionado === "number") {
+            this.cargarHorariosPorUltimoRegistro(
+              idCursoSeleccionado,
+              this.periodoActual().idPeriodo,
+            );
+          } else if (!registro) {
+            this.obtenerDatosPostulante();
+          }
+        });
+    });
+
+  }
+
+
+  obtenerDatosPostulante() {
+     this.postulanteService.getByNumeroDocumento(this.user.userName).subscribe({
+              next: (postulante: any) => {
+                console.log("Datos del postulante:", postulante);
+                if (postulante && postulante.cursoSeleccionado) {
+                  this.cargarHorariosPorUltimoRegistro(postulante.cursoSeleccionado, this.periodoActual().idPeriodo);
+                } 
+              }
+            }); 
   }
 
   private verificarRetornoDePago() {
@@ -919,10 +638,8 @@ export class RegistroMatriculaComponent implements OnInit {
               );
               // Limpiar parámetros de URL
               this.limpiarParametrosURL();
-              // Opcional: recargar datos
-              setTimeout(() => {
-                window.location.reload();
-              }, 3000);
+              // Recargar datos inmediatamente
+              window.location.reload();
             } else {
               this.showPaymentMessage(
                 "El pago está siendo procesado. Te notificaremos cuando se complete.",
@@ -957,13 +674,19 @@ export class RegistroMatriculaComponent implements OnInit {
     window.history.replaceState({}, document.title, url.toString());
   }
 
-  obtenerExamenCalificacion() {
+  obtenerExamenCalificacion(callback?: (examen: any) => void) {
     this.registroService
       .obtenerExamenDeCalificacion(this.user.userName)
-      .subscribe((examen: any) => {
-        if (examen) {
-          this.examenCalificacion.set(examen);
-        }
+      .subscribe({
+        next: (examen: any) => {
+          if (examen) {
+            this.examenCalificacion.set(examen);
+          }
+          callback?.(examen);
+        },
+        error: () => {
+          callback?.(null);
+        },
       });
   }
 
@@ -997,6 +720,9 @@ export class RegistroMatriculaComponent implements OnInit {
   seleccionarHorarioFila(horario: any) {
     this.resumen = null;
     this.selectedHorario = horario;
+    this.procesandoPago = false;
+    this.formularioIziPayAbierto = false;
+
     setTimeout(() => {
       this.mostrarResumen(horario.idHorario, this.user.userName);
     }, 100);
@@ -1011,7 +737,7 @@ export class RegistroMatriculaComponent implements OnInit {
 
   isRowDisabled(row: any): boolean {
     return (
-      row.vacantes <= row.matriculados ||
+      row.vacantes - row.matriculados <= 0 ||
       !row.cursoAbierto ||
       this.ultimoRegistro()?.mesesDeJoEstudiar >= 6
     );
@@ -1021,11 +747,29 @@ export class RegistroMatriculaComponent implements OnInit {
     this.horarioService.obtenerResumenPago(idHorario, docId).subscribe({
       next: (res: any) => {
         this.resumen = res;
+        // Esperar a que Angular renderice el DOM completamente antes de iniciar el pago
+        setTimeout(() => {
+          // Verificar que el componente esté visible antes de procesar el pago
+          this.waitForContainerAndProcessPayment(res.costo);
+        }, 1000);
       },
       error: (err) => {
         this.resumen = null;
       },
     });
+  }
+
+  private waitForContainerAndProcessPayment(amount: number) {
+    const checkContainer = () => {
+      const container = document.getElementById("iframeContainer");
+      if (container && this.formularioIziPayAbierto === false) {
+        this.procesarPago(amount);
+      } else {
+        // Reintentar después de 500ms
+        setTimeout(checkContainer, 500);
+      }
+    };
+    checkContainer();
   }
 
   procesarPago(precio: number) {
@@ -1042,8 +786,6 @@ export class RegistroMatriculaComponent implements OnInit {
     this.paymentMessage = "";
 
     // Mostrar spinner de pago
-    this.paymentSpinner.showPaymentSpinner("Iniciando proceso de pago...");
-
     // Pago real
     const transactionId =
       Date.now().toString() + Math.random().toString().substr(2, 5);
@@ -1086,7 +828,6 @@ export class RegistroMatriculaComponent implements OnInit {
                     orderNumber,
                   );
                 } else {
-                  this.paymentSpinner.hidePaymentSpinner();
                   this.showPaymentMessage(
                     "Error al obtener token de pago",
                     "error",
@@ -1096,7 +837,6 @@ export class RegistroMatriculaComponent implements OnInit {
                 this.procesandoPago = false;
               },
               error: (err) => {
-                this.paymentSpinner.hidePaymentSpinner();
                 this.showPaymentMessage("Error al procesar el pago", "error");
                 this.procesandoPago = false;
                 this.currentTransactionId = null;
@@ -1104,7 +844,7 @@ export class RegistroMatriculaComponent implements OnInit {
             });
         },
         error: (err) => {
-          this.paymentSpinner.hidePaymentSpinner();
+          this.paymentSpinner.hideSpinner();
           this.showPaymentMessage("Error al preparar el pago", "error");
           this.procesandoPago = false;
           this.currentTransactionId = null;
@@ -1135,25 +875,58 @@ export class RegistroMatriculaComponent implements OnInit {
     this.horarios.filter = `${searchText}|${selectedSede}`;
   }
 
-  private initializeIziPay(
+  private async initializeIziPay(
     tokenResponse: any,
     amount: number,
     transactionId: string,
     orderNumber: string,
   ) {
-    if (!this.izipayLoaded) {
-      this.loadIziPayScript().then(() => {
-        this.setupIziPayForm(tokenResponse, amount, transactionId, orderNumber);
-      });
-    } else {
-      this.setupIziPayForm(tokenResponse, amount, transactionId, orderNumber);
+    try {
+      if (!this.izipayLoaded) {
+        await this.loadIziPayScript();
+      }
+      await this.setupIziPayForm(
+        tokenResponse,
+        amount,
+        transactionId,
+        orderNumber,
+      );
+    } catch (error) {
+      console.error("Error initializing IziPay:", error);
+      this.formularioIziPayAbierto = false;
+      this.procesandoPago = false;
+      this.showPaymentMessage(
+        "Error al cargar el formulario de pago. Inténtelo nuevamente.",
+        "error",
+      );
     }
+  }
+
+  private waitForContainer(
+    maxAttempts: number = 10,
+  ): Promise<HTMLElement | null> {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const checkContainer = () => {
+        const container = document.getElementById("iframeContainer");
+        if (container) {
+          resolve(container);
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(checkContainer, 300);
+        } else {
+          resolve(null);
+        }
+      };
+      checkContainer();
+    });
   }
 
   private loadIziPayScript(): Promise<void> {
     return new Promise((resolve, reject) => {
       if ((window as any).Izipay) {
         this.izipayLoaded = true;
+        this.configureIziPayGlobally();
         resolve();
         return;
       }
@@ -1162,6 +935,7 @@ export class RegistroMatriculaComponent implements OnInit {
       script.src = environment.izipay.scriptUrl;
       script.onload = () => {
         this.izipayLoaded = true;
+        this.configureIziPayGlobally();
         resolve();
       };
       script.onerror = () => reject(new Error("Error cargando IziPay script"));
@@ -1169,7 +943,28 @@ export class RegistroMatriculaComponent implements OnInit {
     });
   }
 
-  private setupIziPayForm(
+  private configureIziPayGlobally() {
+    // Add minimal styles to ensure embedded mode works properly
+    if ((window as any).Izipay) {
+      const globalStyle = document.createElement("style");
+      globalStyle.id = "izipay-embedded-styles";
+      globalStyle.innerHTML = `
+        #iframeContainer .izipay-form,
+        #iframeContainer .izipay-embedded {
+          width: 100% !important;
+          height: auto !important;
+          border: none !important;
+          border-radius: 8px !important;
+        }
+      `;
+
+      if (!document.getElementById("izipay-embedded-styles")) {
+        document.head.appendChild(globalStyle);
+      }
+    }
+  }
+
+  private async setupIziPayForm(
     tokenResponse: any,
     amount: number,
     transactionId: string,
@@ -1180,19 +975,24 @@ export class RegistroMatriculaComponent implements OnInit {
     // Configuración específica para sandbox vs producción
     const isSandbox = !environment.production;
 
+    // Wait for container to be available in DOM
+    const container = await this.waitForContainer();
+    if (!container) {
+      throw new Error("Container #iframeContainer not found after waiting");
+    }
+
     const iziConfig = {
       config: {
         transactionId: transactionId,
-        action: (window as any).Izipay.enums.payActions.PAY,
+        action: "pay",
         merchantCode: environment.izipay.merchantCode,
         order: {
           orderNumber: orderNumber,
           currency: "PEN",
           amount: amount.toFixed(2),
-          processType: (window as any).Izipay.enums.processType.AUTHORIZATION,
+          processType: "AT",
           merchantBuyerId: this.user?.userName || "12345678",
           dateTimeTransaction: dateTimeTransaction,
-          payMethod: (window as any).Izipay.enums.showMethods.ALL,
         },
         billing: {
           firstName: this.resumen?.nombres || "Juan",
@@ -1206,22 +1006,16 @@ export class RegistroMatriculaComponent implements OnInit {
           postalCode: "13001",
           document: this.user?.userName || "12345678",
           documentType:
-            this.user?.userName && this.user.userName.length > 8
-              ? (window as any).Izipay.enums.documentType.CE
-              : (window as any).Izipay.enums.documentType.DNI,
+            this.user?.userName && this.user.userName.length > 8 ? "CE" : "DNI",
         },
         render: {
-          typeForm: (window as any).Izipay.enums.typeForm.IFRAME,
+          typeForm: "embedded",
           container: "#iframeContainer",
           showButtonProcessForm: true,
         },
         appearance: {
           logo: "https://elcultural.edu.pe/images/asset6.png",
         },
-        urlRedirect:
-          window.location.origin +
-          "/registro-matricula?payment=success&transactionId=" +
-          transactionId,
         urlIPN: (environment as any).webhookUrl + "Registro/webhook/izipay",
       },
     };
@@ -1229,38 +1023,58 @@ export class RegistroMatriculaComponent implements OnInit {
     try {
       const checkout = new (window as any).Izipay(iziConfig);
 
-      // Ocultar spinner de carga y mostrar spinner de pago
-      this.paymentSpinner.hidePaymentSpinner();
-      this.paymentSpinner.showPaymentSpinner(
-        "Completa tu pago en la ventana emergente...",
-      );
+      // Ocultar spinner cuando se abre IziPay (IziPay tiene su propio loading)
+      this.paymentSpinner.hideSpinner();
 
-      // Bloquear botón cuando se abre el formulario
+      // Activar el formulario y ocultar procesando
+      this.procesandoPago = false;
       this.formularioIziPayAbierto = true;
+
+      // Clear container before loading
+      if (container) {
+        container.innerHTML = "";
+      }
 
       checkout.LoadForm({
         authorization: tokenResponse.response.token,
         keyRSA: "RSA",
         callbackResponse: (response: any) => {
-          // Mostrar spinner de procesamiento de matrícula
-          this.paymentSpinner.hidePaymentSpinner();
-          this.paymentSpinner.showMatriculationSpinner(
-            "Procesando matrícula...",
-          );
-
           // Desbloquear botón cuando se recibe respuesta
           this.formularioIziPayAbierto = false;
           this.handlePaymentResponse(response);
         },
       });
-    } catch (error) {
-      this.paymentSpinner.hidePaymentSpinner();
-      this.formularioIziPayAbierto = false;
 
-      // Mensaje específico para errores CORS
-      const errorMessage = error?.toString().includes("CORS")
-        ? "Error de CORS detectado. Esto es común en sandbox. El pago puede funcionar normalmente."
-        : "Error al inicializar el formulario de pago";
+      // Scroll to the embedded form after it loads
+      setTimeout(() => {
+        const paymentFormContainer = document.querySelector(
+          ".payment-form-container",
+        );
+        if (paymentFormContainer) {
+          paymentFormContainer.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        }
+      }, 1000);
+    } catch (error) {
+      this.formularioIziPayAbierto = false;
+      this.procesandoPago = false;
+
+      console.error("IziPay Error:", error);
+
+      // Mensaje específico para diferentes tipos de errores
+      let errorMessage = "Error al inicializar el formulario de pago";
+
+      if (error?.toString().includes("CORS")) {
+        errorMessage =
+          "Error de CORS detectado. Esto es común en sandbox. El pago puede funcionar normalmente.";
+      } else if (error?.message?.includes("allowedValues")) {
+        errorMessage =
+          "Error de configuración en el formulario de pago. Contacte soporte técnico.";
+      } else if (error?.message?.includes("Container")) {
+        errorMessage = "Error al cargar el contenedor del formulario de pago.";
+      }
 
       this.showPaymentMessage(errorMessage, "error");
     }
@@ -1306,29 +1120,25 @@ export class RegistroMatriculaComponent implements OnInit {
         OrderNumber: this.currentOrderNumber,
       };
 
+      // Mostrar spinner solo cuando inicia el registro de matrícula
+      this.paymentSpinner.showSpinner("Registrando matrícula...");
+
       // Llamar al endpoint de matrícula
       this.registroService.matricularAlumno(matriculaData).subscribe({
         next: (matriculaResponse: any) => {
-          this.paymentSpinner.hideMatriculationSpinner();
-          this.paymentSpinner.showMatriculationSpinner(
-            "¡Matrícula exitosa! Generando boleta...",
-          );
-
           matriculaResponse.fechaInicio = this.resumen.fechaInicio;
           // Redirigir directamente a la boleta electrónica
-          setTimeout(() => {
-            this.paymentSpinner.hideMatriculationSpinner();
-            this.router.navigate(["/boleta-electronica"], {
-              state: matriculaResponse,
-              replaceUrl: true,
-            });
-            // Limpiar flags después de la navegación
-            this.procesandoMatricula = false;
-            this.currentTransactionId = null;
-          }, 2000);
+          this.paymentSpinner.hideSpinner();
+          this.router.navigate(["/boleta-electronica"], {
+            state: matriculaResponse,
+            replaceUrl: true,
+          });
+          // Limpiar flags después de la navegación
+          this.procesandoMatricula = false;
+          this.currentTransactionId = null;
         },
         error: (matriculaError) => {
-          this.paymentSpinner.hideMatriculationSpinner();
+          this.paymentSpinner.hideSpinner();
 
           // Si el error es por duplicado, no mostrar error severo
           if (
@@ -1339,9 +1149,7 @@ export class RegistroMatriculaComponent implements OnInit {
               "La matrícula ya fue registrada. Redirigiendo...",
               "success",
             );
-            setTimeout(() => {
-              this.router.navigate(["/home"]);
-            }, 2000);
+            this.router.navigate(["/home"]);
           } else {
             this.showPaymentMessage(
               "Error al procesar la matrícula. Contacte soporte.",
@@ -1355,7 +1163,7 @@ export class RegistroMatriculaComponent implements OnInit {
         },
       });
     } else {
-      this.paymentSpinner.hideMatriculationSpinner();
+      this.paymentSpinner.hideSpinner();
       this.showPaymentMessage(
         `Error en el pago: ${response.message || JSON.stringify(response)}`,
         "error",

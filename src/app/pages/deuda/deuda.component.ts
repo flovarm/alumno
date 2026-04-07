@@ -77,7 +77,7 @@ export class DeudaComponent implements OnInit {
     // Pago real
     const transactionId =
       Date.now().toString() + Math.random().toString().substr(2, 5);
-    const orderNumber = this.resumen.idHorario + this.user.userName;
+    const orderNumber =  this.resumen.idHorario + this.user.userName;
     this.registroService
       .obtenerTokenPago(precio, transactionId, orderNumber)
       .subscribe({

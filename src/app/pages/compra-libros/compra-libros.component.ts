@@ -42,7 +42,7 @@ import { environment } from "../../../environments/environment.development";
 
       <!-- Último Registro -->
       @if (ultimoRegistro()) {
-        <mat-card class="ultimo-registro-card" style="margin-bottom: 2rem;">
+        <mat-card class="ultimo-registro-card">
           <mat-card-header>
             <mat-icon mat-card-avatar>history</mat-icon>
             <mat-card-title>Último Registro Académico</mat-card-title>
@@ -288,46 +288,6 @@ import { environment } from "../../../environments/environment.development";
         margin: 0 auto;
       }
 
-      .ultimo-registro-card {
-        background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
-      }
-
-      .ultimo-registro-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1rem;
-      }
-
-      .registro-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
-        background: var(--mat-sys-surface-container-high);
-        border-radius: 12px;
-        border: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      .registro-item mat-icon {
-        color: var(--mat-sys-primary);
-        font-size: 1.5rem;
-      }
-
-      .registro-label {
-        font-size: 0.875rem;
-        color: var(--mat-sys-on-surface-variant);
-        margin-bottom: 0.25rem;
-      }
-
-      .registro-value {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--mat-sys-on-surface);
-      }
-
       .tipo-libro-section {
         background: var(--mat-sys-surface-container);
         border: 1px solid var(--mat-sys-outline-variant);
@@ -524,11 +484,6 @@ import { environment } from "../../../environments/environment.development";
           width: 100% !important;
         }
 
-        .ultimo-registro-grid {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-
         .libros-grid {
           grid-template-columns: 1fr;
           gap: 1rem;
@@ -681,16 +636,30 @@ export class CompraLibrosComponent implements OnInit {
     this.paymentMessage = "";
 
     // Mostrar spinner de pago para libros
-    this.paymentSpinner.showBookPurchaseSpinner(
-      "Iniciando proceso de compra...",
-    );
 
     // Pago real - usar el precio total de todos los libros
     const total = this.getPrecioTotal();
     const transactionId =
       Date.now().toString() + Math.random().toString().substr(2, 5);
-    const orderNumber =
-      this.ultimoRegistro().idRegistro + this.ultimoRegistro().docid;
+
+    // Validar que ultimoRegistro tenga los datos necesarios
+    const registro = this.ultimoRegistro();
+
+    if (!registro) {
+      this.showPaymentMessage(
+        "Error: No se encontró información del registro del alumno",
+        "error",
+      );
+      this.procesandoPago = false;
+      return;
+    }
+
+    // Usar un enfoque más simple como en registro-matrícula
+    // El orderNumber será: período + userName (como backup siempre funcional)
+    const periodoId =
+      this.periodoActual()?.idPeriodo || Date.now().toString().slice(-8);
+    const userDoc = this.user?.userName || "unknown";
+    const orderNumber = `LIB${periodoId}${userDoc}`;
 
     this.registroService
       .obtenerTokenPago(total, transactionId, orderNumber)
@@ -704,13 +673,11 @@ export class CompraLibrosComponent implements OnInit {
               orderNumber,
             );
           } else {
-            this.paymentSpinner.hideBookPurchaseSpinner();
             this.showPaymentMessage("Error al obtener token de pago", "error");
           }
           this.procesandoPago = false;
         },
         error: (err) => {
-          this.paymentSpinner.hideBookPurchaseSpinner();
           this.showPaymentMessage("Error al procesar el pago", "error");
           this.procesandoPago = false;
         },
@@ -807,7 +774,6 @@ export class CompraLibrosComponent implements OnInit {
         render: {
           typeForm: (window as any).Izipay.enums.typeForm.POP_UP,
           container: "#iframeContainer",
-          showButtonProcessForm: false,
         },
         appearance: {
           logo: "https://elcultural.edu.pe/images/asset6.png",
@@ -819,10 +785,6 @@ export class CompraLibrosComponent implements OnInit {
       const checkout = new (window as any).Izipay(iziConfig);
 
       // Ocultar spinner de carga y mostrar spinner de pago
-      this.paymentSpinner.hideBookPurchaseSpinner();
-      this.paymentSpinner.showBookPurchaseSpinner(
-        "Completa tu pago en la ventana emergente...",
-      );
 
       this.formularioIziPayAbierto = true;
 
@@ -830,17 +792,10 @@ export class CompraLibrosComponent implements OnInit {
         authorization: tokenResponse.response.token,
         keyRSA: "RSA",
         callbackResponse: (response: any) => {
-          // Mostrar spinner de procesamiento
-          this.paymentSpinner.hideBookPurchaseSpinner();
-          this.paymentSpinner.showBookPurchaseSpinner(
-            "Procesando compra de libros...",
-          );
-
           this.formularioIziPayAbierto = false;
           this.handlePaymentResponse(response);
         },
         callbackError: (error: any) => {
-          this.paymentSpinner.hideBookPurchaseSpinner();
           this.formularioIziPayAbierto = false;
           this.showPaymentMessage(
             "Error en el procesamiento del pago. La pasarela de pagos no está disponible temporalmente.",
@@ -852,7 +807,6 @@ export class CompraLibrosComponent implements OnInit {
       // Timeout para cerrar el formulario si no hay respuesta en 5 minutos
       setTimeout(() => {
         if (this.formularioIziPayAbierto) {
-          this.paymentSpinner.hideBookPurchaseSpinner();
           this.formularioIziPayAbierto = false;
           this.showPaymentMessage(
             "El tiempo de espera para el pago ha expirado. Por favor, intente nuevamente.",
@@ -861,7 +815,6 @@ export class CompraLibrosComponent implements OnInit {
         }
       }, 300000); // 5 minutos
     } catch (error) {
-      this.paymentSpinner.hideBookPurchaseSpinner();
       this.formularioIziPayAbierto = false;
       this.showPaymentMessage(
         "Error al inicializar el formulario de pago",
@@ -873,7 +826,6 @@ export class CompraLibrosComponent implements OnInit {
   private handlePaymentResponse(response: any): void {
     // Validar si la respuesta es válida
     if (!response || typeof response !== "object") {
-      this.paymentSpinner.hideBookPurchaseSpinner();
       this.showPaymentMessage(
         "Error: Respuesta inválida del sistema de pagos. Por favor, contacte soporte.",
         "error",
@@ -893,13 +845,13 @@ export class CompraLibrosComponent implements OnInit {
       response.code === "504" ||
       response.message?.includes("timeout")
     ) {
-      this.paymentSpinner.hideBookPurchaseSpinner();
+      this.paymentSpinner.hideSpinner();
       this.showPaymentMessage(
         "La pasarela de pagos no está respondiendo. Por favor, intente nuevamente en unos minutos.",
         "error",
       );
     } else {
-      this.paymentSpinner.hideBookPurchaseSpinner();
+      this.paymentSpinner.hideSpinner();
       const errorMessage =
         response.message ||
         response.error ||
@@ -909,12 +861,6 @@ export class CompraLibrosComponent implements OnInit {
   }
 
   private registrarCompraLibros(paymentResponse: any): void {
-    // Cambiar mensaje del spinner
-    this.paymentSpinner.hideBookPurchaseSpinner();
-    this.paymentSpinner.showBookPurchaseSpinner(
-      "Registrando compra de libros...",
-    );
-
     const registro = this.ultimoRegistro();
     const libros = this.getLibrosSeleccionados();
 
@@ -945,24 +891,22 @@ export class CompraLibrosComponent implements OnInit {
       estadoe: "P",
     };
 
+    // Mostrar spinner solo cuando inicia el registro de compra
+    this.paymentSpinner.showSpinner("Registrando compra...");
+
     // Enviar una sola petición con todos los libros
     this.libroService.registrarLibro(compraLibrosDto).subscribe({
       next: (boletaData: any) => {
-        this.paymentSpinner.hideBookPurchaseSpinner();
-        this.paymentSpinner.showBookPurchaseSpinner(
-          "¡Compra exitosa! Generando boleta...",
-        );
-
         setTimeout(() => {
-          this.paymentSpinner.hideBookPurchaseSpinner();
+          this.paymentSpinner.hideSpinner();
           this.router.navigate(["/boleta-electronica"], {
             state: boletaData,
             replaceUrl: false,
           });
-        }, 2000);
+        }, 500);
       },
       error: (error) => {
-        this.paymentSpinner.hideBookPurchaseSpinner();
+        this.paymentSpinner.hideSpinner();
         this.showPaymentMessage(
           "Pago exitoso, pero hubo un error al registrar la compra. Contacte soporte.",
           "error",

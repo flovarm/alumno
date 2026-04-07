@@ -8,6 +8,7 @@ import { CommonModule } from "@angular/common";
 import { MatIconModule } from "@angular/material/icon";
 import { MatDivider, MatDividerModule } from "@angular/material/divider";
 import { MatButtonModule } from "@angular/material/button";
+import { MatListModule } from "@angular/material/list";
 import { AlumnoService } from "../../services/alumno.service";
 
 @Component({
@@ -20,23 +21,44 @@ import { AlumnoService } from "../../services/alumno.service";
     MatDivider,
     MatButtonModule,
     MatDividerModule,
+    MatListModule,
   ],
   template: `
-    <h3 mat-dialog-title class="nota-vertical-title text-center">
-      <!-- <div class="nota-vertical-title text-center mb-2">
-      {{ data?.element?.completo | titlecase }}
-    </div> -->
-    {{ data?.element?.descripcion || "" }}
-    @if (data?.element?.nombre) {
-      <span> - {{ data?.element?.nombre }}</span>
-    }
-    @if (data?.element?.nombreAula) {
-      <span>
-        - {{ data?.element?.nombreAula }} -
-        {{ data?.element?.nombreCompleto }}</span
-        >
-      }
-    </h3>
+    <div mat-dialog-title class="dialog-header">
+      <mat-list class="detalle-list">
+        <mat-list-item class="full-row">
+          <mat-icon matListItemIcon>person</mat-icon>
+          <span matListItemTitle>Alumno</span>
+          <span matListItemLine>{{ data?.element?.completo | titlecase }}</span>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-icon matListItemIcon>description</mat-icon>
+          <span matListItemTitle>Curso</span>
+          <span matListItemLine>{{ data?.element?.descripcion || "" }}</span>
+        </mat-list-item>
+        @if (data?.element?.nombre) {
+          <mat-list-item>
+            <mat-icon matListItemIcon>schedule</mat-icon>
+            <span matListItemTitle>Turno</span>
+            <span matListItemLine>{{ data?.element?.nombre }}</span>
+          </mat-list-item>
+        }
+        @if (data?.element?.nombreAula) {
+          <mat-list-item>
+            <mat-icon matListItemIcon>meeting_room</mat-icon>
+            <span matListItemTitle>Aula</span>
+            <span matListItemLine>{{ data?.element?.nombreAula }}</span>
+          </mat-list-item>
+        }
+        @if (data?.element?.nombreCompleto) {
+          <mat-list-item>
+            <mat-icon matListItemIcon>school</mat-icon>
+            <span matListItemTitle>Profesor</span>
+            <span matListItemLine>{{ data?.element?.nombreCompleto }}</span>
+          </mat-list-item>
+        }
+      </mat-list>
+    </div>
     <mat-dialog-content>
       @if (dataSource().length > 0) {
         <div class="notas-asistencia-row">
@@ -196,6 +218,7 @@ import { AlumnoService } from "../../services/alumno.service";
         border-radius: 8px;
         margin-bottom: 1.5rem;
         padding: 1rem;
+        
       }
       .nota-vertical-header {
         margin-bottom: 0.5rem;
@@ -205,6 +228,31 @@ import { AlumnoService } from "../../services/alumno.service";
       .nota-vertical-title {
         color: var(--mat-sys-primary);
         font-weight: 900;
+      }
+      .dialog-header {
+        margin-top: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0.25rem;
+      }
+      .detalle-list {
+        padding-top: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.25rem 0.75rem;
+      }
+      .full-row {
+        grid-column: 1 / -1;
+      }
+      .detalle-list mat-list-item {
+        border-radius: 8px;
+        background: var(--mat-sys-surface-container);
+      }
+      .detalle-list [matListItemTitle] {
+        color: var(--mat-sys-primary);
+        font-weight: 800;
+      }
+      .detalle-list mat-icon[matListItemIcon] {
+        color: var(--mat-sys-primary);
       }
       .nota-vertical-index {
         color: var(--mat-sys-on-surface-variant);
@@ -249,6 +297,9 @@ import { AlumnoService } from "../../services/alumno.service";
       }
 
       @media (max-width: 900px) {
+        .detalle-list {
+          grid-template-columns: 1fr;
+        }
         .notas-asistencia-row {
           flex-direction: column;
           gap: 1rem;

@@ -89,7 +89,6 @@ export class AuthService {
       .post<AuthResponseDto>(`${this.apiUrl}/login-alumno`, loginData)
       .pipe(
         tap((response) => {
-          console.log("Login exitoso:", response);
           this.setAuthData(response);
         }),
         catchError(this.handleError.bind(this)),

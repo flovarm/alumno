@@ -1,13 +1,14 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-detalle-horario',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, MatCardModule, MatListModule, MatButtonModule],
   template: `
     <div class="detalle-container">
       <mat-card>
@@ -15,30 +16,44 @@ import { MatButtonModule } from '@angular/material/button';
           <mat-card-title>Detalle del Horario Seleccionado</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <div class="info-row">
-            <strong>Curso:</strong> {{ horario?.nombreCurso }}
-          </div>
-          <div class="info-row">
-            <strong>Profesor:</strong> {{ horario?.nombreProfesor }}
-          </div>
-          <div class="info-row">
-            <strong>Turno:</strong> {{ horario?.turno }}
-          </div>
-          <div class="info-row">
-            <strong>Modalidad:</strong> {{ horario?.modalidad }}
-          </div>
-          <div class="info-row">
-            <strong>Aula:</strong> {{ horario?.nombreAula }}
-          </div>
-          <div class="info-row">
-            <strong>Fecha Inicio:</strong> {{ horario?.fechaInicio | date:'shortDate' }}
-          </div>
-          <div class="info-row">
-            <strong>Fecha Fin:</strong> {{ horario?.fechaFin | date:'shortDate' }}
-          </div>
-          <div class="info-row">
-            <strong>Pago:</strong> S/ {{ pago() }}
-          </div>
+          <mat-list>
+            <mat-list-item>
+              <span matListItemTitle>Alumno</span>
+              <span matListItemLine>{{ nombreAlumno() }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Curso</span>
+              <span matListItemLine>{{ horario?.nombreCurso }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Profesor</span>
+              <span matListItemLine>{{ horario?.nombreProfesor }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Turno</span>
+              <span matListItemLine>{{ horario?.turno }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Modalidad</span>
+              <span matListItemLine>{{ horario?.modalidad }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Aula</span>
+              <span matListItemLine>{{ horario?.nombreAula }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Fecha Inicio</span>
+              <span matListItemLine>{{ horario?.fechaInicio | date:'shortDate' }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Fecha Fin</span>
+              <span matListItemLine>{{ horario?.fechaFin | date:'shortDate' }}</span>
+            </mat-list-item>
+            <mat-list-item>
+              <span matListItemTitle>Pago</span>
+              <span matListItemLine>S/ {{ pago() }}</span>
+            </mat-list-item>
+          </mat-list>
         </mat-card-content>
         <mat-card-actions>
           <button mat-raised-button color="primary">Realizar Pago</button>
@@ -59,12 +74,19 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class DetalleHorarioComponent implements OnInit {
   @Input() horario: any;
+  private readonly authService = inject(AuthService);
   pago = signal<number>(0);
+  readonly nombreAlumno = signal('');
 
   ngOnInit() {
-    // Simulación de obtención de pago (puedes reemplazar por llamada a servicio)
+    this.nombreAlumno.set(
+      this.authService.currentUser()?.nombreCompleto ||
+      this.horario?.nombreAlumno ||
+      this.horario?.alumno ||
+      'Alumno no disponible'
+    );
+
     if (this.horario) {
-      // Ejemplo: pago depende de modalidad
       this.pago.set(this.horario.modalidad === 'Presencial' ? 350 : 250);
     }
   }

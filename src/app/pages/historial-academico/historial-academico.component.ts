@@ -21,9 +21,9 @@ import { MatInputModule } from "@angular/material/input";
 import { NotasDetalleDialogComponent } from "./detalle-Historial.component";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import { ClipboardModule } from '@angular/cdk/clipboard';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { Clipboard } from '@angular/cdk/clipboard';
+import { ClipboardModule } from "@angular/cdk/clipboard";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { Clipboard } from "@angular/cdk/clipboard";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Component as NgComponent, Inject } from "@angular/core";
@@ -46,6 +46,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
     PageHeaderComponent,
     MatDialogModule,
     MatSnackBarModule,
+    MatTooltipModule,
   ],
   templateUrl: "./historial-academico.component.html",
   styleUrls: ["./historial-academico.component.scss"],
@@ -158,10 +159,10 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
 
   abrirModalCodigoPlataforma(element: any): void {
     const idHorario = element.idHorario ?? element.IdHorario;
-    
+
     if (!idHorario) {
-      this.snackBar.open('No se encontró el ID del horario', 'Cerrar', {
-        duration: 3000
+      this.snackBar.open("No se encontró el ID del horario", "Cerrar", {
+        duration: 3000,
       });
       return;
     }
@@ -171,20 +172,24 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
         if (codigo && codigo.codigo) {
           // Crear un diálogo simple para mostrar el código
           const dialogRef = this.dialog.open(CodigoPlataformaDialogComponent, {
-            width: '400px',
-            height: 'auto',
+            width: "400px",
+            height: "auto",
             data: {
               codigo: codigo.codigo,
               codigoTeacher: codigo.codigoTeacher,
-              curso: element.descripcion || 'Curso'
-            }
+              curso: element.descripcion || "Curso",
+            },
           });
         } else {
-          this.snackBar.open('No se encontró código de plataforma para este horario', 'Cerrar', {
-            duration: 3000
-          });
+          this.snackBar.open(
+            "No se encontró código de plataforma para este horario",
+            "Cerrar",
+            {
+              duration: 3000,
+            },
+          );
         }
-      }
+      },
     });
   }
   // Getter para obtener el alumno actual
@@ -301,7 +306,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
 
 // Componente de diálogo para mostrar el código de plataforma
 @NgComponent({
-  selector: 'app-codigo-plataforma-dialog',
+  selector: "app-codigo-plataforma-dialog",
   standalone: true,
   imports: [
     CommonModule,
@@ -311,7 +316,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
     MatCardModule,
     MatSnackBarModule,
     ClipboardModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   template: `
     <div class="dialog-container">
@@ -319,7 +324,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
         <mat-icon>code</mat-icon>
         Código de Plataforma
       </h2>
-      
+
       <div mat-dialog-content class="dialog-content">
         <mat-card class="info-card">
           <mat-card-header>
@@ -329,7 +334,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
             <div class="codigo-section">
               <div class="codigo-container">
                 <div class="codigo-value">{{data.codigo}}</div>
-                <button mat-icon-button 
+                <button mat-icon-button
                         (click)="copiarCodigo(data.codigo)"
                         matTooltip="Copiar código"
                         class="copy-button">
@@ -340,7 +345,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
           </mat-card-content>
         </mat-card>
       </div>
-      
+
       <div mat-dialog-actions class="dialog-actions">
         <button mat-button (click)="cerrar()" color="primary">
           <mat-icon>close</mat-icon>
@@ -349,11 +354,12 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
       </div>
     </div>
   `,
-  styles: [`
+  styles: [
+    `
     .dialog-container {
       padding: 10px;
     }
-    
+
     .dialog-title {
       display: flex;
       align-items: center;
@@ -361,31 +367,31 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
       color: var(--mat-sys-primary);
       margin-bottom: 10px;
     }
-    
+
     .dialog-content {
       min-height: 100px;
     }
-    
+
     .info-card {
       margin-bottom: 16px;
     }
-    
+
     .codigo-section {
       margin-bottom: 16px;
     }
-    
+
     .codigo-section h4 {
       color: var(--mat-sys-primary);
       margin: 0 0 8px 0;
       font-weight: 600;
     }
-    
+
     .codigo-container {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    
+
     .codigo-value {
       background: var(--mat-sys-container);
       padding: 12px;
@@ -397,27 +403,28 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
       border-left: 4px solid var(--mat-sys-secondary);
       flex: 1;
     }
-    
+
     .copy-button {
       background: var(--mat-sys-primary);
       color: white;
       min-width: 40px;
       height: 40px;
     }
-    
+
     .copy-button:hover {
       background: var(--mat-sys-primary-container);
     }
-    
+
     .dialog-actions {
       justify-content: flex-end;
       padding-top: 20px;
     }
-    
+
     .dialog-actions button {
       margin-left: 10px;
     }
-  `]
+  `,
+  ],
 })
 export class CodigoPlataformaDialogComponent {
   private clipboard = inject(Clipboard);
@@ -425,19 +432,19 @@ export class CodigoPlataformaDialogComponent {
 
   constructor(
     public dialogRef: MatDialogRef<CodigoPlataformaDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
   ) {}
 
   copiarCodigo(codigo: string): void {
     if (this.clipboard.copy(codigo)) {
-      this.snackBar.open('Código copiado al portapapeles', 'Cerrar', {
+      this.snackBar.open("Código copiado al portapapeles", "Cerrar", {
         duration: 2000,
-        panelClass: ['success-snackbar']
+        panelClass: ["success-snackbar"],
       });
     } else {
-      this.snackBar.open('Error al copiar el código', 'Cerrar', {
+      this.snackBar.open("Error al copiar el código", "Cerrar", {
         duration: 3000,
-        panelClass: ['error-snackbar']
+        panelClass: ["error-snackbar"],
       });
     }
   }
