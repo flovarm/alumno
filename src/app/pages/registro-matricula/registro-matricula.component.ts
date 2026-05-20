@@ -158,7 +158,7 @@ import { PostulanteService } from "../../_services/postulante.service";
 
       @if (examenCalificacion()?.idCurso) {
         <div class="curso-calificacion">
-          Cargando Horarios según examen de clasificación 
+          Cargando Horarios según examen de clasificación
         </div>
       }
 
@@ -419,17 +419,23 @@ import { PostulanteService } from "../../_services/postulante.service";
                             <mat-icon color="primary">security</mat-icon>
                             <span>Formulario seguro procesado por IziPay</span>
                           </div>
-                          <!-- Container para el formulario de IziPay -->
-                          <div id="iframeContainer"></div>
 
-                          <!-- Mensaje importante debajo del formulario -->
-                          <div class="payment-footer-messages">
-                            <div class="importante">
-                              <mat-icon>warning</mat-icon>
-                              No cierre está página hasta que se genere su
-                              comprobante de pago!
+                          <!-- Mensaje importante arriba del formulario -->
+                          <div class="important-warning-card-izipay">
+                            <div class="warning-content-izipay">
+                              <mat-icon class="warning-icon-izipay"
+                                >warning</mat-icon
+                              >
+                              <div class="warning-text-izipay">
+                                <strong>¡IMPORTANTE!</strong> No cerrar esta
+                                ventana hasta que se genere el comprobante de
+                                pago
+                              </div>
                             </div>
                           </div>
+
+                          <!-- Container para el formulario de IziPay -->
+                          <div id="iframeContainer"></div>
                         }
                       </mat-card-content>
                     </mat-card>
@@ -550,7 +556,9 @@ export class RegistroMatriculaComponent implements OnInit {
 
   ngOnInit() {
     // Verificar si viene de un retorno de pago
-    this.verificarRetornoDePago();
+    // this.verificarRetornoDePago();
+    // Verificar si hay una matrícula pendiente por cierre de página durante el pago
+    this.verificarMatriculaPendiente();
 
     // Configurar filtro personalizado para buscar en múltiples campos
     this.horarios.filterPredicate = (data: any, filter: string) => {
@@ -590,7 +598,10 @@ export class RegistroMatriculaComponent implements OnInit {
           const idCursoExamen = examen?.idCurso;
           let idCursoSeleccionado: number | undefined;
 
-          if (typeof idCursoExamen === "number" && typeof idUltimoCurso === "number") {
+          if (
+            typeof idCursoExamen === "number" &&
+            typeof idUltimoCurso === "number"
+          ) {
             idCursoSeleccionado = Math.max(idCursoExamen, idUltimoCurso);
           } else {
             idCursoSeleccionado = idCursoExamen ?? idUltimoCurso;
@@ -606,65 +617,127 @@ export class RegistroMatriculaComponent implements OnInit {
           }
         });
     });
-
   }
-
 
   obtenerDatosPostulante() {
-     this.postulanteService.getByNumeroDocumento(this.user.userName).subscribe({
-              next: (postulante: any) => {
-                console.log("Datos del postulante:", postulante);
-                if (postulante && postulante.cursoSeleccionado) {
-                  this.cargarHorariosPorUltimoRegistro(postulante.cursoSeleccionado, this.periodoActual().idPeriodo);
-                } 
-              }
-            }); 
+    this.postulanteService.getByNumeroDocumento(this.user.userName).subscribe({
+      next: (postulante: any) => {
+        console.log("Datos del postulante:", postulante);
+        if (postulante && postulante.cursoSeleccionado) {
+          this.cargarHorariosPorUltimoRegistro(
+            postulante.cursoSeleccionado,
+            this.periodoActual().idPeriodo,
+          );
+        }
+      },
+    });
   }
 
-  private verificarRetornoDePago() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get("payment");
-    const transactionId = urlParams.get("transactionId");
+  private verificarMatriculaPendiente() {
+    const pendienteStr = localStorage.getItem("matricula_pendiente");
+    if (!pendienteStr) return;
 
-    if (paymentStatus && transactionId) {
-      if (paymentStatus === "success") {
-        // Verificar el estado del pago en el servidor
-        this.registroService.verificarEstadoPago(transactionId).subscribe({
-          next: (response: any) => {
-            if (response.success) {
-              this.showPaymentMessage(
-                "¡Pago procesado exitosamente! Tu matrícula se ha completado.",
-                "success",
-              );
-              // Limpiar parámetros de URL
-              this.limpiarParametrosURL();
-              // Recargar datos inmediatamente
-              window.location.reload();
-            } else {
-              this.showPaymentMessage(
-                "El pago está siendo procesado. Te notificaremos cuando se complete.",
-                "error",
-              );
-              this.limpiarParametrosURL();
-            }
-          },
-          error: (err) => {
-            this.showPaymentMessage(
-              "Error verificando el estado del pago. Contacta al soporte.",
-              "error",
-            );
-            this.limpiarParametrosURL();
-          },
-        });
-      } else if (paymentStatus === "error") {
-        this.showPaymentMessage(
-          "El pago no se pudo completar. Por favor, inténtalo nuevamente.",
-          "error",
-        );
-        this.limpiarParametrosURL();
-      }
+    let pendiente: any;
+    try {
+      pendiente = JSON.parse(pendienteStr);
+    } catch {
+      localStorage.removeItem("matricula_pendiente");
+      return;
     }
+
+    // Ignorar si tiene más de 24 horas (transacción expirada)
+    const veinticuatroHoras = 24 * 60 * 60 * 1000;
+    if (Date.now() - pendiente.timestamp > veinticuatroHoras) {
+      localStorage.removeItem("matricula_pendiente");
+      return;
+    }
+
+    // Verificar si el pago fue aprobado en el backend (vía webhook IPN de IziPay)
+    // this.registroService.verificarEstadoPago(pendiente.transactionId).subscribe({
+    //   next: (response: any) => {
+    //     if (response.success) {
+    //       // El webhook ya procesó el pago y registró la matrícula
+    //       localStorage.removeItem('matricula_pendiente');
+    //       this.showPaymentMessage(
+    //         '¡Tu matrícula fue registrada exitosamente!',
+    //         'success',
+    //       );
+    //       setTimeout(() => this.router.navigate(['/home']), 2000);
+    //     } else if (response.paymentApproved) {
+    //       // El pago fue aprobado pero la matrícula no se registró → completar ahora
+    //       this.procesandoMatricula = true;
+    //       this.paymentSpinner.showSpinner('Completando matrícula...');
+    //       this.registroService.matricularAlumno(pendiente.matriculaData).subscribe({
+    //         next: (matriculaResponse: any) => {
+    //           localStorage.removeItem('matricula_pendiente');
+    //           this.paymentSpinner.hideSpinner();
+    //           this.procesandoMatricula = false;
+    //           this.showPaymentMessage('¡Matrícula completada exitosamente!', 'success');
+    //           setTimeout(() => this.router.navigate(['/home']), 2000);
+    //         },
+    //         error: (err) => {
+    //           this.paymentSpinner.hideSpinner();
+    //           this.procesandoMatricula = false;
+    //           if (err.status === 409 || err.error?.message?.includes('ya existe')) {
+    //             localStorage.removeItem('matricula_pendiente');
+    //             this.showPaymentMessage('Tu matrícula ya fue registrada.', 'success');
+    //             setTimeout(() => this.router.navigate(['/home']), 2000);
+    //           }
+    //         },
+    //       });
+    //     }
+    //     // Si no fue aprobado aún, no hacemos nada (puede que el alumno no pagó)
+    //   },
+    //   error: () => {
+    //     // No se pudo verificar, ignorar silenciosamente
+    //   },
+    // });
   }
+
+  // private verificarRetornoDePago() {
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const paymentStatus = urlParams.get("payment");
+  //   const transactionId = urlParams.get("transactionId");
+
+  //   if (paymentStatus && transactionId) {
+  //     if (paymentStatus === "success") {
+  //       // Verificar el estado del pago en el servidor
+  //       this.registroService.verificarEstadoPago(transactionId).subscribe({
+  //         next: (response: any) => {
+  //           if (response.success) {
+  //             this.showPaymentMessage(
+  //               "¡Pago procesado exitosamente! Tu matrícula se ha completado.",
+  //               "success",
+  //             );
+  //             // Limpiar parámetros de URL
+  //             this.limpiarParametrosURL();
+  //             // Recargar datos inmediatamente
+  //             window.location.reload();
+  //           } else {
+  //             this.showPaymentMessage(
+  //               "El pago está siendo procesado. Te notificaremos cuando se complete.",
+  //               "error",
+  //             );
+  //             this.limpiarParametrosURL();
+  //           }
+  //         },
+  //         error: (err) => {
+  //           this.showPaymentMessage(
+  //             "Error verificando el estado del pago. Contacta al soporte.",
+  //             "error",
+  //           );
+  //           this.limpiarParametrosURL();
+  //         },
+  //       });
+  //     } else if (paymentStatus === "error") {
+  //       this.showPaymentMessage(
+  //         "El pago no se pudo completar. Por favor, inténtalo nuevamente.",
+  //         "error",
+  //       );
+  //       this.limpiarParametrosURL();
+  //     }
+  //   }
+  // }
 
   private limpiarParametrosURL() {
     // Limpiar parámetros de URL sin recargar la página
@@ -815,6 +888,16 @@ export class RegistroMatriculaComponent implements OnInit {
       .guardarMatriculaPendiente(transactionId, orderNumber, matriculaData)
       .subscribe({
         next: () => {
+          // Guardar en localStorage para recuperar si el alumno cierra la página
+          localStorage.setItem(
+            "matricula_pendiente",
+            JSON.stringify({
+              transactionId,
+              orderNumber,
+              matriculaData,
+              timestamp: Date.now(),
+            }),
+          );
           // Luego obtener el token de pago
           this.registroService
             .obtenerTokenPago(precio, transactionId, orderNumber)
@@ -981,6 +1064,14 @@ export class RegistroMatriculaComponent implements OnInit {
       throw new Error("Container #iframeContainer not found after waiting");
     }
 
+    const webhookNotificationUrl =
+      (environment as any).izipay?.ipnUrl ||
+      `${(environment as any).webhookUrl}registro/webhook/izipay`;
+    const successUrl = `${window.location.origin}/pago-exitoso`;
+    const errorUrl = `${window.location.origin}/registro-matricula?payment=error`;
+    const cancelUrl = `${window.location.origin}/registro-matricula?payment=cancel`;
+
+    console.log("Using webhook notification URL:", webhookNotificationUrl);
     const iziConfig = {
       config: {
         transactionId: transactionId,
@@ -988,8 +1079,11 @@ export class RegistroMatriculaComponent implements OnInit {
         merchantCode: environment.izipay.merchantCode,
         order: {
           orderNumber: orderNumber,
+          showAmount: true,
           currency: "PEN",
           amount: amount.toFixed(2),
+          payMethod: "all",
+          channel: "web",
           processType: "AT",
           merchantBuyerId: this.user?.userName || "12345678",
           dateTimeTransaction: dateTimeTransaction,
@@ -1008,15 +1102,70 @@ export class RegistroMatriculaComponent implements OnInit {
           documentType:
             this.user?.userName && this.user.userName.length > 8 ? "CE" : "DNI",
         },
+        shipping: {
+          firstName: "",
+          lastName: "",
+          email: "",
+          phoneNumber: "",
+          street: "",
+          city: "",
+          state: "",
+          country: "",
+          postalCode: "",
+          document: "",
+          documentType: "",
+        },
+        language: {
+          init: "ESP",
+          showControlMultiLang: false,
+        },
         render: {
           typeForm: "embedded",
           container: "#iframeContainer",
           showButtonProcessForm: true,
+          autoResize: false,
+          layout: "tabs",
+          redirectUrls: {
+            onSuccess: successUrl,
+            onError: errorUrl,
+            onCancel: cancelUrl,
+          },
         },
+        urlRedirect: successUrl,
+        urlIPN: webhookNotificationUrl,
         appearance: {
+          styleInput: "normal",
           logo: "https://elcultural.edu.pe/images/asset6.png",
+          theme: "green",
+          customize: {
+            visibility: {
+              hideOrderNumber: false,
+              hideResultScreen: false,
+              hideLogo: false,
+              hideMessageActivateOnlinePurchases: false,
+              hideTestCards: false,
+              hideShakeValidation: false,
+              hideGlobalErrors: false,
+            },
+            elements: [
+              {
+                paymentMethod: "CARD",
+                order: 1,
+                fields: [
+                  {
+                    name: "cardNumber",
+                    order: 1,
+                    visible: true,
+                    groupName: "",
+                  },
+                ],
+                changeButtonText: {
+                  actionPay: "Pagar",
+                },
+              },
+            ],
+          },
         },
-        urlIPN: (environment as any).webhookUrl + "Registro/webhook/izipay",
       },
     };
 
@@ -1042,6 +1191,16 @@ export class RegistroMatriculaComponent implements OnInit {
           // Desbloquear botón cuando se recibe respuesta
           this.formularioIziPayAbierto = false;
           this.handlePaymentResponse(response);
+        },
+        callbackError: (error: any) => {
+          this.formularioIziPayAbierto = false;
+          this.procesandoPago = false;
+          this.paymentSpinner.hideSpinner();
+          console.error("IziPay callbackError:", error);
+          this.showPaymentMessage(
+            "No se pudo completar la comunicación con la pasarela. Inténtelo nuevamente.",
+            "error",
+          );
         },
       });
 
@@ -1126,7 +1285,9 @@ export class RegistroMatriculaComponent implements OnInit {
       // Llamar al endpoint de matrícula
       this.registroService.matricularAlumno(matriculaData).subscribe({
         next: (matriculaResponse: any) => {
-          matriculaResponse.fechaInicio = this.resumen.fechaInicio;
+          matriculaResponse.fechaInicio = this.resumen?.fechaInicio;
+          // Limpiar transacción pendiente del localStorage
+          localStorage.removeItem("matricula_pendiente");
           // Redirigir directamente a la boleta electrónica
           this.paymentSpinner.hideSpinner();
           this.router.navigate(["/boleta-electronica"], {
@@ -1145,6 +1306,7 @@ export class RegistroMatriculaComponent implements OnInit {
             matriculaError.status === 409 ||
             matriculaError.error?.message?.includes("ya existe")
           ) {
+            localStorage.removeItem("matricula_pendiente");
             this.showPaymentMessage(
               "La matrícula ya fue registrada. Redirigiendo...",
               "success",

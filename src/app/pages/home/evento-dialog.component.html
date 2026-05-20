@@ -1,0 +1,75 @@
+<div class="evento-dialog">
+  <!-- Header del dialog -->
+  <div mat-dialog-title class="dialog-header d-flex justify-content-between align-items-center">
+    <h2 class="mb-0">{{ evento.titulo | titlecase }}</h2>
+    <button mat-icon-button (click)="cerrarDialog()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+
+  <!-- Contenido del dialog -->
+  <div mat-dialog-content class="dialog-content">
+    <!-- Imagen del evento -->
+    @if (evento.imgPortada) {
+      <div class="evento-imagen mb-3">
+        <img [src]="evento.imgPortada" [alt]="evento.titulo" class="img-fluid rounded w-100" style="max-height: auto; object-fit: cover;">
+      </div>
+    }
+
+    <!-- Si no hay imagen, mostrar un placeholder -->
+    @if (!evento.imgPortada) {
+      <div class="evento-imagen-placeholder mb-3 d-flex align-items-center justify-content-center">
+        <mat-icon style="font-size: 48px; ">event</mat-icon>
+      </div>
+    }
+
+    <!-- Información del evento -->
+    <mat-card class="evento-info-card">
+      <mat-card-content>
+        <!-- Fecha y hora -->
+        <div class="fecha-hora mb-3">
+          <div class="d-flex align-items-center mb-2">
+            <mat-icon class="me-2" style="color: var(--mat-sys-primary);">calendar_today</mat-icon>
+            <strong>Fecha:</strong>
+            <span class="ms-2">{{ evento.fechaEvento | date:'EEEE, d MMMM y' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <mat-icon class="me-2" style="color: var(--mat-sys-primary);">schedule</mat-icon>
+            <strong>Hora:</strong>
+            <span class="ms-2">{{ evento.fechaEvento | date:'h:mm a' }}</span>
+          </div>
+        </div>
+
+        <mat-divider class="my-3"></mat-divider>
+
+        <!-- Descripción -->
+        <div class="descripcion">
+          <div class="d-flex align-items-start mb-2">
+            <mat-icon class="me-2 mt-1" style="color: var(--mat-sys-primary);">description</mat-icon>
+            <div>
+              <strong>Descripción:</strong>
+              @if (evento.descripcion) {
+                <div class="mt-2 mb-0" [innerHTML]="evento.descripcion"></div>
+              } @else {
+                <p class="mt-2 mb-0 text-muted">No hay descripción disponible para este evento.</p>
+              }
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Botones de acción -->
+  <div mat-dialog-actions class="d-flex justify-content-end gap-2 pt-3">
+    <button mat-button (click)="cerrarDialog()" class="btn-cerrar">
+      <mat-icon class="me-1">close</mat-icon>
+      Cerrar
+    </button>
+    <!-- <button mat-flat-button color="primary" (click)="registrarAsistencia()" class="btn-asistencia">
+      <mat-icon class="me-1">check_circle</mat-icon>
+      Registrar Asistencia
+    </button> -->
+  </div>
+</div>

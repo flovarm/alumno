@@ -21,8 +21,18 @@ import { TeamsDialogComponent } from "../../components/teams-dialog/teams-dialog
 import { GmailDialogComponent } from "../../components/gmail-dialog/gmail-dialog.component";
 import { AlumnoService } from "../../services/alumno.service";
 import { SnackService } from "../../services/snack.service";
+import { UbigeoService } from "../../services/ubigeo.service";
 import { MatTabsModule } from "@angular/material/tabs";
-import { MatNoDataRow } from "@angular/material/table";
+import { MatSelectModule } from "@angular/material/select";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDividerModule } from "@angular/material/divider";
+import {
+  UbigeoDepartment,
+  UbigeoProvince,
+  UbigeoDistrict,
+} from "../../models/ubigeo";
+import { EventoService } from "../../services/evento.service";
+import { EventoDialogComponent } from "./evento-dialog.component";
 @Component({
   selector: "app-home",
   standalone: true,
@@ -39,6 +49,9 @@ import { MatNoDataRow } from "@angular/material/table";
     PageHeaderComponent,
     CommonModule,
     MatTabsModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatDividerModule,
   ],
   templateUrl: "./home.component.html",
   styleUrl: "./home.component.scss",
@@ -48,7 +61,9 @@ export class HomeComponent implements OnInit {
   private snack = inject(SnackService);
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
-
+  private ubigeoService = inject(UbigeoService);
+  eventos: any[] = [];
+  private eventoService = inject(EventoService);
   // Patrón simple para celular peruano según tu requerimiento:
   // - Prefijo opcional: '+51' o '51' (el '+' es opcional)
   // - Luego debe empezar con '9' y tener 9 dígitos en total (ej.: 987654321, 51987654321, +51987654321)
@@ -61,20 +76,36 @@ export class HomeComponent implements OnInit {
     completo: [""],
     codigo: [""],
     docid: ["", Validators.required],
-    direccion: [""],
+    direccion: ["", Validators.required],
     email: ["", [Validators.email, Validators.required]],
     fechanac: [""],
     sexo: [""],
-    seguro: [""],
+    seguro: ["", Validators.required],
+    brazoDominante: ["", Validators.required],
+    tipodoc: [""],
+    persona: [""], // Campo administrativo, no editable por usuario
+    alergia: [""],
+    id_teams: [""], // Campo administrativo, no editable por usuario
+    departamento: [""],
+    provincia: [""],
+    distrito: ["", Validators.required],
+    enteramiento: ["", Validators.required],
+
+    permiteLlamadas: [false],
+    permiteCorreos: [false],
+    permiteWhatsapp: [false],
     // Telefonos: permitir múltiples entradas como FormArray (cada entrada tiene numeroTfno, tipoTfno e idTlfno)
-    telefonos: this.fb.array([
-      this.fb.group({
-        numeroTfno: ["", [Validators.pattern(this.celularPattern)]],
-        tipoTfno: [""],
-        personaTfno: ["", Validators.required],
-        idTlfno: [""],
-      }),
-    ]),
+    telefonos: this.fb.array(
+      [
+        this.fb.group({
+          numeroTfno: ["", [Validators.pattern(this.celularPattern)]],
+          tipoTfno: [""],
+          personaTfno: ["", Validators.required],
+          idTlfno: [""],
+        }),
+      ],
+      [HomeComponent.atLeastOnePhoneValidator],
+    ),
     // Apoderados: es un FormGroup que maneja 2 apoderados (estructura del backend)
     apoderados: this.fb.group({
       nombre1Apo: [""],
@@ -103,11 +134,27 @@ export class HomeComponent implements OnInit {
   // Estado de carga para actualización
   isUpdating: boolean = false;
 
+  // Propiedades para ubigeo
+  departamentos: UbigeoDepartment[] = [];
+  provincias: UbigeoProvince[] = [];
+  distritos: UbigeoDistrict[] = [];
+
+  // IDs por defecto para La Libertad, Trujillo, Trujillo
+  readonly DEFAULT_DEPARTMENT_ID = "13"; // La Libertad
+  readonly DEFAULT_PROVINCE_ID = "1301"; // Trujillo
+  readonly DEFAULT_DISTRICT_ID = "130101"; // Trujillo
+
+  // Estados de carga para ubigeo
+  loadingDepartamentos = false;
+  loadingProvincias = false;
+  loadingDistritos = false;
+
   // Método para mostrar errores de validación específicos
   mostrarErroresValidacion(): void {
     const erroresDatosPersonales: string[] = [];
     const erroresTelefonos: string[] = [];
     const erroresApoderados: string[] = [];
+    const erroresInformacionAdicional: string[] = [];
 
     // Validar campos básicos - Datos Personales
     if (this.perfilForm.get("nombre")?.hasError("required")) {
@@ -122,13 +169,24 @@ export class HomeComponent implements OnInit {
       erroresDatosPersonales.push("• El documento de identidad es requerido");
     }
 
+    if (this.perfilForm.get("direccion")?.hasError("required")) {
+      erroresDatosPersonales.push("• La dirección es requerida");
+    }
+
     if (this.perfilForm.get("email")?.hasError("required")) {
       erroresDatosPersonales.push("• El email es requerido");
     } else if (this.perfilForm.get("email")?.hasError("email")) {
       erroresDatosPersonales.push("• El formato del email no es válido");
     }
 
-    // Validar teléfonos
+    // Validar que al menos un teléfono sea proporcionado
+    if (this.perfilForm.get("telefonos")?.hasError("atLeastOnePhone")) {
+      erroresTelefonos.push(
+        "• Debe proporcionar al menos un número de teléfono",
+      );
+    }
+
+    // Validar teléfonos individuales
     const telefonosArray = this.perfilForm.get("telefonos") as FormArray;
     telefonosArray.controls.forEach((telefonoGroup, index) => {
       const numeroTfno = telefonoGroup.get("numeroTfno");
@@ -174,6 +232,24 @@ export class HomeComponent implements OnInit {
       );
     }
 
+    // Validar campos de información adicional
+
+    if (this.perfilForm.get("brazoDominante")?.hasError("required")) {
+      erroresInformacionAdicional.push("• El brazo dominante es requerido");
+    }
+
+    if (this.perfilForm.get("distrito")?.hasError("required")) {
+      erroresInformacionAdicional.push("• El distrito es requerido");
+    }
+
+    if (this.perfilForm.get("seguro")?.hasError("required")) {
+      erroresInformacionAdicional.push("• El seguro es requerido");
+    }
+
+    if (this.perfilForm.get("enteramiento")?.hasError("required")) {
+      erroresInformacionAdicional.push("• El enteramiento es requerido");
+    }
+
     // Construir mensaje organizado
     let mensajeCompleto =
       "No se puede actualizar el perfil. Corrija los siguientes errores:\n\n";
@@ -193,11 +269,19 @@ export class HomeComponent implements OnInit {
         "👥 APODERADOS:\n" + erroresApoderados.join("\n") + "\n\n";
     }
 
+    if (erroresInformacionAdicional.length > 0) {
+      mensajeCompleto +=
+        "ℹ️ INFORMACIÓN ADICIONAL:\n" +
+        erroresInformacionAdicional.join("\n") +
+        "\n\n";
+    }
+
     // Mostrar errores encontrados
     const totalErrores =
       erroresDatosPersonales.length +
       erroresTelefonos.length +
-      erroresApoderados.length;
+      erroresApoderados.length +
+      erroresInformacionAdicional.length;
     if (totalErrores > 0) {
       mensajeCompleto += `Total: ${totalErrores} error${totalErrores > 1 ? "es" : ""} encontrado${totalErrores > 1 ? "s" : ""}`;
       this.snack.danger(mensajeCompleto, { duration: 8000 });
@@ -264,6 +348,7 @@ export class HomeComponent implements OnInit {
       this.perfilForm.get("nombre")?.invalid ||
       this.perfilForm.get("apePaterno")?.invalid ||
       this.perfilForm.get("docid")?.invalid ||
+      this.perfilForm.get("direccion")?.invalid ||
       this.perfilForm.get("email")?.invalid ||
       this.telefonos.invalid
     );
@@ -281,9 +366,11 @@ export class HomeComponent implements OnInit {
     if (this.perfilForm.get("nombre")?.invalid) errores++;
     if (this.perfilForm.get("apePaterno")?.invalid) errores++;
     if (this.perfilForm.get("docid")?.invalid) errores++;
+    if (this.perfilForm.get("direccion")?.invalid) errores++;
     if (this.perfilForm.get("email")?.invalid) errores++;
 
     // Contar errores en teléfonos
+    if (this.telefonos.hasError("atLeastOnePhone")) errores++;
     this.telefonos.controls.forEach((telefonoControl) => {
       if (telefonoControl.invalid) errores++;
     });
@@ -304,27 +391,266 @@ export class HomeComponent implements OnInit {
     return errores;
   }
 
+  // Método para verificar si la pestaña de información adicional tiene errores
+  get tieneErroresInformacionAdicional(): boolean {
+    return (
+      this.perfilForm.get("brazoDominante")?.invalid ||
+      this.perfilForm.get("departamento")?.invalid ||
+      this.perfilForm.get("provincia")?.invalid ||
+      this.perfilForm.get("distrito")?.invalid ||
+      this.perfilForm.get("seguro")?.invalid ||
+      this.perfilForm.get("enteramiento")?.invalid ||
+      false
+    );
+  }
+
+  // Método para obtener el conteo de errores en información adicional
+  get conteoErroresInformacionAdicional(): number {
+    let errores = 0;
+
+    if (this.perfilForm.get("brazoDominante")?.invalid) errores++;
+    if (this.perfilForm.get("departamento")?.invalid) errores++;
+    if (this.perfilForm.get("provincia")?.invalid) errores++;
+    if (this.perfilForm.get("distrito")?.invalid) errores++;
+    if (this.perfilForm.get("seguro")?.invalid) errores++;
+    if (this.perfilForm.get("enteramiento")?.invalid) errores++;
+
+    return errores;
+  }
+
+  // Validador personalizado para requerir al menos un teléfono
+  static atLeastOnePhoneValidator(
+    control: AbstractControl,
+  ): { [key: string]: any } | null {
+    const formArray = control as FormArray;
+    if (!formArray || formArray.length === 0) {
+      return { atLeastOnePhone: true };
+    }
+
+    const hasValidPhone = formArray.controls.some((phoneGroup) => {
+      const numeroTfno = phoneGroup.get("numeroTfno")?.value;
+      return numeroTfno && numeroTfno.trim().length > 0;
+    });
+
+    return hasValidPhone ? null : { atLeastOnePhone: true };
+  }
+
+  // Métodos para manejo de ubigeo
+  private cargarDepartamentos(): void {
+    this.cargarUbigeoDesdeBackend();
+  }
+
+  eventosDesdeAhora() {
+    this.eventoService.listarEventosDesdeAhora().subscribe((eventos) => {
+      this.eventos = eventos as any[];
+    });
+  }
+
+  onDepartamentoChange(departamentoId: string): void {
+    if (!departamentoId) {
+      this.provincias = [];
+      this.distritos = [];
+      this.perfilForm.get("provincia")?.setValue("");
+      this.perfilForm.get("distrito")?.setValue("");
+      return;
+    }
+
+    this.loadingProvincias = true;
+    this.ubigeoService.getProvincesByDepartment(departamentoId).subscribe({
+      next: (provincias) => {
+        this.provincias = provincias;
+        this.distritos = [];
+        this.loadingProvincias = false;
+
+        // Si es La Libertad, establecer Trujillo por defecto
+        if (departamentoId === this.DEFAULT_DEPARTMENT_ID) {
+          this.perfilForm.get("provincia")?.setValue(this.DEFAULT_PROVINCE_ID);
+          this.onProvinciaChange(this.DEFAULT_PROVINCE_ID);
+        } else {
+          this.perfilForm.get("provincia")?.setValue("");
+          this.perfilForm.get("distrito")?.setValue("");
+        }
+      },
+      error: (error) => {
+        console.error("Error al cargar provincias:", error);
+        this.loadingProvincias = false;
+        this.snack.danger("Error al cargar provincias");
+      },
+    });
+  }
+
+  onProvinciaChange(provinciaId: string): void {
+    if (!provinciaId) {
+      this.distritos = [];
+      this.perfilForm.get("distrito")?.setValue("");
+      return;
+    }
+
+    this.loadingDistritos = true;
+    this.ubigeoService.getDistrictsByProvince(provinciaId).subscribe({
+      next: (distritos) => {
+        this.distritos = distritos;
+        this.loadingDistritos = false;
+
+        // Si es Trujillo, establecer Trujillo por defecto
+        if (provinciaId === this.DEFAULT_PROVINCE_ID) {
+          this.perfilForm.get("distrito")?.setValue(this.DEFAULT_DISTRICT_ID);
+        } else {
+          this.perfilForm.get("distrito")?.setValue("");
+        }
+      },
+      error: (error) => {
+        console.error("Error al cargar distritos:", error);
+        this.loadingDistritos = false;
+        this.snack.danger("Error al cargar distritos");
+      },
+    });
+  }
+
+  private cargarUbigeoDesdeBackend(distritoNombre?: string): void {
+    this.loadingDepartamentos = true;
+    this.ubigeoService.getDepartments().subscribe({
+      next: (departamentos) => {
+        this.departamentos = departamentos;
+        this.loadingDepartamentos = false;
+
+        if (!distritoNombre) {
+          // Si no hay distrito guardado, NO inicializar nada
+          // El usuario debe completar departamento, provincia y distrito manualmente
+          // No hacer nada aquí
+        } else {
+          // Si hay distrito guardado, buscar su información completa
+          this.buscarDistritoPorNombre(distritoNombre);
+        }
+      },
+      error: (error) => {
+        console.error("Error al cargar departamentos:", error);
+        this.loadingDepartamentos = false;
+        this.snack.danger("Error al cargar departamentos");
+        // En caso de error, no inicializar nada
+      },
+    });
+  }
+
+  private establecerValoresPorDefecto(): void {
+    this.perfilForm.get("departamento")?.setValue(this.DEFAULT_DEPARTMENT_ID);
+    this.onDepartamentoChange(this.DEFAULT_DEPARTMENT_ID);
+  }
+
+  private buscarDistritoPorNombre(nombreDistrito: string): void {
+    // Buscar en todos los departamentos el distrito con ese nombre
+    // Como puede haber distritos con el mismo nombre en diferentes provincias,
+    // priorizamos La Libertad
+    this.ubigeoService
+      .getDistrictsByDepartment(this.DEFAULT_DEPARTMENT_ID)
+      .subscribe({
+        next: (distritos) => {
+          const distritoEncontrado = distritos.find(
+            (d) => d.name.toLowerCase() === nombreDistrito.toLowerCase(),
+          );
+
+          if (distritoEncontrado) {
+            // Cargar la jerarquía completa
+            this.cargarJerarquiaCompleta(distritoEncontrado);
+          } else {
+            // Si no se encuentra, usar valores por defecto
+            this.establecerValoresPorDefecto();
+          }
+        },
+        error: (error) => {
+          console.error("Error al buscar distrito:", error);
+          this.establecerValoresPorDefecto();
+        },
+      });
+  }
+
+  private cargarJerarquiaCompleta(distrito: UbigeoDistrict): void {
+    // Establecer departamento
+    this.perfilForm.get("departamento")?.setValue(distrito.departmentId);
+
+    // Cargar provincias del departamento
+    this.ubigeoService
+      .getProvincesByDepartment(distrito.departmentId)
+      .subscribe({
+        next: (provincias) => {
+          this.provincias = provincias;
+          this.perfilForm.get("provincia")?.setValue(distrito.provinceId);
+
+          // Cargar distritos de la provincia
+          this.ubigeoService
+            .getDistrictsByProvince(distrito.provinceId)
+            .subscribe({
+              next: (distritos) => {
+                this.distritos = distritos;
+                this.perfilForm.get("distrito")?.setValue(distrito.id);
+              },
+              error: (error) => {
+                console.error("Error al cargar distritos:", error);
+              },
+            });
+        },
+        error: (error) => {
+          console.error("Error al cargar provincias:", error);
+        },
+      });
+  }
+
+  // Método para obtener el nombre del distrito seleccionado
+  private getSelectedDistrictName(): string {
+    const distritoId = this.perfilForm.get("distrito")?.value;
+    if (!distritoId) return "";
+
+    const distrito = this.distritos.find((d) => d.id === distritoId);
+    return distrito?.name || "";
+  }
+
   // Getter para detectar si hay cambios en el formulario
   get hasChanges(): boolean {
     if (!this.perfilOriginal) return false;
 
     const currentValues = this.perfilForm.value;
 
-    // Comparar campos básicos
-    const basicFieldsChanged = [
+    // Comparar campos básicos de texto
+    const basicFields = [
       "nombre",
       "apePaterno",
       "apeMaterno",
       "direccion",
       "email",
       "seguro",
-    ].some((field) => {
+      "fechanac",
+      "sexo",
+      "brazoDominante",
+      "tipodoc",
+      "persona",
+      "alergia",
+      "id_teams",
+      "enteramiento",
+    ];
+
+    for (const field of basicFields) {
       const current = currentValues[field] || "";
       const original = this.perfilOriginal[field] || "";
-      return current !== original;
-    });
+      if (current !== original) return true;
+    }
 
-    if (basicFieldsChanged) return true;
+    // Comparar ubigeo - comparamos el nombre del distrito seleccionado con el original
+    const currentDistrictName = this.getSelectedDistrictName();
+    const originalDistrictName = this.perfilOriginal.distrito || "";
+    if (currentDistrictName !== originalDistrictName) return true;
+
+    // Comparar campos booleanos de permisos
+    const permissionFields = [
+      "permiteLlamadas",
+      "permiteCorreos",
+      "permiteWhatsapp",
+    ];
+
+    for (const field of permissionFields) {
+      const current = currentValues[field] || false;
+      const original = this.perfilOriginal[field] || false;
+      if (current !== original) return true;
+    }
 
     // Comparar teléfonos
     const currentTelefonos = currentValues.telefonos || [];
@@ -332,25 +658,25 @@ export class HomeComponent implements OnInit {
 
     if (currentTelefonos.length !== originalTelefonos.length) return true;
 
-    const telefonosChanged = currentTelefonos.some(
-      (tel: any, index: number) => {
-        const original = originalTelefonos[index];
-        if (!original) return true;
-        return (
-          (tel.numeroTfno || "") !== (original.numeroTfno || "") ||
-          (tel.tipoTfno || "") !== (original.tipoTfno || "") ||
-          (tel.personaTfno || "") !== (original.personaTfno || "")
-        );
-      },
-    );
+    for (let i = 0; i < currentTelefonos.length; i++) {
+      const tel = currentTelefonos[i];
+      const original = originalTelefonos[i];
+      if (!original) return true;
 
-    if (telefonosChanged) return true;
+      if (
+        (tel.numeroTfno || "") !== (original.numeroTfno || "") ||
+        (tel.tipoTfno || "") !== (original.tipoTfno || "") ||
+        (tel.personaTfno || "") !== (original.personaTfno || "")
+      ) {
+        return true;
+      }
+    }
 
     // Comparar apoderados
     const currentApoderados = currentValues.apoderados || {};
     const originalApoderados = this.perfilOriginal.apoderado || {};
 
-    const apoderadosChanged = [
+    const apoderadoFields = [
       "nombre1Apo",
       "nombre2Apo",
       "apellidos1Apo",
@@ -361,13 +687,15 @@ export class HomeComponent implements OnInit {
       "email2Apo",
       "tfno1Apo",
       "tfno2Apo",
-    ].some((field) => {
+    ];
+
+    for (const field of apoderadoFields) {
       const current = currentApoderados[field] || "";
       const original = originalApoderados[field] || "";
-      return current !== original;
-    });
+      if (current !== original) return true;
+    }
 
-    return apoderadosChanged;
+    return false;
   }
 
   // Método equivalente al de navbar: toma el nombre completo y devuelve hasta 2 iniciales
@@ -420,6 +748,7 @@ export class HomeComponent implements OnInit {
     // Ensure apoderados/telefonos getters reference existing FormArrays (form is already created above)
     // cargarPerfil() will repopulate the arrays based on backend data
     this.cargarPerfil();
+    this.eventosDesdeAhora();
   }
 
   private obtenerDniDeUsuario(): string {
@@ -441,6 +770,7 @@ export class HomeComponent implements OnInit {
 
     this.alumnoService.getPerfil(dni).subscribe({
       next: (perfil: any) => {
+        console.log(perfil);
         // Guardamos el original
         this.perfilOriginal = perfil;
 
@@ -459,7 +789,19 @@ export class HomeComponent implements OnInit {
           fechanac: perfil.fechanac ? this.formatFecha(perfil.fechanac) : "",
           sexo: perfil.sexo || "",
           seguro: perfil.seguro || "",
+          brazoDominante: perfil.brazoDominante || "",
+          tipodoc: perfil.tipodoc || null,
+          persona: perfil.persona || "",
+          alergia: perfil.alergia || "",
+          id_teams: perfil.id_teams || "",
+          enteramiento: perfil.enteramiento || "",
+          permiteLlamadas: perfil.permiteLlamadas || false,
+          permiteCorreos: perfil.permiteCorreos || false,
+          permiteWhatsapp: perfil.permiteWhatsapp || false,
         });
+
+        // Cargar ubigeo basado en el distrito guardado
+        this.cargarUbigeoDesdeBackend(perfil.distrito);
 
         // Obtener idteams del perfil
         this.idteams = perfil.id_teams || null;
@@ -642,6 +984,16 @@ export class HomeComponent implements OnInit {
       telefonos: telefonosPayload,
       apoderado: apoderadoPayload,
       fechanac: this.perfilForm.value.fechanac || this.perfilOriginal?.fechanac,
+      brazoDominante: this.perfilForm.value.brazoDominante,
+      tipodoc: this.perfilForm.value.tipodoc,
+      persona: this.perfilForm.value.persona,
+      alergia: this.perfilForm.value.alergia,
+      id_teams: this.perfilForm.value.id_teams,
+      distrito: this.getSelectedDistrictName(),
+      enteramiento: this.perfilForm.value.enteramiento,
+      permiteLlamadas: this.perfilForm.value.permiteLlamadas,
+      permiteCorreos: this.perfilForm.value.permiteCorreos,
+      permiteWhatsapp: this.perfilForm.value.permiteWhatsapp,
     };
 
     // Obtener el código del alumno para la actualización
@@ -672,7 +1024,8 @@ export class HomeComponent implements OnInit {
   abrirDialogTeams(): void {
     if (this.idteams) {
       this.dialog.open(TeamsDialogComponent, {
-        width: "600px",
+        width: "800px",
+        maxWidth: "95vw",
         data: { idteams: this.idteams },
       });
     }
@@ -681,6 +1034,22 @@ export class HomeComponent implements OnInit {
   abrirDialogGmail(): void {
     this.dialog.open(GmailDialogComponent, {
       width: "600px",
+    });
+  }
+
+  abrirDialogEvento(evento: any) {
+    const dialogRef = this.dialog.open(EventoDialogComponent, {
+      width: "600px",
+      maxHeight: "80vh",
+      disableClose: false,
+      data: { evento: evento },
+    });
+
+    dialogRef.afterClosed().subscribe((resultado) => {
+      if (resultado === "asistencia_registrada") {
+        // Aquí podrías actualizar la lista de eventos o mostrar un mensaje
+        console.log("Asistencia registrada para el evento:", evento.titulo);
+      }
     });
   }
 }

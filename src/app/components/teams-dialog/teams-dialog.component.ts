@@ -22,8 +22,8 @@ import { SnackService } from "../../services/snack.service";
     MatIconModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+  ],
   template: `
     <h2 mat-dialog-title class="flex items-center gap-2">
       <mat-icon>groups</mat-icon>
@@ -126,6 +126,27 @@ import { SnackService } from "../../services/snack.service";
                   </div>
                 </div>
               </div>
+              <!-- Video tutorial de YouTube -->
+              <div class="video-container">
+                <div class="flex items-center gap-2 mb-2">
+                  <mat-icon class="text-[var(--mat-sys-primary)]"
+                    >play_circle</mat-icon
+                  >
+                  <p class="font-semibold text-[var(--mat-sys-on-surface)]">
+                    Video tutorial: Cómo ingresar a Teams
+                  </p>
+                </div>
+                <div class="video-wrapper">
+                  <iframe
+                    src="https://www.youtube.com/embed/7noft_v65n8"
+                    title="Tutorial de Teams"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    class="youtube-iframe"
+                  ></iframe>
+                </div>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>
@@ -149,7 +170,7 @@ import { SnackService } from "../../services/snack.service";
   styles: [
     `
       .mat-dialog-content {
-        max-height: 400px;
+        max-height: 600px;
         overflow-y: auto;
       }
 
@@ -326,6 +347,30 @@ import { SnackService } from "../../services/snack.service";
 
       a {
         transition: color 0.2s;
+      }
+
+      /* Estilos para el video de YouTube */
+      .video-container {
+        margin-top: 1rem;
+      }
+
+      .video-wrapper {
+        position: relative;
+        padding-bottom: 56.25%; /* Aspect ratio 16:9 */
+        height: 0;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        background-color: #000;
+      }
+
+      .youtube-iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0.5rem;
       }
     `,
   ],

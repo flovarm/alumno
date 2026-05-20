@@ -272,12 +272,6 @@
   overflow: hidden;
 
   &:not([disabled]) {
-    background: linear-gradient(
-      45deg,
-      var(--mat-sys-on-primary),
-      var(--mat-sys-primary)
-    );
-
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -415,5 +409,77 @@
     button {
       width: 100%;
     }
+  }
+}
+
+/* Estilos para la alerta de recordatorio */
+.alert-container {
+  width: 100%;
+}
+
+.alert-card {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+  border-left: 4px solid #2196f3 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2) !important;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.alert-icon {
+  color: #1976d2;
+  font-size: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  flex-shrink: 0;
+}
+
+.alert-text {
+  flex: 1;
+  color: #0d47a1;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.alert-text strong {
+  color: #0d47a1;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .alert-content {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .alert-icon {
+    font-size: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .alert-text {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .alert-content {
+    gap: 10px;
+  }
+
+  .alert-icon {
+    font-size: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .alert-text {
+    font-size: 0.9rem;
   }
 }

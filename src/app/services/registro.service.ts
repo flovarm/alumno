@@ -52,9 +52,9 @@ export class RegistroService {
   }
 
   // Método para verificar el estado de un pago
-  verificarEstadoPago(transactionId: string) {
-    return this.http.get(this.apiUrl + "verificar-pago/" + transactionId);
-  }
+  // verificarEstadoPago(transactionId: string) {
+  //   return this.http.get(this.apiUrl + "verificar-pago/" + transactionId);
+  // }
 
   // Método para procesar webhook de IziPay (si necesitas llamarlo manualmente)
   procesarWebhookIzipay(data: any) {

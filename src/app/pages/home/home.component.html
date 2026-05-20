@@ -8,6 +8,20 @@
     class="mb-6">
   </app-page-header>
 
+  <!-- Alerta de recordatorio para actualizar datos -->
+  <div class="alert-container mb-6">
+    <mat-card class="alert-card">
+      <mat-card-content>
+        <div class="alert-content">
+          <mat-icon class="alert-icon">info</mat-icon>
+          <div class="alert-text">
+            <strong>Recordatorio:</strong> Para las matrículas de junio debes tener actualizados tus datos para poder registrarte.
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
   <section class="info-section">
     <mat-card class="profile-card w-full bg-white shadow-lg rounded-lg overflow-hidden">
       <mat-card-header class="px-6 py-4">
@@ -71,8 +85,11 @@
                 <!-- Dirección -->
                 <div class="w-full mt-2">
                   <mat-form-field appearance="fill" class="w-full">
-                    <mat-label>Dirección</mat-label>
+                    <mat-label>Dirección *</mat-label>
                     <input matInput formControlName="direccion" class="w-full" />
+                    @if (perfilForm.get('direccion')?.hasError('required')) {
+                      <mat-error>Dirección es requerida</mat-error>
+                    }
                   </mat-form-field>
                 </div>
 
@@ -115,6 +132,11 @@
                         </mat-form-field>
                       </div>
                     }
+                    @if (perfilForm.get('telefonos')?.hasError('atLeastOnePhone')) {
+                      <mat-error class="text-sm text-red-500 mt-2">
+                        Debe proporcionar al menos un número de teléfono
+                      </mat-error>
+                    }
                     <mat-hint class="text-sm text-gray-500">
                       Formatos permitidos: <strong>987654321</strong>, <strong>51987654321</strong>, <strong>+51987654321</strong>
                     </mat-hint>
@@ -140,7 +162,7 @@
                   <div formGroupName="apoderados" class="space-y-6">
 
                     <!-- Apoderado 1 -->
-                    <div class="border rounded p-4">
+                    <div>
                       <div class="flex items-center justify-between mb-3">
                         <div class="text-sm font-medium">Apoderado 1</div>
                       </div>
@@ -179,8 +201,10 @@
                       </div>
                     </div>
 
+                    <mat-divider class="my-6"></mat-divider>
+
                     <!-- Apoderado 2 -->
-                    <div class="border rounded p-4">
+                    <div>
                       <div class="flex items-center justify-between mb-3">
                         <div class="text-sm font-medium">Apoderado 2</div>
                       </div>
@@ -224,6 +248,162 @@
               </mat-card-content>
             </mat-card>
           </mat-tab>
+
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <span>Información Adicional</span>
+              @if (tieneErroresInformacionAdicional && perfilForm.touched) {
+                <span class="error-indicator ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  {{ conteoErroresInformacionAdicional }}
+                </span>
+              }
+            </ng-template>
+            <mat-card>
+              <mat-card-content>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+
+
+
+                  <!-- Brazo Dominante y Enteramiento en una fila -->
+                  <div class="col-span-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <!-- Brazo Dominante -->
+                      <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>Brazo Dominante *</mat-label>
+                        <mat-select formControlName="brazoDominante">
+                          <mat-option value="Derecho">Derecho</mat-option>
+                          <mat-option value="Izquierdo">Izquierdo</mat-option>
+                        </mat-select>
+                        @if (perfilForm.get('brazoDominante')?.hasError('required')) {
+                          <mat-error>Brazo dominante es requerido</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <!-- Enteramiento -->
+                      <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>¿Cómo se enteró de nosotros? *</mat-label>
+                        <mat-select formControlName="enteramiento">
+                          <mat-option value="Activación">Activación</mat-option>
+                          <mat-option value="Feria">Feria</mat-option>
+                          <mat-option value="Instagram">Instagram</mat-option>
+                          <mat-option value="Referido">Referido</mat-option>
+                          <mat-option value="TikTok">TikTok</mat-option>
+                          <mat-option value="Volanteo">Volanteo</mat-option>
+                        </mat-select>
+                        @if (perfilForm.get('enteramiento')?.hasError('required')) {
+                          <mat-error>Enteramiento es requerido</mat-error>
+                        }
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+
+                  <!-- Ubigeo - Departamento, Provincia, Distrito en una fila -->
+                  <div class="col-span-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <!-- Departamento -->
+                      <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>Departamento *</mat-label>
+                        <mat-select formControlName="departamento" (selectionChange)="onDepartamentoChange($event.value)">
+                          @if (loadingDepartamentos) {
+                            <mat-option disabled>Cargando departamentos...</mat-option>
+                          }
+                          @for (departamento of departamentos; track departamento.id) {
+                            <mat-option [value]="departamento.id">{{ departamento.name }}</mat-option>
+                          }
+                        </mat-select>
+                        @if (perfilForm.get('departamento')?.hasError('required')) {
+                          <mat-error>Departamento es requerido</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <!-- Provincia -->
+                      <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>Provincia *</mat-label>
+                        <mat-select formControlName="provincia" (selectionChange)="onProvinciaChange($event.value)" [disabled]="!perfilForm.get('departamento')?.value">
+                          @if (loadingProvincias) {
+                            <mat-option disabled>Cargando provincias...</mat-option>
+                          }
+                          @if (!perfilForm.get('departamento')?.value) {
+                            <mat-option disabled>Seleccione un departamento primero</mat-option>
+                          }
+                          @for (provincia of provincias; track provincia.id) {
+                            <mat-option [value]="provincia.id">{{ provincia.name }}</mat-option>
+                          }
+                        </mat-select>
+                        @if (perfilForm.get('provincia')?.hasError('required')) {
+                          <mat-error>Provincia es requerida</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <!-- Distrito -->
+                      <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>Distrito *</mat-label>
+                        <mat-select formControlName="distrito" [disabled]="!perfilForm.get('provincia')?.value">
+                          @if (loadingDistritos) {
+                            <mat-option disabled>Cargando distritos...</mat-option>
+                          }
+                          @if (!perfilForm.get('provincia')?.value) {
+                            <mat-option disabled>Seleccione una provincia primero</mat-option>
+                          }
+                          @for (distrito of distritos; track distrito.id) {
+                            <mat-option [value]="distrito.id">{{ distrito.name }}</mat-option>
+                          }
+                        </mat-select>
+                        @if (perfilForm.get('distrito')?.hasError('required')) {
+                          <mat-error>Distrito es requerido</mat-error>
+                        }
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <!-- Seguro -->
+                  <mat-form-field appearance="fill" class="w-full">
+                    <mat-label>Seguro *</mat-label>
+                    <mat-select formControlName="seguro">
+                      <mat-option value="EsSalud">EsSalud</mat-option>
+                      <mat-option value="SIS">SIS</mat-option>
+                      <mat-option value="Particular">Particular</mat-option>
+                      <mat-option value="Ninguno">Ninguno</mat-option>
+                      <mat-option value="Otro">Otro</mat-option>
+                    </mat-select>
+                    @if (perfilForm.get('seguro')?.hasError('required')) {
+                      <mat-error>Seguro es requerido</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <!-- Alergias -->
+                  <mat-form-field appearance="fill" class="w-full">
+                    <mat-label>Alergias</mat-label>
+                    <input matInput formControlName="alergia" placeholder="Describe cualquier alergia o condición médica relevante" />
+                  </mat-form-field>
+
+
+                </div>
+
+                <!-- Permisos -->
+                <div class="mt-6">
+                  <h3 class="text-lg font-medium mb-4">Permisos y Autorizaciones</h3>
+                  <div class="space-y-3">
+
+
+                    <mat-checkbox formControlName="permiteLlamadas">
+                      Permitir llamadas telefónicas
+                    </mat-checkbox>
+
+                    <mat-checkbox formControlName="permiteCorreos">
+                      Permitir envío de correos electrónicos
+                    </mat-checkbox>
+
+                    <mat-checkbox formControlName="permiteWhatsapp">
+                      Permitir comunicación por WhatsApp
+                    </mat-checkbox>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </mat-tab>
         </mat-tab-group>
 
         <!-- Acciones -->
@@ -239,7 +419,7 @@
             @if (perfilForm.invalid && perfilForm.touched) {
               <span class="flex items-center text-red-600">
                 <mat-icon class="mr-1 text-base">error</mat-icon>
-                {{ (conteoErroresDatosPersonales + conteoErroresApoderados) }} error(es) encontrado(s)
+                {{ (conteoErroresDatosPersonales + conteoErroresApoderados + conteoErroresInformacionAdicional) }} error(es) encontrado(s)
               </span>
             }
             @if (!perfilForm.touched) {
@@ -269,5 +449,63 @@
       </form>
     </mat-card-content>
   </mat-card>
+</section>
+<section>
+  <!-- Sección de Próximos Eventos -->
+        <div class="eventos-container w-full">
+          <h2 class="mt-6 mb-6 text-center text-2xl font-bold" style="color: var(--mat-sys-primary);">
+            Próximos Eventos
+          </h2>
+
+          <div class="space-y-4">
+            @for (evento of eventos; track evento.id) {
+              <div
+                class="evento-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                style="background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container);">
+
+                <div class="flex items-center gap-4 flex-1">
+                  <!-- Cuadro de fecha -->
+                  <div
+                    class="fecha-cuadro rounded-lg text-center p-4 flex-shrink-0 shadow-sm"
+                    style="min-width: 80px; height: 80px; background: var(--mat-sys-primary); color: var(--mat-sys-on-primary);">
+                    <div class="dia text-3xl font-bold leading-none">
+                      {{ evento.fechaEvento | date:'d' }}
+                    </div>
+                    <div class="mes text-xs font-semibold uppercase tracking-wider mt-1 opacity-90">
+                      {{ evento.fechaEvento | date:'MMM' }}
+                    </div>
+                  </div>
+
+                  <!-- Información del evento -->
+                  <div class="evento-info flex-1 min-w-0">
+                    <h4 class="mb-2 text-lg font-semibold" style="color: var(--mat-sys-on-primary-container);">
+                      {{ evento.titulo | titlecase }}
+                    </h4>
+                    <p class="mb-0 text-sm opacity-75 flex items-center gap-1">
+                      <mat-icon class="text-base">schedule</mat-icon>
+                      <span>{{ evento.fechaEvento | date: 'h:mm a' }}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Botón Ver Más -->
+                <div class="flex items-center flex-shrink-0">
+                  <button
+                    mat-stroked-button
+                    (click)="abrirDialogEvento(evento)"
+                    class="whitespace-nowrap">
+                    Ver Más
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="sin-eventos text-center py-8">
+                <mat-icon class="text-6xl opacity-30 mb-4" style="color: var(--mat-sys-on-surface);">event_busy</mat-icon>
+                <p class="text-lg opacity-60" style="color: var(--mat-sys-on-surface);">No hay eventos próximos.</p>
+              </div>
+            }
+          </div>
+        </div>
 </section>
 </div>
