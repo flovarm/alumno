@@ -10,6 +10,8 @@ import { ThemeService } from "../../_services/theme.service";
 import { AuthService } from "../../services/auth.service";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { PaymentSpinnerService } from "../../services/loading.service";
+import { MatDialog } from "@angular/material/dialog";
+import { ChangePasswordDialogComponent } from "./change-password-dialog.component";
 
 @Component({
   selector: "app-navbar",
@@ -37,6 +39,7 @@ export class NavbarComponent {
   private themeService = inject(ThemeService);
   private router = inject(Router);
   private authService = inject(AuthService);
+   private dialog = inject(MatDialog);
 
   profileMenuItems = [
     { label: "Mi Perfil", route: "/home", icon: "person" },
@@ -104,5 +107,13 @@ export class NavbarComponent {
       .map((part) => part[0].toUpperCase())
       .join("")
       .slice(0, 2); // Solo dos iniciales
+  }
+
+    openChangePasswordDialog(): void {
+    this.dialog.open(ChangePasswordDialogComponent, {
+      width: '520px',
+      maxWidth: '95vw',
+      disableClose: true
+    });
   }
 }

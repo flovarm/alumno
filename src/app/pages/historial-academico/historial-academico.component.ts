@@ -73,21 +73,10 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit(): void {
-    // Obtener el DNI del usuario logueado desde localStorage
-    let dni: string | null = null;
 
     const userStr = localStorage.getItem("alumno_currentUser");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user && user.userName) {
-        dni = user.userName;
-      }
-    }
-    if (dni) {
-      this.obtenerCodigoYHistorial(dni);
-    } else {
-      console.warn("No se encontró el DNI del usuario logueado.");
-    }
+      this.obtenerCodigoYHistorial(userStr ? JSON.parse(userStr).codigo : "");
+  
   }
 
   ngAfterViewInit() {
@@ -95,11 +84,8 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
-  obtenerCodigoYHistorial(dni: string): void {
-    this.alumnoService.verificarDni(dni).subscribe({
-      next: (resp) => {
-        if (resp.existe && resp.codigo) {
-          this.alumnoService.getHistorialAcademico(resp.codigo).subscribe({
+  obtenerCodigoYHistorial(codigo: string): void {
+          this.alumnoService.getHistorialAcademico(codigo).subscribe({
             next: (data) => {
               // Asegura que historial sea un array plano de objetos
               this.historial =
@@ -111,16 +97,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
               console.error("Error al obtener historial académico:", err);
             },
           });
-        } else {
-          this.historial = null;
-          this.dataSource.data = [];
-        }
-      },
-      error: (err: any) => {
-        console.error("Error al verificar DNI:", err);
-      },
-    });
-  }
+   } 
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;

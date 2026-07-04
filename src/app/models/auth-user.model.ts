@@ -1,5 +1,6 @@
 export interface AuthUser {
   id: string;
+  codigo: number;
   userName: string;
   email: string;
   nombreCompleto: string;

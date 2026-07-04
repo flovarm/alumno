@@ -18,6 +18,7 @@ import { jwtInterceptor } from "./interceptors/jwt.interceptor";
 import { routes } from "./app.routes";
 import { LoadingInterceptor } from "./interceptors/loading.interceptor";
 import { NgxSpinnerModule } from "ngx-spinner";
+import { A11yModule } from "@angular/cdk/a11y";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,5 +29,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimations(),
     importProvidersFrom(NgxSpinnerModule),
+    importProvidersFrom(A11yModule),
   ],
 };

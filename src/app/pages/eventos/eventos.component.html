@@ -1,0 +1,61 @@
+<section>
+  <!-- Sección de Próximos Eventos -->
+  <div class="page-container">
+       <app-page-header
+         title="Eventos"
+         description="Descubre nuestros próximos eventos"
+         icon="event">
+       </app-page-header>
+
+
+          <div class="space-y-4">
+            @for (evento of eventos; track evento.id) {
+              <div
+                class="evento-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                style="background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container);">
+
+                <div class="flex items-center gap-4 flex-1">
+                  <!-- Cuadro de fecha -->
+                  <div
+                    class="fecha-cuadro rounded-lg text-center p-4 flex-shrink-0 shadow-sm"
+                    style="min-width: 80px; height: 80px; background: var(--mat-sys-primary); color: var(--mat-sys-on-primary);">
+                    <div class="dia text-3xl font-bold leading-none">
+                      {{ evento.fechaEvento | date:'d' }}
+                    </div>
+                    <div class="mes text-xs font-semibold uppercase tracking-wider mt-1 opacity-90">
+                      {{ evento.fechaEvento | date:'MMM' }}
+                    </div>
+                  </div>
+
+                  <!-- Información del evento -->
+                  <div class="evento-info flex-1 min-w-0">
+                    <h4 class="mb-2 text-lg font-semibold" style="color: var(--mat-sys-on-primary-container);">
+                      {{ evento.titulo | titlecase }}
+                    </h4>
+                    <p class="mb-0 text-sm opacity-75 flex items-center gap-1">
+                      <mat-icon class="text-base">schedule</mat-icon>
+                      <span>{{ evento.fechaEvento | date: 'h:mm a' }}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Botón Ver Más -->
+                <div class="flex items-center flex-shrink-0">
+                  <button
+                    mat-stroked-button
+                    (click)="abrirDialogEvento(evento)"
+                    class="whitespace-nowrap">
+                    Ver Más
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <div class="sin-eventos text-center py-8">
+                <mat-icon class="text-6xl opacity-30 mb-4" style="color: var(--mat-sys-on-surface);">event_busy</mat-icon>
+                <p class="text-lg opacity-60" style="color: var(--mat-sys-on-surface);">No hay eventos próximos.</p>
+              </div>
+            }
+          </div>
+        </div>
+</section>

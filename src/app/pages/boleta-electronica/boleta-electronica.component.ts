@@ -6,34 +6,13 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatDividerModule } from "@angular/material/divider";
 import { Router, ActivatedRoute } from "@angular/router";
 import { Location } from "@angular/common";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import {
   DocumentoService,
   BoletaElectronicaResponse,
 } from "../../services/documento.service";
 
-/**
- * Componente de Boleta Electrónica
- *
- * Este componente puede funcionar de dos formas:
- * 1. Recibiendo datos a través del estado de navegación (modo tradicional)
- * 2. Obteniendo datos de la API usando el servicio DocumentoService (nuevo modo)
- *
- * Para usar con documento ID:
- * - Navegar a /boleta-electronica/:documentoId
- * - Los datos se obtendrán automáticamente del endpoint obtener-boleta
- *
- * Ejemplo de uso desde otro componente:
- * ```typescript
- * // Opción 1: Navegación directa
- * this.router.navigate(['/boleta-electronica', documentoId]);
- *
- * // Opción 2: Usando el método estático
- * BoletaElectronicaComponent.mostrarBoletaPorDocumentoId(this.router, documentoId);
- *
- * // Opción 3: Impresión directa (requiere instancia del componente)
- * component.imprimirFormatoNormalPorDocumentoId(documentoId);
- * ```
- */
 @Component({
   selector: "app-boleta-electronica",
   standalone: true,
@@ -369,7 +348,7 @@ import {
         font-size: 48px;
         height: 48px;
         width: 48px;
-        color: #10b981;
+        color: var(--md-primary);
         animation: spin 2s linear infinite;
       }
 
@@ -377,7 +356,7 @@ import {
         font-size: 48px;
         height: 48px;
         width: 48px;
-        color: #ef4444;
+        color: var(--md-error);
       }
 
       @keyframes spin {
@@ -390,35 +369,45 @@ import {
       }
 
       :host {
-        --success-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        --card-bg: #ffffff;
+        --md-primary: var(--mat-sys-primary);
+        --md-on-primary: var(--mat-sys-on-primary);
+        --md-primary-container: var(--mat-sys-primary-container);
+        --md-on-primary-container: var(--mat-sys-on-primary-container);
+        --md-secondary: var(--mat-sys-secondary);
+        --md-on-secondary: var(--mat-sys-on-secondary);
+        --md-tertiary: var(--mat-sys-tertiary);
+        --md-on-tertiary: var(--mat-sys-on-tertiary);
+        --md-surface: var(--mat-sys-surface);
+        --md-surface-container: var(--mat-sys-surface-container);
+        --md-surface-variant: var(--mat-sys-surface-variant);
+        --md-outline-variant: var(--mat-sys-outline-variant);
+        --md-on-surface: var(--mat-sys-on-surface);
+        --md-on-surface-variant: var(--mat-sys-on-surface-variant);
+        --md-error: var(--mat-sys-error);
+        --success-bg: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--md-primary-container) 45%, white) 0%,
+          color-mix(in srgb, var(--md-surface-container) 70%, white) 100%
+        );
+        --card-bg: var(--md-surface);
         --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --header-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        --info-bg: #f8fafc;
-        --info-border: #e2e8f0;
-        --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --message-bg: #eff6ff;
-        --message-border: #bfdbfe;
-        --message-text: #1e40af;
-        --message-icon: #3b82f6;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :host {
-          --success-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-          --card-bg: #1f2937;
-          --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-          --header-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);
-          --info-bg: #374151;
-          --info-border: #4b5563;
-          --text-primary: #f1f5f9;
-          --text-secondary: #94a3b8;
-          --message-bg: #1e3a8a;
-          --message-border: #3b82f6;
-          --message-text: #dbeafe;
-          --message-icon: #60a5fa;
-        }
+        --header-bg: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--md-primary) 92%, black) 0%,
+          var(--md-primary) 100%
+        );
+        --info-bg: var(--md-surface-container);
+        --info-border: var(--md-outline-variant);
+        --text-primary: var(--md-on-surface);
+        --text-secondary: var(--md-on-surface-variant);
+        --message-bg: color-mix(
+          in srgb,
+          var(--md-primary-container) 65%,
+          var(--md-surface) 35%
+        );
+        --message-border: var(--md-outline-variant);
+        --message-text: var(--md-on-primary-container);
+        --message-icon: var(--md-primary);
       }
 
       .pago-exitoso-container {
@@ -441,12 +430,6 @@ import {
         border: 1px solid transparent;
       }
 
-      @media (prefers-color-scheme: dark) {
-        .success-card {
-          border-color: #374151;
-        }
-      }
-
       @keyframes slideIn {
         from {
           opacity: 0;
@@ -459,12 +442,13 @@ import {
       }
 
       .success-header {
-        background: var(--header-bg);
-        color: #fff;
+        background: transparent;
+        color: var(--mat-sys-primary);
         padding: 2rem;
         display: flex;
         align-items: center;
         gap: 1.5rem;
+        border-bottom: 1px solid var(--md-outline-variant);
       }
 
       .success-icon {
@@ -475,7 +459,7 @@ import {
 
       .checkmark-icon {
         font-size: 4rem;
-        color: #fff;
+        color: var(--mat-sys-primary);
         animation: checkmark 0.8s ease-in-out 0.3s both;
       }
 
@@ -502,14 +486,14 @@ import {
         font-size: 1.75rem;
         font-weight: 700;
         margin: 0 0 0.5rem;
-        color: #fff;
+        color: var(--mat-sys-primary);
       }
 
       .success-subtitle {
         font-size: 1.1rem;
         opacity: 0.9;
         margin: 0;
-        color: #fff;
+        color: var(--mat-sys-primary);
       }
 
       .success-details {
@@ -521,13 +505,7 @@ import {
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 2rem;
-        border-left: 4px solid #10b981;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .transaction-info {
-          border-left-color: #059669;
-        }
+        border-left: 4px solid var(--md-primary);
       }
 
       .info-row {
@@ -543,7 +521,7 @@ import {
       }
 
       .info-row.total-row {
-        border-top: 2px solid #10b981;
+        border-top: 2px solid var(--md-primary);
         margin-top: 1rem;
         padding-top: 1rem;
         font-weight: 600;
@@ -562,7 +540,7 @@ import {
       }
 
       .total-amount {
-        color: #10b981;
+        color: var(--md-primary);
         font-size: 1.25rem;
         font-weight: 700;
       }
@@ -867,11 +845,6 @@ import {
       }
 
       @media (prefers-color-scheme: dark) {
-        #boleta-content {
-          background: white !important;
-          color: black !important;
-        }
-
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -889,16 +862,8 @@ import {
           background: #9ca3af;
         }
 
-        .mat-mdc-raised-button.mat-primary {
-          --mat-button-filled-container-color: #10b981;
-        }
-
-        .mat-mdc-raised-button.mat-accent {
-          --mat-button-filled-container-color: #059669;
-        }
-
         .mat-divider {
-          border-top-color: #4b5563;
+          border-top-color: var(--md-outline-variant);
         }
       }
 
@@ -911,56 +876,8 @@ import {
         background: var(--card-bg);
       }
 
-      :host-context(.light-theme),
-      :host-context(.light) {
-        --success-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        --card-bg: #ffffff;
-        --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --header-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        --info-bg: #f8fafc;
-        --info-border: #e2e8f0;
-        --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --message-bg: #eff6ff;
-        --message-border: #bfdbfe;
-        --message-text: #1e40af;
-        --message-icon: #3b82f6;
-      }
-
-      :host-context(.dark-theme),
-      :host-context(.dark) {
-        --success-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        --card-bg: #1f2937;
-        --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        --header-bg: linear-gradient(135deg, #047857 0%, #065f46 100%);
-        --info-bg: #374151;
-        --info-border: #4b5563;
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --message-bg: #1e3a8a;
-        --message-border: #3b82f6;
-        --message-text: #dbeafe;
-        --message-icon: #60a5fa;
-      }
-
-      :host-context(.light-theme) .success-card,
-      :host-context(.light) .success-card {
-        border-color: transparent;
-      }
-
-      :host-context(.dark-theme) .success-card,
-      :host-context(.dark) .success-card {
-        border-color: #374151;
-      }
-
-      :host-context(.light-theme) .transaction-info,
-      :host-context(.light) .transaction-info {
-        border-left-color: #10b981;
-      }
-
-      :host-context(.dark-theme) .transaction-info,
-      :host-context(.dark) .transaction-info {
-        border-left-color: #059669;
+      .success-card {
+        border-color: var(--md-outline-variant);
       }
     `,
   ],
@@ -1705,13 +1622,61 @@ export class BoletaElectronicaComponent implements OnInit {
     `;
   }
 
-  descargarPDF() {
-    // Implementar descarga como PDF usando html2pdf o similar
-    const element = document.getElementById("boleta-content");
-    if (element) {
-      // Aquí puedes integrar una librería como html2pdf.js
-      // Por ahora, usar print como alternativa
-      this.imprimirBoleta();
+  async descargarPDF() {
+    const element = document.getElementById("boleta-content") as HTMLElement | null;
+    if (!element) return;
+
+    const pdfWrapper = document.createElement("div");
+    pdfWrapper.style.cssText = `
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: 794px;
+      padding: 24px;
+      background: #ffffff;
+      z-index: -1;
+    `;
+
+    const contentClone = element.cloneNode(true) as HTMLElement;
+    contentClone.style.display = "block";
+    pdfWrapper.appendChild(contentClone);
+    document.body.appendChild(pdfWrapper);
+
+    try {
+      const canvas = await html2canvas(pdfWrapper, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const serie = this.boletaData?.serie || "B";
+      const numero = this.boletaData?.numero || "00000000";
+      pdf.save(`boleta-${serie}-${numero}.pdf`);
+    } catch (error) {
+      console.error("Error al descargar el PDF:", error);
+      this.imprimirFormatoNormal();
+    } finally {
+      document.body.removeChild(pdfWrapper);
     }
   }
 

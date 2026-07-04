@@ -1,6 +1,6 @@
 <div class="evento-dialog">
   <!-- Header del dialog -->
-  <div mat-dialog-title class="dialog-header d-flex justify-content-between align-items-center">
+  <div mat-dialog-title class="dialog-header  items-center">
     <h2 class="mb-0">{{ evento.titulo | titlecase }}</h2>
     <button mat-icon-button (click)="cerrarDialog()" class="close-button">
       <mat-icon>close</mat-icon>
@@ -29,12 +29,12 @@
       <mat-card-content>
         <!-- Fecha y hora -->
         <div class="fecha-hora mb-3">
-          <div class="d-flex align-items-center mb-2">
+          <div class="flex items-center mb-2">
             <mat-icon class="me-2" style="color: var(--mat-sys-primary);">calendar_today</mat-icon>
             <strong>Fecha:</strong>
             <span class="ms-2">{{ evento.fechaEvento | date:'EEEE, d MMMM y' }}</span>
           </div>
-          <div class="d-flex align-items-center mb-2">
+          <div class="flex items-center mb-2">
             <mat-icon class="me-2" style="color: var(--mat-sys-primary);">schedule</mat-icon>
             <strong>Hora:</strong>
             <span class="ms-2">{{ evento.fechaEvento | date:'h:mm a' }}</span>
@@ -45,7 +45,7 @@
 
         <!-- Descripción -->
         <div class="descripcion">
-          <div class="d-flex align-items-start mb-2">
+          <div class="flex items-start mb-2">
             <mat-icon class="me-2 mt-1" style="color: var(--mat-sys-primary);">description</mat-icon>
             <div>
               <strong>Descripción:</strong>
@@ -62,7 +62,7 @@
   </div>
 
   <!-- Botones de acción -->
-  <div mat-dialog-actions class="d-flex justify-content-end gap-2 pt-3">
+  <div mat-dialog-actions class="flex content-end gap-2 pt-3">
     <button mat-button (click)="cerrarDialog()" class="btn-cerrar">
       <mat-icon class="me-1">close</mat-icon>
       Cerrar

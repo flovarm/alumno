@@ -3,7 +3,6 @@
 @use "./_theme-colors" as my-theme;
 
 // === Tailwind CSS 4.x with DaisyUI (imported separately via angular.json) ===
-
 // === Font Face Declarations ===
 @font-face {
   font-family: "MDPrimer";
@@ -404,7 +403,6 @@ body {
   gap: 12px !important;
   font-size: 0.9rem !important;
   line-height: 1.4 !important;
-  width: 450px !important;
 }
 
 .curso-calificacion {
@@ -419,7 +417,6 @@ body {
   gap: 12px !important;
   font-size: 0.9rem !important;
   line-height: 1.4 !important;
-  width: 450px !important;
 }
 
 .curso-danger {

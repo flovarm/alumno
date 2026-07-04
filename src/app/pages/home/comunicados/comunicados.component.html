@@ -1,0 +1,55 @@
+<mat-dialog-content class="dialog-content">
+  <div class="dialog-wrapper">
+    <div *ngIf="comunicadoActual as comunicado; else sinComunicados" class="image-wrapper">
+      <button
+        mat-icon-button
+        (click)="close()"
+        aria-label="Cerrar"
+        class="close-button"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+
+      <img [src]="comunicado.imagen" 
+           [alt]="comunicado.titulo" 
+           class="image-fill">
+    </div>
+
+    <ng-template #sinComunicados>
+      <div class="empty-state">
+        No hay comunicados disponibles en este momento.
+      </div>
+    </ng-template>
+
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions
+  *ngIf="comunicados.length > 1"
+  [align]="'start'"
+  class="bg-white px-6 py-4 flex items-center border-t border-gray-200 m-0"
+>
+  <div class="w-full max-w-xl mx-auto flex items-center justify-between">
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="prev()"
+      class="!border-[var(--mat-sys-primary)] !text-[var(--mat-sys-primary)]"
+    >
+      <mat-icon class="mr-1">navigate_before</mat-icon> Anterior
+    </button>
+
+    <span class="text-sm font-medium text-gray-500">
+      {{ currentIndex + 1 }} de {{ comunicados.length }}
+    </span>
+
+    <button
+      mat-stroked-button
+      color="primary"
+      (click)="next()"
+      class="!border-[var(--mat-sys-primary)] !text-[var(--mat-sys-primary)]"
+    >
+      Siguiente <mat-icon class="ml-1">navigate_next</mat-icon>
+    </button>
+  </div>
+</mat-dialog-actions>

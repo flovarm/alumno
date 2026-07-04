@@ -1,6 +1,6 @@
-import { Component, inject, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import {
   ReactiveFormsModule,
   FormBuilder,
@@ -9,32 +9,34 @@ import {
   FormArray,
   FormControl,
   AbstractControl,
-} from "@angular/forms";
-import { MatCardModule } from "@angular/material/card";
-import { MatIconModule } from "@angular/material/icon";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatButtonModule } from "@angular/material/button";
-import { MatDialog, MatDialogModule } from "@angular/material/dialog";
-import { PageHeaderComponent } from "../../components/page-header/page-header.component";
-import { TeamsDialogComponent } from "../../components/teams-dialog/teams-dialog.component";
-import { GmailDialogComponent } from "../../components/gmail-dialog/gmail-dialog.component";
-import { AlumnoService } from "../../services/alumno.service";
-import { SnackService } from "../../services/snack.service";
-import { UbigeoService } from "../../services/ubigeo.service";
-import { MatTabsModule } from "@angular/material/tabs";
-import { MatSelectModule } from "@angular/material/select";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatDividerModule } from "@angular/material/divider";
+} from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { PageHeaderComponent } from '../../components/page-header/page-header.component';
+import { TeamsDialogComponent } from '../../components/teams-dialog/teams-dialog.component';
+import { GmailDialogComponent } from '../../components/gmail-dialog/gmail-dialog.component';
+import { AlumnoService } from '../../services/alumno.service';
+import { SnackService } from '../../services/snack.service';
+import { UbigeoService } from '../../services/ubigeo.service';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDividerModule } from '@angular/material/divider';
 import {
   UbigeoDepartment,
   UbigeoProvince,
   UbigeoDistrict,
-} from "../../models/ubigeo";
-import { EventoService } from "../../services/evento.service";
-import { EventoDialogComponent } from "./evento-dialog.component";
+} from '../../models/ubigeo';
+import { EventoService } from '../../services/evento.service';
+
+import { ComunicadosComponent } from './comunicados/comunicados.component';
+import { ComunicadoService } from '../../services/comunicado.service';
 @Component({
-  selector: "app-home",
+  selector: 'app-home',
   standalone: true,
   imports: [
     CommonModule,
@@ -53,8 +55,8 @@ import { EventoDialogComponent } from "./evento-dialog.component";
     MatCheckboxModule,
     MatDividerModule,
   ],
-  templateUrl: "./home.component.html",
-  styleUrl: "./home.component.scss",
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
   private alumnoService = inject(AlumnoService);
@@ -62,7 +64,9 @@ export class HomeComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialog = inject(MatDialog);
   private ubigeoService = inject(UbigeoService);
-  eventos: any[] = [];
+  private comunicadoService = inject(ComunicadoService);
+  comunicados: any[] = [];
+
   private eventoService = inject(EventoService);
   // Patrón simple para celular peruano según tu requerimiento:
   // - Prefijo opcional: '+51' o '51' (el '+' es opcional)
@@ -70,54 +74,47 @@ export class HomeComponent implements OnInit {
   celularPattern: RegExp = /^(?:\+?51)?9\d{8}$/;
 
   perfilForm: FormGroup = this.fb.group({
-    nombre: ["", Validators.required],
-    apePaterno: ["", Validators.required],
-    apeMaterno: [""],
-    completo: [""],
-    codigo: [""],
-    docid: ["", Validators.required],
-    direccion: ["", Validators.required],
-    email: ["", [Validators.email, Validators.required]],
-    fechanac: [""],
-    sexo: [""],
-    seguro: ["", Validators.required],
-    brazoDominante: ["", Validators.required],
-    tipodoc: [""],
-    persona: [""], // Campo administrativo, no editable por usuario
-    alergia: [""],
-    id_teams: [""], // Campo administrativo, no editable por usuario
-    departamento: [""],
-    provincia: [""],
-    distrito: ["", Validators.required],
-    enteramiento: ["", Validators.required],
+    nombre: ['', Validators.required],
+    apePaterno: ['', Validators.required],
+    apeMaterno: [''],
+    completo: [''],
+    codigo: [''],
+    docid: ['', Validators.required],
+    direccion: ['', Validators.required],
+    email: ['', [Validators.email, Validators.required]],
+    fechanac: [''],
+    sexo: [''],
+    seguro: ['', Validators.required],
+    brazoDominante: ['', Validators.required],
+    tipodoc: [''],
+    persona: [''], // Campo administrativo, no editable por usuario
+    alergia: [''],
+    id_teams: [''], // Campo administrativo, no editable por usuario
+    departamento: [''],
+    provincia: [''],
+    distrito: ['', Validators.required],
+    enteramiento: ['', Validators.required],
 
     permiteLlamadas: [false],
     permiteCorreos: [false],
     permiteWhatsapp: [false],
     // Telefonos: permitir múltiples entradas como FormArray (cada entrada tiene numeroTfno, tipoTfno e idTlfno)
     telefonos: this.fb.array(
-      [
-        this.fb.group({
-          numeroTfno: ["", [Validators.pattern(this.celularPattern)]],
-          tipoTfno: [""],
-          personaTfno: ["", Validators.required],
-          idTlfno: [""],
-        }),
-      ],
+      [this.crearTelefono('', 'Celular', 'Alumno', '')],
       [HomeComponent.atLeastOnePhoneValidator],
     ),
     // Apoderados: es un FormGroup que maneja 2 apoderados (estructura del backend)
     apoderados: this.fb.group({
-      nombre1Apo: [""],
-      nombre2Apo: [""],
-      apellidos1Apo: [""],
-      apellidos2Apo: [""],
-      tipo1Apo: [""],
-      tipo2Apo: [""],
-      email1Apo: ["", Validators.email],
-      email2Apo: ["", Validators.email],
-      tfno1Apo: ["", Validators.pattern(this.celularPattern)],
-      tfno2Apo: ["", Validators.pattern(this.celularPattern)],
+      nombre1Apo: [''],
+      nombre2Apo: [''],
+      apellidos1Apo: [''],
+      apellidos2Apo: [''],
+      tipo1Apo: [''],
+      tipo2Apo: [''],
+      email1Apo: ['', Validators.email],
+      email2Apo: ['', Validators.email],
+      tfno1Apo: ['', Validators.pattern(this.celularPattern)],
+      tfno2Apo: ['', Validators.pattern(this.celularPattern)],
     }),
   });
 
@@ -125,8 +122,8 @@ export class HomeComponent implements OnInit {
   perfilOriginal: any = null;
 
   // Avatar: iniciales y color generado
-  avatarInitials: string = "";
-  avatarColor: string = ""; // css color (ej. hsl(...))
+  avatarInitials: string = '';
+  avatarColor: string = ''; // css color (ej. hsl(...))
 
   // Propiedad para manejar idteams
   idteams: string | null = null;
@@ -140,9 +137,9 @@ export class HomeComponent implements OnInit {
   distritos: UbigeoDistrict[] = [];
 
   // IDs por defecto para La Libertad, Trujillo, Trujillo
-  readonly DEFAULT_DEPARTMENT_ID = "13"; // La Libertad
-  readonly DEFAULT_PROVINCE_ID = "1301"; // Trujillo
-  readonly DEFAULT_DISTRICT_ID = "130101"; // Trujillo
+  readonly DEFAULT_DEPARTMENT_ID = '13'; // La Libertad
+  readonly DEFAULT_PROVINCE_ID = '1301'; // Trujillo
+  readonly DEFAULT_DISTRICT_ID = '130101'; // Trujillo
 
   // Estados de carga para ubigeo
   loadingDepartamentos = false;
@@ -157,48 +154,48 @@ export class HomeComponent implements OnInit {
     const erroresInformacionAdicional: string[] = [];
 
     // Validar campos básicos - Datos Personales
-    if (this.perfilForm.get("nombre")?.hasError("required")) {
-      erroresDatosPersonales.push("• El nombre es requerido");
+    if (this.perfilForm.get('nombre')?.hasError('required')) {
+      erroresDatosPersonales.push('• El nombre es requerido');
     }
 
-    if (this.perfilForm.get("apePaterno")?.hasError("required")) {
-      erroresDatosPersonales.push("• El apellido paterno es requerido");
+    if (this.perfilForm.get('apePaterno')?.hasError('required')) {
+      erroresDatosPersonales.push('• El apellido paterno es requerido');
     }
 
-    if (this.perfilForm.get("docid")?.hasError("required")) {
-      erroresDatosPersonales.push("• El documento de identidad es requerido");
+    if (this.perfilForm.get('docid')?.hasError('required')) {
+      erroresDatosPersonales.push('• El documento de identidad es requerido');
     }
 
-    if (this.perfilForm.get("direccion")?.hasError("required")) {
-      erroresDatosPersonales.push("• La dirección es requerida");
+    if (this.perfilForm.get('direccion')?.hasError('required')) {
+      erroresDatosPersonales.push('• La dirección es requerida');
     }
 
-    if (this.perfilForm.get("email")?.hasError("required")) {
-      erroresDatosPersonales.push("• El email es requerido");
-    } else if (this.perfilForm.get("email")?.hasError("email")) {
-      erroresDatosPersonales.push("• El formato del email no es válido");
+    if (this.perfilForm.get('email')?.hasError('required')) {
+      erroresDatosPersonales.push('• El email es requerido');
+    } else if (this.perfilForm.get('email')?.hasError('email')) {
+      erroresDatosPersonales.push('• El formato del email no es válido');
     }
 
     // Validar que al menos un teléfono sea proporcionado
-    if (this.perfilForm.get("telefonos")?.hasError("atLeastOnePhone")) {
+    if (this.perfilForm.get('telefonos')?.hasError('atLeastOnePhone')) {
       erroresTelefonos.push(
-        "• Debe proporcionar al menos un número de teléfono",
+        '• Debe proporcionar al menos un número de teléfono',
       );
     }
 
     // Validar teléfonos individuales
-    const telefonosArray = this.perfilForm.get("telefonos") as FormArray;
+    const telefonosArray = this.perfilForm.get('telefonos') as FormArray;
     telefonosArray.controls.forEach((telefonoGroup, index) => {
-      const numeroTfno = telefonoGroup.get("numeroTfno");
-      const personaTfno = telefonoGroup.get("personaTfno");
+      const numeroTfno = telefonoGroup.get('numeroTfno');
+      const personaTfno = telefonoGroup.get('personaTfno');
 
-      if (personaTfno?.hasError("required")) {
+      if (personaTfno?.hasError('required')) {
         erroresTelefonos.push(
           `• Teléfono ${index + 1}: La persona es requerida`,
         );
       }
 
-      if (numeroTfno?.hasError("pattern") && numeroTfno.value) {
+      if (numeroTfno?.hasError('pattern') && numeroTfno.value) {
         erroresTelefonos.push(
           `• Teléfono ${index + 1}: Formato inválido (ej: 987654321, +51987654321)`,
         );
@@ -206,74 +203,74 @@ export class HomeComponent implements OnInit {
     });
 
     // Validar apoderados
-    const apoderadosGroup = this.perfilForm.get("apoderados") as FormGroup;
+    const apoderadosGroup = this.perfilForm.get('apoderados') as FormGroup;
 
-    const email1Apo = apoderadosGroup.get("email1Apo");
-    if (email1Apo?.hasError("email") && email1Apo.value) {
-      erroresApoderados.push("• Email del Apoderado 1: Formato no válido");
+    const email1Apo = apoderadosGroup.get('email1Apo');
+    if (email1Apo?.hasError('email') && email1Apo.value) {
+      erroresApoderados.push('• Email del Apoderado 1: Formato no válido');
     }
 
-    const email2Apo = apoderadosGroup.get("email2Apo");
-    if (email2Apo?.hasError("email") && email2Apo.value) {
-      erroresApoderados.push("• Email del Apoderado 2: Formato no válido");
+    const email2Apo = apoderadosGroup.get('email2Apo');
+    if (email2Apo?.hasError('email') && email2Apo.value) {
+      erroresApoderados.push('• Email del Apoderado 2: Formato no válido');
     }
 
-    const tfno1Apo = apoderadosGroup.get("tfno1Apo");
-    if (tfno1Apo?.hasError("pattern") && tfno1Apo.value) {
+    const tfno1Apo = apoderadosGroup.get('tfno1Apo');
+    if (tfno1Apo?.hasError('pattern') && tfno1Apo.value) {
       erroresApoderados.push(
-        "• Teléfono del Apoderado 1: Formato inválido (ej: 987654321, +51987654321)",
+        '• Teléfono del Apoderado 1: Formato inválido (ej: 987654321, +51987654321)',
       );
     }
 
-    const tfno2Apo = apoderadosGroup.get("tfno2Apo");
-    if (tfno2Apo?.hasError("pattern") && tfno2Apo.value) {
+    const tfno2Apo = apoderadosGroup.get('tfno2Apo');
+    if (tfno2Apo?.hasError('pattern') && tfno2Apo.value) {
       erroresApoderados.push(
-        "• Teléfono del Apoderado 2: Formato inválido (ej: 987654321, +51987654321)",
+        '• Teléfono del Apoderado 2: Formato inválido (ej: 987654321, +51987654321)',
       );
     }
 
     // Validar campos de información adicional
 
-    if (this.perfilForm.get("brazoDominante")?.hasError("required")) {
-      erroresInformacionAdicional.push("• El brazo dominante es requerido");
+    if (this.perfilForm.get('brazoDominante')?.hasError('required')) {
+      erroresInformacionAdicional.push('• El brazo dominante es requerido');
     }
 
-    if (this.perfilForm.get("distrito")?.hasError("required")) {
-      erroresInformacionAdicional.push("• El distrito es requerido");
+    if (this.perfilForm.get('distrito')?.hasError('required')) {
+      erroresInformacionAdicional.push('• El distrito es requerido');
     }
 
-    if (this.perfilForm.get("seguro")?.hasError("required")) {
-      erroresInformacionAdicional.push("• El seguro es requerido");
+    if (this.perfilForm.get('seguro')?.hasError('required')) {
+      erroresInformacionAdicional.push('• El seguro es requerido');
     }
 
-    if (this.perfilForm.get("enteramiento")?.hasError("required")) {
-      erroresInformacionAdicional.push("• El enteramiento es requerido");
+    if (this.perfilForm.get('enteramiento')?.hasError('required')) {
+      erroresInformacionAdicional.push('• El enteramiento es requerido');
     }
 
     // Construir mensaje organizado
     let mensajeCompleto =
-      "No se puede actualizar el perfil. Corrija los siguientes errores:\n\n";
+      'No se puede actualizar el perfil. Corrija los siguientes errores:\n\n';
 
     if (erroresDatosPersonales.length > 0) {
       mensajeCompleto +=
-        "📋 DATOS PERSONALES:\n" + erroresDatosPersonales.join("\n") + "\n\n";
+        '📋 DATOS PERSONALES:\n' + erroresDatosPersonales.join('\n') + '\n\n';
     }
 
     if (erroresTelefonos.length > 0) {
       mensajeCompleto +=
-        "📞 TELÉFONOS:\n" + erroresTelefonos.join("\n") + "\n\n";
+        '📞 TELÉFONOS:\n' + erroresTelefonos.join('\n') + '\n\n';
     }
 
     if (erroresApoderados.length > 0) {
       mensajeCompleto +=
-        "👥 APODERADOS:\n" + erroresApoderados.join("\n") + "\n\n";
+        '👥 APODERADOS:\n' + erroresApoderados.join('\n') + '\n\n';
     }
 
     if (erroresInformacionAdicional.length > 0) {
       mensajeCompleto +=
-        "ℹ️ INFORMACIÓN ADICIONAL:\n" +
-        erroresInformacionAdicional.join("\n") +
-        "\n\n";
+        'ℹ️ INFORMACIÓN ADICIONAL:\n' +
+        erroresInformacionAdicional.join('\n') +
+        '\n\n';
     }
 
     // Mostrar errores encontrados
@@ -283,11 +280,11 @@ export class HomeComponent implements OnInit {
       erroresApoderados.length +
       erroresInformacionAdicional.length;
     if (totalErrores > 0) {
-      mensajeCompleto += `Total: ${totalErrores} error${totalErrores > 1 ? "es" : ""} encontrado${totalErrores > 1 ? "s" : ""}`;
+      mensajeCompleto += `Total: ${totalErrores} error${totalErrores > 1 ? 'es' : ''} encontrado${totalErrores > 1 ? 's' : ''}`;
       this.snack.danger(mensajeCompleto, { duration: 8000 });
     } else {
       this.snack.danger(
-        "El formulario contiene errores. Por favor, revise todos los campos.",
+        'El formulario contiene errores. Por favor, revise todos los campos.',
       );
     }
 
@@ -302,7 +299,7 @@ export class HomeComponent implements OnInit {
   private resaltarCamposConErrores(): void {
     setTimeout(() => {
       // Resaltar campos básicos con errores
-      const camposBasicos = ["nombre", "apePaterno", "docid", "email"];
+      const camposBasicos = ['nombre', 'apePaterno', 'docid', 'email'];
       camposBasicos.forEach((campo) => {
         const control = this.perfilForm.get(campo);
         if (control?.invalid) {
@@ -310,14 +307,14 @@ export class HomeComponent implements OnInit {
             `[formControlName="${campo}"]`,
           );
           if (elemento) {
-            elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return; // Solo hacer scroll al primer error encontrado
           }
         }
       });
 
       // Si no hay errores en campos básicos, revisar teléfonos
-      const telefonosArray = this.perfilForm.get("telefonos") as FormArray;
+      const telefonosArray = this.perfilForm.get('telefonos') as FormArray;
       for (let i = 0; i < telefonosArray.controls.length; i++) {
         const telefonoGroup = telefonosArray.controls[i];
         if (telefonoGroup.invalid) {
@@ -325,18 +322,18 @@ export class HomeComponent implements OnInit {
             `[formArrayName="telefonos"] [formGroupName="${i}"]`,
           );
           if (elemento) {
-            elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
           }
         }
       }
 
       // Si no hay errores en teléfonos, revisar apoderados
-      const apoderadosGroup = this.perfilForm.get("apoderados") as FormGroup;
+      const apoderadosGroup = this.perfilForm.get('apoderados') as FormGroup;
       if (apoderadosGroup.invalid) {
         const elemento = document.querySelector('[formGroupName="apoderados"]');
         if (elemento) {
-          elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+          elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
     }, 100);
@@ -345,32 +342,32 @@ export class HomeComponent implements OnInit {
   // Método para verificar si la pestaña de datos personales tiene errores
   get tieneErroresDatosPersonales(): boolean {
     return (
-      this.perfilForm.get("nombre")?.invalid ||
-      this.perfilForm.get("apePaterno")?.invalid ||
-      this.perfilForm.get("docid")?.invalid ||
-      this.perfilForm.get("direccion")?.invalid ||
-      this.perfilForm.get("email")?.invalid ||
+      this.perfilForm.get('nombre')?.invalid ||
+      this.perfilForm.get('apePaterno')?.invalid ||
+      this.perfilForm.get('docid')?.invalid ||
+      this.perfilForm.get('direccion')?.invalid ||
+      this.perfilForm.get('email')?.invalid ||
       this.telefonos.invalid
     );
   }
 
   // Método para verificar si la pestaña de apoderados tiene errores
   get tieneErroresApoderados(): boolean {
-    return this.perfilForm.get("apoderados")?.invalid || false;
+    return this.perfilForm.get('apoderados')?.invalid || false;
   }
 
   // Método para obtener el conteo de errores en datos personales
   get conteoErroresDatosPersonales(): number {
     let errores = 0;
 
-    if (this.perfilForm.get("nombre")?.invalid) errores++;
-    if (this.perfilForm.get("apePaterno")?.invalid) errores++;
-    if (this.perfilForm.get("docid")?.invalid) errores++;
-    if (this.perfilForm.get("direccion")?.invalid) errores++;
-    if (this.perfilForm.get("email")?.invalid) errores++;
+    if (this.perfilForm.get('nombre')?.invalid) errores++;
+    if (this.perfilForm.get('apePaterno')?.invalid) errores++;
+    if (this.perfilForm.get('docid')?.invalid) errores++;
+    if (this.perfilForm.get('direccion')?.invalid) errores++;
+    if (this.perfilForm.get('email')?.invalid) errores++;
 
     // Contar errores en teléfonos
-    if (this.telefonos.hasError("atLeastOnePhone")) errores++;
+    if (this.telefonos.hasError('atLeastOnePhone')) errores++;
     this.telefonos.controls.forEach((telefonoControl) => {
       if (telefonoControl.invalid) errores++;
     });
@@ -381,12 +378,12 @@ export class HomeComponent implements OnInit {
   // Método para obtener el conteo de errores en apoderados
   get conteoErroresApoderados(): number {
     let errores = 0;
-    const apoderadosGroup = this.perfilForm.get("apoderados") as FormGroup;
+    const apoderadosGroup = this.perfilForm.get('apoderados') as FormGroup;
 
-    if (apoderadosGroup.get("email1Apo")?.invalid) errores++;
-    if (apoderadosGroup.get("email2Apo")?.invalid) errores++;
-    if (apoderadosGroup.get("tfno1Apo")?.invalid) errores++;
-    if (apoderadosGroup.get("tfno2Apo")?.invalid) errores++;
+    if (apoderadosGroup.get('email1Apo')?.invalid) errores++;
+    if (apoderadosGroup.get('email2Apo')?.invalid) errores++;
+    if (apoderadosGroup.get('tfno1Apo')?.invalid) errores++;
+    if (apoderadosGroup.get('tfno2Apo')?.invalid) errores++;
 
     return errores;
   }
@@ -394,12 +391,12 @@ export class HomeComponent implements OnInit {
   // Método para verificar si la pestaña de información adicional tiene errores
   get tieneErroresInformacionAdicional(): boolean {
     return (
-      this.perfilForm.get("brazoDominante")?.invalid ||
-      this.perfilForm.get("departamento")?.invalid ||
-      this.perfilForm.get("provincia")?.invalid ||
-      this.perfilForm.get("distrito")?.invalid ||
-      this.perfilForm.get("seguro")?.invalid ||
-      this.perfilForm.get("enteramiento")?.invalid ||
+      this.perfilForm.get('brazoDominante')?.invalid ||
+      this.perfilForm.get('departamento')?.invalid ||
+      this.perfilForm.get('provincia')?.invalid ||
+      this.perfilForm.get('distrito')?.invalid ||
+      this.perfilForm.get('seguro')?.invalid ||
+      this.perfilForm.get('enteramiento')?.invalid ||
       false
     );
   }
@@ -408,12 +405,12 @@ export class HomeComponent implements OnInit {
   get conteoErroresInformacionAdicional(): number {
     let errores = 0;
 
-    if (this.perfilForm.get("brazoDominante")?.invalid) errores++;
-    if (this.perfilForm.get("departamento")?.invalid) errores++;
-    if (this.perfilForm.get("provincia")?.invalid) errores++;
-    if (this.perfilForm.get("distrito")?.invalid) errores++;
-    if (this.perfilForm.get("seguro")?.invalid) errores++;
-    if (this.perfilForm.get("enteramiento")?.invalid) errores++;
+    if (this.perfilForm.get('brazoDominante')?.invalid) errores++;
+    if (this.perfilForm.get('departamento')?.invalid) errores++;
+    if (this.perfilForm.get('provincia')?.invalid) errores++;
+    if (this.perfilForm.get('distrito')?.invalid) errores++;
+    if (this.perfilForm.get('seguro')?.invalid) errores++;
+    if (this.perfilForm.get('enteramiento')?.invalid) errores++;
 
     return errores;
   }
@@ -428,7 +425,7 @@ export class HomeComponent implements OnInit {
     }
 
     const hasValidPhone = formArray.controls.some((phoneGroup) => {
-      const numeroTfno = phoneGroup.get("numeroTfno")?.value;
+      const numeroTfno = phoneGroup.get('numeroTfno')?.value;
       return numeroTfno && numeroTfno.trim().length > 0;
     });
 
@@ -440,18 +437,12 @@ export class HomeComponent implements OnInit {
     this.cargarUbigeoDesdeBackend();
   }
 
-  eventosDesdeAhora() {
-    this.eventoService.listarEventosDesdeAhora().subscribe((eventos) => {
-      this.eventos = eventos as any[];
-    });
-  }
-
   onDepartamentoChange(departamentoId: string): void {
     if (!departamentoId) {
       this.provincias = [];
       this.distritos = [];
-      this.perfilForm.get("provincia")?.setValue("");
-      this.perfilForm.get("distrito")?.setValue("");
+      this.perfilForm.get('provincia')?.setValue('');
+      this.perfilForm.get('distrito')?.setValue('');
       return;
     }
 
@@ -464,17 +455,16 @@ export class HomeComponent implements OnInit {
 
         // Si es La Libertad, establecer Trujillo por defecto
         if (departamentoId === this.DEFAULT_DEPARTMENT_ID) {
-          this.perfilForm.get("provincia")?.setValue(this.DEFAULT_PROVINCE_ID);
+          this.perfilForm.get('provincia')?.setValue(this.DEFAULT_PROVINCE_ID);
           this.onProvinciaChange(this.DEFAULT_PROVINCE_ID);
         } else {
-          this.perfilForm.get("provincia")?.setValue("");
-          this.perfilForm.get("distrito")?.setValue("");
+          this.perfilForm.get('provincia')?.setValue('');
+          this.perfilForm.get('distrito')?.setValue('');
         }
       },
       error: (error) => {
-        console.error("Error al cargar provincias:", error);
         this.loadingProvincias = false;
-        this.snack.danger("Error al cargar provincias");
+        this.snack.danger('Error al cargar provincias');
       },
     });
   }
@@ -482,7 +472,7 @@ export class HomeComponent implements OnInit {
   onProvinciaChange(provinciaId: string): void {
     if (!provinciaId) {
       this.distritos = [];
-      this.perfilForm.get("distrito")?.setValue("");
+      this.perfilForm.get('distrito')?.setValue('');
       return;
     }
 
@@ -494,114 +484,85 @@ export class HomeComponent implements OnInit {
 
         // Si es Trujillo, establecer Trujillo por defecto
         if (provinciaId === this.DEFAULT_PROVINCE_ID) {
-          this.perfilForm.get("distrito")?.setValue(this.DEFAULT_DISTRICT_ID);
+          this.perfilForm.get('distrito')?.setValue(this.DEFAULT_DISTRICT_ID);
         } else {
-          this.perfilForm.get("distrito")?.setValue("");
+          this.perfilForm.get('distrito')?.setValue('');
         }
       },
       error: (error) => {
-        console.error("Error al cargar distritos:", error);
         this.loadingDistritos = false;
-        this.snack.danger("Error al cargar distritos");
+        this.snack.danger('Error al cargar distritos');
       },
     });
   }
 
-  private cargarUbigeoDesdeBackend(distritoNombre?: string): void {
+  private cargarUbigeoDesdeBackend(distritoId?: string): void {
     this.loadingDepartamentos = true;
     this.ubigeoService.getDepartments().subscribe({
       next: (departamentos) => {
         this.departamentos = departamentos;
         this.loadingDepartamentos = false;
 
-        if (!distritoNombre) {
+        if (!distritoId) {
           // Si no hay distrito guardado, NO inicializar nada
           // El usuario debe completar departamento, provincia y distrito manualmente
           // No hacer nada aquí
         } else {
-          // Si hay distrito guardado, buscar su información completa
-          this.buscarDistritoPorNombre(distritoNombre);
+          // Si hay distrito guardado, buscar su información completa por ID
+          this.buscarDistritoPorId(distritoId);
         }
       },
       error: (error) => {
-        console.error("Error al cargar departamentos:", error);
         this.loadingDepartamentos = false;
-        this.snack.danger("Error al cargar departamentos");
+        this.snack.danger('Error al cargar departamentos');
         // En caso de error, no inicializar nada
       },
     });
   }
 
   private establecerValoresPorDefecto(): void {
-    this.perfilForm.get("departamento")?.setValue(this.DEFAULT_DEPARTMENT_ID);
+    this.perfilForm.get('departamento')?.setValue(this.DEFAULT_DEPARTMENT_ID);
     this.onDepartamentoChange(this.DEFAULT_DEPARTMENT_ID);
   }
 
-  private buscarDistritoPorNombre(nombreDistrito: string): void {
-    // Buscar en todos los departamentos el distrito con ese nombre
-    // Como puede haber distritos con el mismo nombre en diferentes provincias,
-    // priorizamos La Libertad
-    this.ubigeoService
-      .getDistrictsByDepartment(this.DEFAULT_DEPARTMENT_ID)
-      .subscribe({
-        next: (distritos) => {
-          const distritoEncontrado = distritos.find(
-            (d) => d.name.toLowerCase() === nombreDistrito.toLowerCase(),
-          );
+  private buscarDistritoPorId(distritoId: string): void {
+    // Extraer el departamento y provincia del ID del distrito
+    // El formato del ID es: DDPPDD (ej: 130101)
+    // DD = departamento (2 dígitos), PP = provincia (2 dígitos), DD = distrito (2 dígitos)
+    const departamentoId = distritoId.substring(0, 2);
+    const provinciaId = distritoId.substring(0, 4);
 
-          if (distritoEncontrado) {
-            // Cargar la jerarquía completa
-            this.cargarJerarquiaCompleta(distritoEncontrado);
-          } else {
-            // Si no se encuentra, usar valores por defecto
-            this.establecerValoresPorDefecto();
-          }
-        },
-        error: (error) => {
-          console.error("Error al buscar distrito:", error);
-          this.establecerValoresPorDefecto();
-        },
-      });
-  }
-
-  private cargarJerarquiaCompleta(distrito: UbigeoDistrict): void {
     // Establecer departamento
-    this.perfilForm.get("departamento")?.setValue(distrito.departmentId);
+    this.perfilForm.get('departamento')?.setValue(departamentoId);
 
     // Cargar provincias del departamento
-    this.ubigeoService
-      .getProvincesByDepartment(distrito.departmentId)
-      .subscribe({
-        next: (provincias) => {
-          this.provincias = provincias;
-          this.perfilForm.get("provincia")?.setValue(distrito.provinceId);
+    this.loadingProvincias = true;
+    this.ubigeoService.getProvincesByDepartment(departamentoId).subscribe({
+      next: (provincias) => {
+        this.provincias = provincias;
+        this.loadingProvincias = false;
+        this.perfilForm.get('provincia')?.setValue(provinciaId);
 
-          // Cargar distritos de la provincia
-          this.ubigeoService
-            .getDistrictsByProvince(distrito.provinceId)
-            .subscribe({
-              next: (distritos) => {
-                this.distritos = distritos;
-                this.perfilForm.get("distrito")?.setValue(distrito.id);
-              },
-              error: (error) => {
-                console.error("Error al cargar distritos:", error);
-              },
-            });
-        },
-        error: (error) => {
-          console.error("Error al cargar provincias:", error);
-        },
-      });
-  }
-
-  // Método para obtener el nombre del distrito seleccionado
-  private getSelectedDistrictName(): string {
-    const distritoId = this.perfilForm.get("distrito")?.value;
-    if (!distritoId) return "";
-
-    const distrito = this.distritos.find((d) => d.id === distritoId);
-    return distrito?.name || "";
+        // Cargar distritos de la provincia
+        this.loadingDistritos = true;
+        this.ubigeoService.getDistrictsByProvince(provinciaId).subscribe({
+          next: (distritos) => {
+            this.distritos = distritos;
+            this.loadingDistritos = false;
+            this.perfilForm.get('distrito')?.setValue(distritoId);
+          },
+          error: (error) => {
+            console.error('Error al cargar distritos:', error);
+            this.loadingDistritos = false;
+          },
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar provincias:', error);
+        this.loadingProvincias = false;
+        this.establecerValoresPorDefecto();
+      },
+    });
   }
 
   // Getter para detectar si hay cambios en el formulario
@@ -612,38 +573,38 @@ export class HomeComponent implements OnInit {
 
     // Comparar campos básicos de texto
     const basicFields = [
-      "nombre",
-      "apePaterno",
-      "apeMaterno",
-      "direccion",
-      "email",
-      "seguro",
-      "fechanac",
-      "sexo",
-      "brazoDominante",
-      "tipodoc",
-      "persona",
-      "alergia",
-      "id_teams",
-      "enteramiento",
+      'nombre',
+      'apePaterno',
+      'apeMaterno',
+      'direccion',
+      'email',
+      'seguro',
+      'fechanac',
+      'sexo',
+      'brazoDominante',
+      'tipodoc',
+      'persona',
+      'alergia',
+      'id_teams',
+      'enteramiento',
     ];
 
     for (const field of basicFields) {
-      const current = currentValues[field] || "";
-      const original = this.perfilOriginal[field] || "";
+      const current = currentValues[field] || '';
+      const original = this.perfilOriginal[field] || '';
       if (current !== original) return true;
     }
 
-    // Comparar ubigeo - comparamos el nombre del distrito seleccionado con el original
-    const currentDistrictName = this.getSelectedDistrictName();
-    const originalDistrictName = this.perfilOriginal.distrito || "";
-    if (currentDistrictName !== originalDistrictName) return true;
+    // Comparar ubigeo - comparamos el ID del distrito seleccionado con el original
+    const currentDistrictId = this.perfilForm.get('distrito')?.value || '';
+    const originalDistrictId = this.perfilOriginal.distrito || '';
+    if (currentDistrictId !== originalDistrictId) return true;
 
     // Comparar campos booleanos de permisos
     const permissionFields = [
-      "permiteLlamadas",
-      "permiteCorreos",
-      "permiteWhatsapp",
+      'permiteLlamadas',
+      'permiteCorreos',
+      'permiteWhatsapp',
     ];
 
     for (const field of permissionFields) {
@@ -664,9 +625,9 @@ export class HomeComponent implements OnInit {
       if (!original) return true;
 
       if (
-        (tel.numeroTfno || "") !== (original.numeroTfno || "") ||
-        (tel.tipoTfno || "") !== (original.tipoTfno || "") ||
-        (tel.personaTfno || "") !== (original.personaTfno || "")
+        (tel.numeroTfno || '') !== (original.numeroTfno || '') ||
+        (tel.tipoTfno || '') !== (original.tipoTfno || '') ||
+        (tel.personaTfno || '') !== (original.personaTfno || '')
       ) {
         return true;
       }
@@ -677,21 +638,21 @@ export class HomeComponent implements OnInit {
     const originalApoderados = this.perfilOriginal.apoderado || {};
 
     const apoderadoFields = [
-      "nombre1Apo",
-      "nombre2Apo",
-      "apellidos1Apo",
-      "apellidos2Apo",
-      "tipo1Apo",
-      "tipo2Apo",
-      "email1Apo",
-      "email2Apo",
-      "tfno1Apo",
-      "tfno2Apo",
+      'nombre1Apo',
+      'nombre2Apo',
+      'apellidos1Apo',
+      'apellidos2Apo',
+      'tipo1Apo',
+      'tipo2Apo',
+      'email1Apo',
+      'email2Apo',
+      'tfno1Apo',
+      'tfno2Apo',
     ];
 
     for (const field of apoderadoFields) {
-      const current = currentApoderados[field] || "";
-      const original = originalApoderados[field] || "";
+      const current = currentApoderados[field] || '';
+      const original = originalApoderados[field] || '';
       if (current !== original) return true;
     }
 
@@ -701,67 +662,118 @@ export class HomeComponent implements OnInit {
   // Método equivalente al de navbar: toma el nombre completo y devuelve hasta 2 iniciales
   get userInitials(): string {
     const nombreCompleto = (
-      this.perfilForm.get("completo")?.value || ""
+      this.perfilForm.get('completo')?.value || ''
     ).toString();
     return nombreCompleto
       .split(/\s+/)
       .filter((part) => part.length > 0)
       .map((part) => part[0].toUpperCase())
-      .join("")
+      .join('')
       .slice(0, 2); // Solo dos iniciales
   }
 
   // Getter para acceder al FormArray en plantilla / código
   get telefonos(): FormArray {
-    return this.perfilForm.get("telefonos") as FormArray;
+    return this.perfilForm.get('telefonos') as FormArray;
   }
 
   get apoderados(): FormGroup {
-    return this.perfilForm.get("apoderados") as FormGroup;
+    return this.perfilForm.get('apoderados') as FormGroup;
   }
 
   // Helper para limpiar espacios de números de teléfono
   private limpiarNumeroTelefono(numero: string): string {
-    if (!numero) return "";
-    return numero.replace(/\s+/g, ""); // Remueve todos los espacios
+    if (!numero) return '';
+    return numero.replace(/\s+/g, ''); // Remueve todos los espacios
   }
 
   // Helper para crear un grupo de teléfono
   private crearTelefono(
-    numero: string = "",
-    tipo: string = "",
-    persona: string = "",
-    idTlfno: string = "",
+    numero: string = '',
+    tipo: string = '',
+    persona: string = '',
+    idTlfno: number | string | null = null,
   ): FormGroup {
     return this.fb.group({
       numeroTfno: [numero, [Validators.pattern(this.celularPattern)]],
       tipoTfno: [tipo],
       personaTfno: [persona, Validators.required],
-      Idtfno: [idTlfno],
+      idTlfno: [idTlfno ?? null],
     });
   }
 
+  agregarTelefono(): void {
+    this.telefonos.push(this.crearTelefono('', 'Celular', 'Alumno', null));
+  }
+
+  eliminarTelefono(index: number): void {
+    if (this.telefonos.length > 1) {
+      this.telefonos.removeAt(index);
+    } else {
+      this.telefonos.at(0)?.reset({
+        numeroTfno: '',
+        tipoTfno: 'Celular',
+        personaTfno: 'Alumno',
+        idTlfno: null,
+      });
+    }
+
+    this.telefonos.updateValueAndValidity();
+  }
+
+  private asegurarTelefonoInicial(): void {
+    if (this.telefonos.length === 0) {
+      this.agregarTelefono();
+    }
+  }
+
   // Intentamos leer el usuario guardado (puede variar según la app)
-  user = JSON.parse(localStorage.getItem("alumno_currentUser") || "{}");
+  user = JSON.parse(localStorage.getItem('alumno_currentUser') || '{}');
 
   ngOnInit(): void {
     // Ensure apoderados/telefonos getters reference existing FormArrays (form is already created above)
     // cargarPerfil() will repopulate the arrays based on backend data
+    this.listarComunicados();
     this.cargarPerfil();
-    this.eventosDesdeAhora();
+    // this.eventosDesdeAhora();
+  }
+
+  listarComunicados(): void {
+    this.comunicadoService.listarComunicados().subscribe({
+      next: (comunicados: any[]) => {
+        this.comunicados = comunicados;
+        //    console.log('Comunicados cargados:', this.comunicados);
+        if (this.comunicados.length > 0) {
+          this.abrirComunicados();
+        }
+      },
+      error: (err) => {
+        console.error('Error al listar comunicados:', err);
+        this.snack.danger('Error al cargar comunicados');
+      },
+    });
+  }
+
+  abrirComunicados(): void {
+    this.dialog.open(ComunicadosComponent, {
+      width: '600px',
+      disableClose: false,
+      data: this.comunicados,
+      panelClass: ['animate__animated', 'animate__backInUp'],
+    });
   }
 
   private obtenerDniDeUsuario(): string {
     // El objeto user puede tener distintas propiedades; intentamos varios lugares comunes
     if (!this.user || Object.keys(this.user).length === 0) {
-      return "45551179"; // fallback temporal
+      return '45551179'; // fallback temporal
     }
     return (
       (this.user.userName as string) ||
       (this.user.dni as string) ||
       (this.user.docid as string) ||
       (this.user.username as string) ||
-      "45551179"
+      '45551179'
     );
   }
 
@@ -770,38 +782,49 @@ export class HomeComponent implements OnInit {
 
     this.alumnoService.getPerfil(dni).subscribe({
       next: (perfil: any) => {
-        console.log(perfil);
         // Guardamos el original
         this.perfilOriginal = perfil;
 
         // Rellenamos formulario con datos recibidos (seguro con fallback a strings vacíos)
         this.perfilForm.patchValue({
-          nombre: perfil.nombre || "",
-          apePaterno: perfil.apePaterno || "",
-          apeMaterno: perfil.apeMaterno || "",
+          nombre: perfil.nombre || '',
+          apePaterno: perfil.apePaterno || '',
+          apeMaterno: perfil.apeMaterno || '',
           completo:
             perfil.completo ||
-            `${perfil.apePaterno || ""} ${perfil.apeMaterno || ""} ${perfil.nombre || ""}`.trim(),
-          codigo: perfil.codigo ?? "",
-          docid: perfil.docid ?? perfil.persona?.docid ?? "",
-          direccion: perfil.direccion || "",
-          email: perfil.email || "",
-          fechanac: perfil.fechanac ? this.formatFecha(perfil.fechanac) : "",
-          sexo: perfil.sexo || "",
-          seguro: perfil.seguro || "",
-          brazoDominante: perfil.brazoDominante || "",
+            `${perfil.apePaterno || ''} ${perfil.apeMaterno || ''} ${perfil.nombre || ''}`.trim(),
+          codigo: perfil.codigo ?? '',
+          docid: perfil.docid ?? perfil.persona?.docid ?? '',
+          direccion: perfil.direccion || '',
+          email: perfil.email || '',
+          fechanac: perfil.fechanac ? this.formatFecha(perfil.fechanac) : '',
+          sexo: perfil.sexo || '',
+          seguro: perfil.seguro || '',
+          brazoDominante: perfil.brazoDominante || '',
           tipodoc: perfil.tipodoc || null,
-          persona: perfil.persona || "",
-          alergia: perfil.alergia || "",
-          id_teams: perfil.id_teams || "",
-          enteramiento: perfil.enteramiento || "",
+          persona: perfil.persona || '',
+          alergia: perfil.alergia || '',
+          id_teams: perfil.id_teams || '',
+          enteramiento: perfil.enteramiento || '',
           permiteLlamadas: perfil.permiteLlamadas || false,
           permiteCorreos: perfil.permiteCorreos || false,
           permiteWhatsapp: perfil.permiteWhatsapp || false,
         });
 
-        // Cargar ubigeo basado en el distrito guardado
-        this.cargarUbigeoDesdeBackend(perfil.distrito);
+        // Cargar ubigeo basado en el ID del distrito guardado
+        // El backend envía el campo "distrito" con el ID
+        const distritoId = perfil.distrito;
+
+        if (distritoId && /^\d{6}$/.test(distritoId)) {
+          // El distrito es un ID válido de 6 dígitos
+          this.cargarUbigeoDesdeBackend(distritoId);
+        } else {
+          // Si no hay distrito o no es un ID válido, solo cargar los departamentos
+          console.warn(
+            'No se recibió un distrito válido del backend. El usuario deberá seleccionar el distrito manualmente.',
+          );
+          this.cargarDepartamentos();
+        }
 
         // Obtener idteams del perfil
         this.idteams = perfil.id_teams || null;
@@ -811,7 +834,7 @@ export class HomeComponent implements OnInit {
 
         // Telefonos: si vienen, reemplazamos el FormArray con los teléfonos recibidos (permitir varios)
         if (perfil.telefonos && Array.isArray(perfil.telefonos)) {
-          const fa = this.perfilForm.get("telefonos") as FormArray;
+          const fa = this.perfilForm.get('telefonos') as FormArray;
           // limpiar el FormArray actual
           while (fa && fa.length) {
             fa.removeAt(0);
@@ -821,66 +844,68 @@ export class HomeComponent implements OnInit {
             fa.push(
               this.fb.group({
                 numeroTfno: [
-                  this.limpiarNumeroTelefono(t.numeroTfno || ""),
+                  this.limpiarNumeroTelefono(t.numeroTfno || ''),
                   Validators.pattern(this.celularPattern),
                 ],
-                tipoTfno: [t.tipoTfno || ""],
-                personaTfno: [t.personaTfno || "Alumno", Validators.required],
-                idTlfno: [t.idTlfno || ""],
+                tipoTfno: [t.tipoTfno || ''],
+                personaTfno: [t.personaTfno || 'Alumno', Validators.required],
+                idTlfno: [t.idTlfno ?? null],
               }),
             );
           });
+
+          this.asegurarTelefonoInicial();
         }
 
         // Apoderados: poblar FormGroup desde backend (objeto 'apoderado')
         if (perfil.apoderado) {
           const a = perfil.apoderado;
-          this.perfilForm.get("apoderados")?.patchValue({
-            nombre1Apo: a.nombre1Apo || "",
-            nombre2Apo: a.nombre2Apo || "",
-            apellidos1Apo: a.apellidos1Apo || "",
-            apellidos2Apo: a.apellidos2Apo || "",
-            tipo1Apo: a.tipo1Apo || "",
-            tipo2Apo: a.tipo2Apo || "",
-            email1Apo: a.email1Apo || "",
-            email2Apo: a.email2Apo || "",
-            tfno1Apo: this.limpiarNumeroTelefono(a.tfno1Apo || ""),
-            tfno2Apo: this.limpiarNumeroTelefono(a.tfno2Apo || ""),
+          this.perfilForm.get('apoderados')?.patchValue({
+            nombre1Apo: a.nombre1Apo || '',
+            nombre2Apo: a.nombre2Apo || '',
+            apellidos1Apo: a.apellidos1Apo || '',
+            apellidos2Apo: a.apellidos2Apo || '',
+            tipo1Apo: a.tipo1Apo || '',
+            tipo2Apo: a.tipo2Apo || '',
+            email1Apo: a.email1Apo || '',
+            email2Apo: a.email2Apo || '',
+            tfno1Apo: this.limpiarNumeroTelefono(a.tfno1Apo || ''),
+            tfno2Apo: this.limpiarNumeroTelefono(a.tfno2Apo || ''),
           });
         }
       },
       error: (err) => {
-        console.error("Error al obtener perfil del alumno:", err);
+        console.error('Error al obtener perfil del alumno:', err);
       },
     });
   }
 
   private formatFecha(fechaIso: string): string {
     // Convierte '1988-12-13T00:00:00' a '1988-12-13' para bindear en input tipo date
-    if (!fechaIso) return "";
-    const parts = fechaIso.split("T");
+    if (!fechaIso) return '';
+    const parts = fechaIso.split('T');
     return parts[0];
   }
 
   private computeAvatar(): void {
-    const completo = (this.perfilForm.get("completo")?.value || "")
+    const completo = (this.perfilForm.get('completo')?.value || '')
       .toString()
       .trim();
     const parts = completo.split(/\s+/).filter(Boolean);
-    let initials = "";
+    let initials = '';
     if (parts.length === 0) {
-      initials = "";
+      initials = '';
     } else if (parts.length === 1) {
       initials = parts[0].substring(0, 2).toUpperCase();
     } else {
-      initials = (parts[0][0] + (parts[1][0] || "")).toUpperCase();
+      initials = (parts[0][0] + (parts[1][0] || '')).toUpperCase();
     }
     this.avatarInitials = initials;
 
     const seed = (
-      this.perfilForm.get("docid")?.value ||
-      this.perfilForm.get("codigo")?.value ||
-      ""
+      this.perfilForm.get('docid')?.value ||
+      this.perfilForm.get('codigo')?.value ||
+      ''
     ).toString();
     let hash = 0;
     for (let i = 0; i < seed.length; i++) {
@@ -893,16 +918,16 @@ export class HomeComponent implements OnInit {
 
   // Método utilitario para obtener el mensaje de error del teléfono basado en patrón (control único, mantenido para compatibilidad)
   getTelefonoErrorMessage(): string | null {
-    const control = this.perfilForm.get("telefono");
+    const control = this.perfilForm.get('telefono');
     if (!control || !control.errors) return null;
 
-    if (control.hasError("required")) {
-      return "Teléfono es requerido";
+    if (control.hasError('required')) {
+      return 'Teléfono es requerido';
     }
 
-    if (control.hasError("pattern")) {
+    if (control.hasError('pattern')) {
       // Mensaje que explica el patrón que solicitaste
-      return "Teléfono inválido. Debe (opcionalmente) comenzar con +51 o 51 y luego empezar con 9 y tener 9 dígitos en total. Ejemplos válidos: 987654321, 51987654321, +51987654321";
+      return 'Teléfono inválido. Debe (opcionalmente) comenzar con +51 o 51 y luego empezar con 9 y tener 9 dígitos en total. Ejemplos válidos: 987654321, 51987654321, +51987654321';
     }
 
     return null;
@@ -912,12 +937,12 @@ export class HomeComponent implements OnInit {
   getPhoneControlErrorMessage(control: AbstractControl | null): string | null {
     if (!control || !control.errors) return null;
 
-    if (control.hasError("required")) {
-      return "Teléfono es requerido";
+    if (control.hasError('required')) {
+      return 'Teléfono es requerido';
     }
 
-    if (control.hasError("pattern")) {
-      return "Teléfono inválido. Debe (opcionalmente) comenzar con +51 o 51 y luego empezar con 9 y tener 9 dígitos en total. Ejemplos válidos: 987654321, 51987654321, +51987654321";
+    if (control.hasError('pattern')) {
+      return 'Teléfono inválido. Debe (opcionalmente) comenzar con +51 o 51 y luego empezar con 9 y tener 9 dígitos en total. Ejemplos válidos: 987654321, 51987654321, +51987654321';
     }
 
     return null;
@@ -929,7 +954,7 @@ export class HomeComponent implements OnInit {
 
     // Actualizar el valor del formulario sin espacios
     this.perfilForm
-      .get("apoderados")
+      .get('apoderados')
       ?.get(fieldName)
       ?.setValue(cleanedValue, { emitEvent: false });
 
@@ -953,28 +978,31 @@ export class HomeComponent implements OnInit {
     // Construir telefonos payload desde el FormArray
     const telefonosPayload = (this.perfilForm.value.telefonos || []).map(
       (t: any) => ({
-        numeroTfno: this.limpiarNumeroTelefono(t.numeroTfno || ""),
-        tipoTfno: t.tipoTfno || "",
-        personaTfno: t.personaTfno || "Alumno",
-        idTlfno: t.idTlfno || "",
+        numeroTfno: this.limpiarNumeroTelefono(t.numeroTfno || ''),
+        tipoTfno: t.tipoTfno || '',
+        personaTfno: t.personaTfno || 'Alumno',
+        idTlfno:
+          t.idTlfno === '' || t.idTlfno === undefined
+            ? null
+            : Number(t.idTlfno),
       }),
     );
 
     // Construir apoderados payload desde el FormGroup (mantiene la estructura del backend)
     const apoderadoPayload = {
-      nombre1Apo: this.perfilForm.value.apoderados?.nombre1Apo || "",
-      nombre2Apo: this.perfilForm.value.apoderados?.nombre2Apo || "",
-      apellidos1Apo: this.perfilForm.value.apoderados?.apellidos1Apo || "",
-      apellidos2Apo: this.perfilForm.value.apoderados?.apellidos2Apo || "",
-      tipo1Apo: this.perfilForm.value.apoderados?.tipo1Apo || "",
-      tipo2Apo: this.perfilForm.value.apoderados?.tipo2Apo || "",
-      email1Apo: this.perfilForm.value.apoderados?.email1Apo || "",
-      email2Apo: this.perfilForm.value.apoderados?.email2Apo || "",
+      nombre1Apo: this.perfilForm.value.apoderados?.nombre1Apo || '',
+      nombre2Apo: this.perfilForm.value.apoderados?.nombre2Apo || '',
+      apellidos1Apo: this.perfilForm.value.apoderados?.apellidos1Apo || '',
+      apellidos2Apo: this.perfilForm.value.apoderados?.apellidos2Apo || '',
+      tipo1Apo: this.perfilForm.value.apoderados?.tipo1Apo || '',
+      tipo2Apo: this.perfilForm.value.apoderados?.tipo2Apo || '',
+      email1Apo: this.perfilForm.value.apoderados?.email1Apo || '',
+      email2Apo: this.perfilForm.value.apoderados?.email2Apo || '',
       tfno1Apo: this.limpiarNumeroTelefono(
-        this.perfilForm.value.apoderados?.tfno1Apo || "",
+        this.perfilForm.value.apoderados?.tfno1Apo || '',
       ),
       tfno2Apo: this.limpiarNumeroTelefono(
-        this.perfilForm.value.apoderados?.tfno2Apo || "",
+        this.perfilForm.value.apoderados?.tfno2Apo || '',
       ),
     };
 
@@ -989,7 +1017,7 @@ export class HomeComponent implements OnInit {
       persona: this.perfilForm.value.persona,
       alergia: this.perfilForm.value.alergia,
       id_teams: this.perfilForm.value.id_teams,
-      distrito: this.getSelectedDistrictName(),
+      distrito: this.perfilForm.get('distrito')?.value || '',
       enteramiento: this.perfilForm.value.enteramiento,
       permiteLlamadas: this.perfilForm.value.permiteLlamadas,
       permiteCorreos: this.perfilForm.value.permiteCorreos,
@@ -1000,7 +1028,7 @@ export class HomeComponent implements OnInit {
     const codigoAlumno = this.perfilOriginal?.codigo;
     if (!codigoAlumno) {
       this.snack.danger(
-        "No se pudo obtener el código del alumno para actualizar",
+        'No se pudo obtener el código del alumno para actualizar',
       );
       return;
     }
@@ -1008,14 +1036,13 @@ export class HomeComponent implements OnInit {
     // Llamar al servicio para actualizar el perfil
     this.alumnoService.updateAlumno(codigoAlumno, updatedProfile).subscribe({
       next: (response) => {
-        this.snack.success("Perfil actualizado correctamente");
+        this.snack.success('Perfil actualizado correctamente');
         // Recargar el perfil para obtener los datos actualizados
         //this.cargarPerfil();
         this.isUpdating = false;
       },
       error: (error) => {
-        console.error("Error al actualizar perfil:", error);
-        this.snack.danger("Error al actualizar el perfil. Intenta nuevamente.");
+        this.snack.danger('Error al actualizar el perfil. Intenta nuevamente.');
         this.isUpdating = false;
       },
     });
@@ -1024,8 +1051,8 @@ export class HomeComponent implements OnInit {
   abrirDialogTeams(): void {
     if (this.idteams) {
       this.dialog.open(TeamsDialogComponent, {
-        width: "800px",
-        maxWidth: "95vw",
+        width: '800px',
+        maxWidth: '95vw',
         data: { idteams: this.idteams },
       });
     }
@@ -1033,23 +1060,7 @@ export class HomeComponent implements OnInit {
 
   abrirDialogGmail(): void {
     this.dialog.open(GmailDialogComponent, {
-      width: "600px",
-    });
-  }
-
-  abrirDialogEvento(evento: any) {
-    const dialogRef = this.dialog.open(EventoDialogComponent, {
-      width: "600px",
-      maxHeight: "80vh",
-      disableClose: false,
-      data: { evento: evento },
-    });
-
-    dialogRef.afterClosed().subscribe((resultado) => {
-      if (resultado === "asistencia_registrada") {
-        // Aquí podrías actualizar la lista de eventos o mostrar un mensaje
-        console.log("Asistencia registrada para el evento:", evento.titulo);
-      }
+      width: '600px',
     });
   }
 }

@@ -5,11 +5,12 @@ import { environment } from "../../environments/environment.development";
 @Injectable({
   providedIn: "root",
 })
-export class EventoService {
+export class ComunicadoService {
   private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl + "Evento/";
+  private apiUrl = environment.apiUrl + "comunicado";
+  constructor() {}
 
-  listarEventosDesdeAhora() {
-    return this.http.get(this.apiUrl + "EventosDesdeAhora/3");
+  listarComunicados() {
+    return this.http.get(this.apiUrl + "/rango-fechas");
   }
 }

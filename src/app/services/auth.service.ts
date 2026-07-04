@@ -116,6 +116,7 @@ export class AuthService {
 
     const user: AuthUser & { dni?: string } = {
       id: authResponse.id,
+      codigo: authResponse.codigo, // Asumiendo que el ID es numérico
       userName: authResponse.userName,
       email: authResponse.email,
       nombreCompleto: authResponse.nombreCompleto,
@@ -224,5 +225,12 @@ export class AuthService {
     const fiveMinutes = 5 * 60 * 1000; // 5 minutos en milisegundos
 
     return timeUntilExpiry < fiveMinutes;
+  }
+
+    changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(this.apiUrl + '/change-password', {
+      currentPassword,
+      newPassword
+    });
   }
 }

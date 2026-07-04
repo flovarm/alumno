@@ -1,6 +1,5 @@
 import { Routes } from "@angular/router";
 import { authGuard } from "./guards/auth.guard";
-import { loginGuard } from "./guards/login.guard";
 import { perfilCompletoGuard } from "./guards/perfil-completo.guard";
 
 export const routes: Routes = [
@@ -37,7 +36,7 @@ export const routes: Routes = [
           import("./pages/registro-matricula/registro-matricula.component").then(
             (m) => m.RegistroMatriculaComponent,
           ),
-        //   canActivate: [perfilCompletoGuard],
+        canActivate: [perfilCompletoGuard],
       },
       {
         path: "pago-exitoso",
@@ -78,6 +77,13 @@ export const routes: Routes = [
         path: "pago-deuda",
         loadComponent: () =>
           import("./pages/deuda/deuda.component").then((m) => m.DeudaComponent),
+      },
+      {
+        path: "eventos",
+        loadComponent: () =>
+          import("./pages/eventos/eventos.component").then(
+            (m) => m.EventosComponent,
+          ),
       },
       {
         path: "",
