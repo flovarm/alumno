@@ -369,21 +369,37 @@ import {
       }
 
       :host {
-        --md-primary: var(--mat-sys-primary);
-        --md-on-primary: var(--mat-sys-on-primary);
-        --md-primary-container: var(--mat-sys-primary-container);
-        --md-on-primary-container: var(--mat-sys-on-primary-container);
-        --md-secondary: var(--mat-sys-secondary);
-        --md-on-secondary: var(--mat-sys-on-secondary);
-        --md-tertiary: var(--mat-sys-tertiary);
-        --md-on-tertiary: var(--mat-sys-on-tertiary);
-        --md-surface: var(--mat-sys-surface);
-        --md-surface-container: var(--mat-sys-surface-container);
-        --md-surface-variant: var(--mat-sys-surface-variant);
-        --md-outline-variant: var(--mat-sys-outline-variant);
-        --md-on-surface: var(--mat-sys-on-surface);
-        --md-on-surface-variant: var(--mat-sys-on-surface-variant);
-        --md-error: var(--mat-sys-error);
+        --md-primary: var(--sys-primary);
+        --md-on-primary: var(--sys-on-primary);
+        --md-primary-container: var(--sys-primary-container);
+        --md-on-primary-container: var(--sys-on-primary-container);
+        --md-secondary: var(--sys-secondary);
+        --md-on-secondary: var(--sys-on-secondary);
+        --md-secondary-container: var(--sys-secondary-container);
+        --md-on-secondary-container: var(--sys-on-secondary-container);
+        --md-tertiary: var(--sys-tertiary);
+        --md-on-tertiary: var(--sys-on-tertiary);
+        --md-tertiary-container: var(--sys-tertiary-container);
+        --md-on-tertiary-container: var(--sys-on-tertiary-container);
+        --md-surface: var(--sys-surface);
+        --md-surface-dim: var(--sys-surface-dim);
+        --md-surface-bright: var(--sys-surface-bright);
+        --md-surface-container: var(--sys-surface-container);
+        --md-surface-container-low: var(--sys-surface-container-low);
+        --md-surface-container-high: var(--sys-surface-container-high);
+        --md-surface-container-highest: var(--sys-surface-container-highest);
+        --md-surface-variant: var(--sys-surface-variant);
+        --md-outline: var(--sys-outline);
+        --md-outline-variant: var(--sys-outline-variant);
+        --md-on-surface: var(--sys-on-surface);
+        --md-on-surface-variant: var(--sys-on-surface-variant);
+        --md-inverse-surface: var(--sys-inverse-surface);
+        --md-inverse-on-surface: var(--sys-inverse-on-surface);
+        --md-inverse-primary: var(--sys-inverse-primary);
+        --md-error: var(--sys-error);
+        --md-on-error: var(--sys-on-error);
+        --md-error-container: var(--sys-error-container);
+        --md-on-error-container: var(--sys-on-error-container);
         --success-bg: linear-gradient(
           135deg,
           color-mix(in srgb, var(--md-primary-container) 45%, white) 0%,
@@ -416,7 +432,7 @@ import {
         align-items: center;
         min-height: calc(100vh - 200px);
         padding: 2rem;
-        background: var(--success-bg);
+       // background: var(--mat-sys-primary-container);
       }
 
       .success-card {
@@ -426,7 +442,7 @@ import {
         box-shadow: var(--card-shadow);
         overflow: hidden;
         animation: slideIn 0.6s ease-out;
-        background: var(--card-bg);
+        background: var(--mat-bg-secondary-container);
         border: 1px solid transparent;
       }
 
@@ -443,7 +459,7 @@ import {
 
       .success-header {
         background: transparent;
-        color: var(--mat-sys-primary);
+        color: var(--md-primary);
         padding: 2rem;
         display: flex;
         align-items: center;
@@ -459,7 +475,7 @@ import {
 
       .checkmark-icon {
         font-size: 4rem;
-        color: var(--mat-sys-primary);
+        color: var(--md-primary);
         animation: checkmark 0.8s ease-in-out 0.3s both;
       }
 
@@ -501,11 +517,11 @@ import {
       }
 
       .transaction-info {
-        background: var(--info-bg);
+        background: var(--mat-sys-tertary);
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 2rem;
-        border-left: 4px solid var(--md-primary);
+      // border-left: 4px solid var(--mat-sys-primary);
       }
 
       .info-row {
@@ -521,7 +537,7 @@ import {
       }
 
       .info-row.total-row {
-        border-top: 2px solid var(--md-primary);
+        border-top: 2px solid var(--mat-sys-primary);
         margin-top: 1rem;
         padding-top: 1rem;
         font-weight: 600;
@@ -529,7 +545,7 @@ import {
       }
 
       .label {
-        color: var(--text-secondary);
+        color: var(--mat-sys-on-surface-variant);
         font-weight: 500;
       }
 
@@ -540,7 +556,7 @@ import {
       }
 
       .total-amount {
-        color: var(--md-primary);
+        color: var(--mat-sys-primary);
         font-size: 1.25rem;
         font-weight: 700;
       }
@@ -550,7 +566,7 @@ import {
       }
 
       .message-box {
-        background: var(--message-bg);
+        background: var(--mat-sys-primary-container);
         border: 1px solid var(--message-border);
         border-radius: 12px;
         padding: 1.5rem;
@@ -560,7 +576,7 @@ import {
       }
 
       .message-icon {
-        color: var(--message-icon);
+        color: var(--mat-sys-prinmary);
         font-size: 1.5rem;
         margin-top: 0.25rem;
       }
@@ -571,7 +587,7 @@ import {
 
       .message-text p {
         margin: 0 0 0.5rem 0;
-        color: var(--message-text);
+        color: var(--mat-sys-on-primary-container);
         line-height: 1.5;
       }
 
@@ -1084,8 +1100,8 @@ export class BoletaElectronicaComponent implements OnInit {
       <h3>Seleccionar tipo de impresión</h3>
       <div style="margin: 2rem 0;">
         <button id="impresion-normal" style="
-          background: #002b73;
-          color: white;
+          background: var(--sys-primary);
+          color: var(--sys-on-primary);
           border: none;
           padding: 1rem 2rem;
           margin: 0.5rem;
@@ -1098,8 +1114,8 @@ export class BoletaElectronicaComponent implements OnInit {
         </button>
 
         <button id="impresion-ticket" style="
-          background: #002b73;
-          color: white;
+          background: var(--sys-primary);
+          color: var(--sys-on-primary);
           border: none;
           padding: 1rem 2rem;
           margin: 0.5rem;
@@ -1518,6 +1534,12 @@ export class BoletaElectronicaComponent implements OnInit {
       month: "2-digit",
       year: "numeric",
     });
+    const fechaFinal = new Date(this.boletaData?.fechaFinal || new Date());
+    const fechaFinalFormateada = fechaFinal.toLocaleString("es-PE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
     const servicioContent = this.esVentaLibro()
       ? `<div class="small">Tipo: Venta de Libro</div>
          ${this.boletaData?.nombreLibro ? `<div class="small">Libro: ${this.boletaData.nombreLibro}</div>` : ""}`
@@ -1526,7 +1548,8 @@ export class BoletaElectronicaComponent implements OnInit {
          <div class="small">Aula: ${this.boletaData?.aula || "N/A"}</div>
          <div class="small">Turno: ${this.boletaData?.turno || "N/A"}</div>
          <div class="small">Prof: ${this.boletaData?.profesor || "N/A"}</div>
-          <div class="small">Fecha Inicio: ${fechaInicioFormateada || "N/A"}</div>`;
+         <div class="small">Fecha Inicio: ${fechaInicioFormateada || "N/A"}</div>
+         <div class="small">Fecha Fin: ${fechaFinalFormateada || "N/A"}</div>`;
     const descripcionServicio = this.esVentaLibro()
       ? `${this.boletaData?.concepto || "Venta"} - ${this.boletaData?.nombreLibro || "Libro"}`
       : `${this.boletaData?.concepto || "Matrícula"} - ${this.boletaData?.curso || "Curso"}`;

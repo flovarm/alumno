@@ -16,9 +16,11 @@ import { FormsModule } from "@angular/forms";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { AlumnoService } from "../../services/alumno.service";
 import { HorarioService } from "../../services/horario.service";
+import { EncuestaService } from "../../services/encuesta.service";
 import { PageHeaderComponent } from "../../components/page-header/page-header.component";
 import { MatInputModule } from "@angular/material/input";
 import { NotasDetalleDialogComponent } from "./detalle-Historial.component";
+import { EncuestaDialogComponent } from "./encuesta-dialog.component";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
 import { ClipboardModule } from "@angular/cdk/clipboard";
@@ -69,6 +71,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
   private horarioService = inject(HorarioService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private encuestaService = inject(EncuestaService);
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -117,13 +120,39 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
   }
 
   async verDetalle(element: any): Promise<void> {
-    // Obtener las notas usando el servicio NotasService
-    // Se asume que element tiene idHorario, idFormatoNota, idregistro
     const idHorario = element.idHorario ?? element.IdHorario;
     const idFormatoNota = element.idFormatoNota ?? element.IdFormatoNota;
     const idRegistro = element.idregistro ?? element.Idregistro;
 
     if (!idHorario || !idFormatoNota) return;
+
+    try {
+      const response: any = await this.encuestaService
+        .obtenerEncuestaPendiente(idRegistro)
+        .toPromise();
+
+      if (response && !response.completada && response.encuesta) {
+        const encuestaRef = this.dialog.open(EncuestaDialogComponent, {
+          width: "auto",
+          maxHeight: "90vh",
+          data: {
+            encuesta: response.encuesta,
+            idRegistro,
+            nombreDocente: response.nombreDocente,
+            nombreCurso: response.nombreCurso
+          },
+        });
+
+        encuestaRef.afterClosed().subscribe((result) => {
+          if (result) {
+            this.verDetalle(element);
+          }
+        });
+        return;
+      }
+    } catch {
+      // No hay encuesta pendiente, continuar con el detalle normal
+    }
 
     const notas: any = await this.alumnoService
       .listarNotas(idHorario, idFormatoNota, idRegistro)

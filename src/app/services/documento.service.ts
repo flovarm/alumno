@@ -16,6 +16,7 @@ export interface BoletaElectronicaResponse {
   numero?: string;
   fechaEmision?: string;
   fechaInicio?: string; // Fecha de inicio del curso/servicio
+  fechaFinal?: string; // Fecha de fin del curso/servicio
   codigo?: string;
   docId?: string;
   completo?: string;

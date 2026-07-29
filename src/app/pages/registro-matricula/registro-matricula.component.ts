@@ -342,6 +342,14 @@ import { PostulanteService } from "../../_services/postulante.service";
                             </div>
                           </mat-list-item>
                           <mat-divider></mat-divider>
+                          <mat-list-item>
+                            <mat-icon matListItemIcon>date_range</mat-icon>
+                            <div matListItemTitle>Fecha de fin</div>
+                            <div matListItemLine>
+                              {{ resumen.fechaFinal | date: "dd/MM/yyyy" }}
+                            </div>
+                          </mat-list-item>
+                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>attach_money</mat-icon>
@@ -594,9 +602,8 @@ export class RegistroMatriculaComponent implements OnInit {
               idUltimoCurso = registro.idCursoDesaprobado;
             }
           }
-          console.log("ID del último curso:", idUltimoCurso);  
           const idCursoExamen = examen?.idCurso;
-          console.log("ID del curso del examen:", idCursoExamen);
+          
           let idCursoSeleccionado: number | undefined;
 
           if (
@@ -623,7 +630,6 @@ export class RegistroMatriculaComponent implements OnInit {
   obtenerDatosPostulante() {
     this.postulanteService.getByNumeroDocumento(this.user.userName).subscribe({
       next: (postulante: any) => {
-        console.log("Datos del postulante:", postulante);
         if (postulante && postulante.cursoSeleccionado) {
           this.cargarHorariosPorUltimoRegistro(
             postulante.cursoSeleccionado,
@@ -653,92 +659,8 @@ export class RegistroMatriculaComponent implements OnInit {
       return;
     }
 
-    // Verificar si el pago fue aprobado en el backend (vía webhook IPN de IziPay)
-    // this.registroService.verificarEstadoPago(pendiente.transactionId).subscribe({
-    //   next: (response: any) => {
-    //     if (response.success) {
-    //       // El webhook ya procesó el pago y registró la matrícula
-    //       localStorage.removeItem('matricula_pendiente');
-    //       this.showPaymentMessage(
-    //         '¡Tu matrícula fue registrada exitosamente!',
-    //         'success',
-    //       );
-    //       setTimeout(() => this.router.navigate(['/home']), 2000);
-    //     } else if (response.paymentApproved) {
-    //       // El pago fue aprobado pero la matrícula no se registró → completar ahora
-    //       this.procesandoMatricula = true;
-    //       this.paymentSpinner.showSpinner('Completando matrícula...');
-    //       this.registroService.matricularAlumno(pendiente.matriculaData).subscribe({
-    //         next: (matriculaResponse: any) => {
-    //           localStorage.removeItem('matricula_pendiente');
-    //           this.paymentSpinner.hideSpinner();
-    //           this.procesandoMatricula = false;
-    //           this.showPaymentMessage('¡Matrícula completada exitosamente!', 'success');
-    //           setTimeout(() => this.router.navigate(['/home']), 2000);
-    //         },
-    //         error: (err) => {
-    //           this.paymentSpinner.hideSpinner();
-    //           this.procesandoMatricula = false;
-    //           if (err.status === 409 || err.error?.message?.includes('ya existe')) {
-    //             localStorage.removeItem('matricula_pendiente');
-    //             this.showPaymentMessage('Tu matrícula ya fue registrada.', 'success');
-    //             setTimeout(() => this.router.navigate(['/home']), 2000);
-    //           }
-    //         },
-    //       });
-    //     }
-    //     // Si no fue aprobado aún, no hacemos nada (puede que el alumno no pagó)
-    //   },
-    //   error: () => {
-    //     // No se pudo verificar, ignorar silenciosamente
-    //   },
-    // });
   }
 
-  // private verificarRetornoDePago() {
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const paymentStatus = urlParams.get("payment");
-  //   const transactionId = urlParams.get("transactionId");
-
-  //   if (paymentStatus && transactionId) {
-  //     if (paymentStatus === "success") {
-  //       // Verificar el estado del pago en el servidor
-  //       this.registroService.verificarEstadoPago(transactionId).subscribe({
-  //         next: (response: any) => {
-  //           if (response.success) {
-  //             this.showPaymentMessage(
-  //               "¡Pago procesado exitosamente! Tu matrícula se ha completado.",
-  //               "success",
-  //             );
-  //             // Limpiar parámetros de URL
-  //             this.limpiarParametrosURL();
-  //             // Recargar datos inmediatamente
-  //             window.location.reload();
-  //           } else {
-  //             this.showPaymentMessage(
-  //               "El pago está siendo procesado. Te notificaremos cuando se complete.",
-  //               "error",
-  //             );
-  //             this.limpiarParametrosURL();
-  //           }
-  //         },
-  //         error: (err) => {
-  //           this.showPaymentMessage(
-  //             "Error verificando el estado del pago. Contacta al soporte.",
-  //             "error",
-  //           );
-  //           this.limpiarParametrosURL();
-  //         },
-  //       });
-  //     } else if (paymentStatus === "error") {
-  //       this.showPaymentMessage(
-  //         "El pago no se pudo completar. Por favor, inténtalo nuevamente.",
-  //         "error",
-  //       );
-  //       this.limpiarParametrosURL();
-  //     }
-  //   }
-  // }
 
   private limpiarParametrosURL() {
     // Limpiar parámetros de URL sin recargar la página
@@ -1070,7 +992,6 @@ export class RegistroMatriculaComponent implements OnInit {
     const errorUrl = `${window.location.origin}/registro-matricula?payment=error`;
     const cancelUrl = `${window.location.origin}/registro-matricula?payment=cancel`;
 
-    console.log("Using webhook notification URL:", webhookNotificationUrl);
     const iziConfig = {
       config: {
         transactionId: transactionId,
@@ -1167,7 +1088,6 @@ export class RegistroMatriculaComponent implements OnInit {
         },
       },
     };
-
     try {
       const checkout = new (window as any).Izipay(iziConfig);
 
@@ -1195,7 +1115,6 @@ export class RegistroMatriculaComponent implements OnInit {
           this.formularioIziPayAbierto = false;
           this.procesandoPago = false;
           this.paymentSpinner.hideSpinner();
-          console.error("IziPay callbackError:", error);
           this.showPaymentMessage(
             "No se pudo completar la comunicación con la pasarela. Inténtelo nuevamente.",
             "error",
@@ -1218,8 +1137,6 @@ export class RegistroMatriculaComponent implements OnInit {
     } catch (error) {
       this.formularioIziPayAbierto = false;
       this.procesandoPago = false;
-
-      console.error("IziPay Error:", error);
 
       // Mensaje específico para diferentes tipos de errores
       let errorMessage = "Error al inicializar el formulario de pago";
@@ -1306,53 +1223,49 @@ export class RegistroMatriculaComponent implements OnInit {
       this.paymentSpinner.showSpinner("Registrando matrícula...");
 
       // Llamar al endpoint de matrícula
-    //   this.registroService.matricularAlumno(matriculaData).subscribe({
-    //     next: (matriculaResponse: any) => {
-    //       matriculaResponse.fechaInicio = this.resumen?.fechaInicio;
-    //       // Limpiar transacción pendiente del localStorage
-    //       localStorage.removeItem("matricula_pendiente");
-    //       // Redirigir directamente a la boleta electrónica
-    //       this.paymentSpinner.hideSpinner();
-    //       this.router.navigate(["/boleta-electronica"], {
-    //         state: matriculaResponse,
-    //         replaceUrl: true,
-    //       });
-    //       // Limpiar flags después de la navegación
-    //       this.procesandoMatricula = false;
-    //       this.currentTransactionId = null;
-    //     },
-    //     error: (matriculaError) => {
-    //       this.paymentSpinner.hideSpinner();
-
-    //       // Si el error es por duplicado, no mostrar error severo
-    //       if (
-    //         matriculaError.status === 409 ||
-    //         matriculaError.error?.message?.includes("ya existe")
-    //       ) {
-    //         localStorage.removeItem("matricula_pendiente");
-    //         this.showPaymentMessage(
-    //           "La matrícula ya fue registrada. Redirigiendo...",
-    //           "success",
-    //         );
-    //         this.router.navigate(["/home"]);
-    //       } else {
-    //         this.showPaymentMessage(
-    //           "Error al procesar la matrícula. Contacte soporte.",
-    //           "error",
-    //         );
-    //         // Remover de transacciones procesadas si hubo error real
-    //         this.processedTransactions.delete(transactionKey);
-    //       }
-
-    //       this.procesandoMatricula = false;
-    //     },
-    //   });
-    // } else {
-    //   this.paymentSpinner.hideSpinner();
-    //   this.showPaymentMessage(
-    //     `Error en el pago: ${response.message || JSON.stringify(response)}`,
-    //     "error",
-    //   );
+      this.registroService.matricularAlumno(matriculaData).subscribe({
+        next: (matriculaResponse: any) => {
+          matriculaResponse.fechaInicio = this.resumen?.fechaInicio;
+          matriculaResponse.fechaFinal = this.resumen?.fechaFinal;
+          // Limpiar transacción pendiente del localStorage
+          localStorage.removeItem("matricula_pendiente");
+          // Redirigir directamente a la boleta electrónica
+          this.paymentSpinner.hideSpinner();
+          this.router.navigate(["/boleta-electronica"], {
+            state: matriculaResponse,
+            replaceUrl: true,
+          });
+          // Limpiar flags después de la navegación
+          this.procesandoMatricula = false;
+          this.currentTransactionId = null;
+        },
+        error: (matriculaError) => {
+          this.paymentSpinner.hideSpinner();
+          // Si el error es por duplicado, no mostrar error severo
+          if (matriculaError.status === 409 ||matriculaError.error?.message?.includes("ya existe") ) {
+            localStorage.removeItem("matricula_pendiente");
+            this.showPaymentMessage(
+              "La matrícula ya fue registrada. Redirigiendo...",
+              "success",
+            );
+            this.router.navigate(["/home"]);
+          } else {
+            this.showPaymentMessage(
+              "Error al procesar la matrícula. Contacte soporte.",
+              "error",
+            );
+            // Remover de transacciones procesadas si hubo error real
+            this.processedTransactions.delete(transactionKey);
+         
+          this.procesandoMatricula = false;
+        }
+      }})
+    } else {
+      this.paymentSpinner.hideSpinner();
+      this.showPaymentMessage(
+        `Error en el pago: ${response.message || JSON.stringify(response)}`,
+        "error",
+      );
     
     }
   }
