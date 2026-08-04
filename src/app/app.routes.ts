@@ -59,25 +59,25 @@ export const routes: Routes = [
             (m) => m.BoletaElectronicaComponent,
           ),
       },
-      {
-        path: "compra-libros",
-        loadComponent: () =>
-          import("./pages/compra-libros/compra-libros.component").then(
-            (m) => m.CompraLibrosComponent,
-          ),
-      },
-      {
-        path: "resumen-compra-libro",
-        loadComponent: () =>
-          import("./pages/resumen-compra-libro/resumen-compra-libro.component").then(
-            (m) => m.ResumenCompraLibroComponent,
-          ),
-      },
-      {
-        path: "pago-deuda",
-        loadComponent: () =>
-          import("./pages/deuda/deuda.component").then((m) => m.DeudaComponent),
-      },
+      // {
+      //   path: "compra-libros",
+      //   loadComponent: () =>
+      //     import("./pages/compra-libros/compra-libros.component").then(
+      //       (m) => m.CompraLibrosComponent,
+      //     ),
+      // },
+      // {
+      //   path: "resumen-compra-libro",
+      //   loadComponent: () =>
+      //     import("./pages/resumen-compra-libro/resumen-compra-libro.component").then(
+      //       (m) => m.ResumenCompraLibroComponent,
+      //     ),
+      // },
+      // {
+      //   path: "pago-deuda",
+      //   loadComponent: () =>
+      //     import("./pages/deuda/deuda.component").then((m) => m.DeudaComponent),
+      // },
       {
         path: "eventos",
         loadComponent: () =>

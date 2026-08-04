@@ -1,11 +1,10 @@
 export const environment = {
   production: true,
-  simulatePayment: false, // Usar pago real en producción
+  simulatePayment: false,
   apiUrl: 'https://elcultural.edu.pe/intranet2/api/',
   webhookUrl: 'https://elcultural.edu.pe/intranet2/api/',
-  izipay: {
-    scriptUrl: 'https://checkout.izipay.pe/payments/v1/js/index.js', // URL de producción
-    merchantCode: '4079961',
-    ipnUrl: 'https://elcultural.edu.pe/intranet2/api/registro/webhook/izipay'
-  }
+  niubiz: {
+    scriptUrl: 'https://static-content.vnforapps.com/v2/js/checkout.js',
+    merchantId: 341198210,
+  },
 };

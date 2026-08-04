@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+.mat-mdc-card-content>:last-child:not(.mat-mdc-card-footer) {
+    margin-bottom: 0;
+    display: flex;
+}
 .filter-container {
   margin-bottom: 20px;
   display: flex;
@@ -197,7 +201,7 @@
 
 .payment-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.85fr) minmax(560px, 1.15fr);
+  grid-template-columns: 1fr;
   gap: 24px;
   margin-top: 20px;
 }
@@ -206,76 +210,11 @@
   order: 1;
 }
 
-.payment-form-container {
-  background: var(--mat-sys-surface);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 8px;
-  padding: 12px;
-  order: 2;
-  display: flex;
-  justify-content: center;
-}
 
-.payment-form-container mat-card {
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.payment-form-container mat-card-content {
-  padding: 12px;
-}
-
-.payment-form-container.visible {
-  display: flex;
-  justify-content: center;
-  opacity: 1;
-  transform: translateY(0);
-  transition: all 0.3s ease;
-}
-
-#iframeContainer {
-  width: 100%;
-  max-width: 600px;
-  padding: 10px;
-  box-sizing: border-box;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--mat-sys-surface);
-  border: 1px solid var(--mat-sys-outline-variant);
-}
-
-#iframeContainer .izipay-embedded,
-#iframeContainer .izipay-form,
-#iframeContainer iframe {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-height: 605px !important;
-  margin: 0 auto !important;
-  display: block !important;
-  border: none !important;
-  border-radius: 8px !important;
-  background: var(--mat-sys-surface) !important;
-}
-
-.izipay-embedded-container {
-  width: 100%;
-  height: auto;
-  margin-bottom: 2rem;
-}
 
 @media (max-width: 1024px) {
   .payment-grid {
-    grid-template-columns: 1fr;
     gap: 16px;
-  }
-
-  .payment-form-container {
-    order: 2;
-  }
-
-  .payment-summary {
-    order: 1;
   }
 }
 
@@ -296,12 +235,6 @@
     padding: 8px;
   }
 
-  #iframeContainer .izipay-embedded,
-  #iframeContainer .izipay-form,
-  #iframeContainer iframe {
-    min-height: 505px !important;
-    border-radius: 0 !important;
-  }
 
   mat-horizontal-stepper {
     margin: 0 -16px;
@@ -336,62 +269,12 @@
   }
 }
 
-.payment-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: 500;
-  background: var(--mat-sys-surface-variant);
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.payment-form-info {
-  background: var(--mat-sys-surface-variant);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  font-size: 0.9rem;
-  color: var(--mat-sys-on-surface-variant);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .spacer {
   flex: 1;
 }
 
 mat-card-header {
   margin-bottom: 16px;
-}
-
-#iframeContainer:empty::before {
-  content: "Cargando formulario de pago...";
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--mat-sys-on-surface);
-  font-style: italic;
 }
 
 .payment-footer-messages {
@@ -427,41 +310,42 @@ mat-card-header {
   gap: 8px;
 }
 
-.loading-payment {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  text-align: center;
-  min-height: 200px;
-}
-
-.loading-payment p {
-  margin-top: 16px;
-  color: var(--mat-sys-on-surface);
-  font-weight: 500;
-}
-
 mat-horizontal-stepper {
   margin-top: 8px !important;
 }
 
-::ng-deep .izipay-form-container,
-::ng-deep .izipay-container,
-::ng-deep .izipay-form,
-::ng-deep iframe[src*="izipay"],
-::ng-deep iframe[src*="payzen"] {
-  width: 100% !important;
-  min-height: 605px !important;
-  border: none !important;
-  border-radius: 8px !important;
+.payment-form-container {
+  margin-top: 16px;
+}
+
+::ng-deep .niubiz-pay-button {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  margin-top: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--mat-sys-on-primary);
+  background-color: var(--mat-sys-primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+::ng-deep .niubiz-pay-button:hover {
+  filter: brightness(1.08);
+}
+
+::ng-deep .niubiz-pay-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
-  ::ng-deep .izipay-form-container,
-  ::ng-deep .izipay-container,
-  ::ng-deep .izipay-form {
+  ::ng-deep .niubiz-form-container,
+  ::ng-deep .niubiz-container,
+  ::ng-deep .niubiz-form {
     min-height: 505px !important;
     border-radius: 0 !important;
   }
@@ -516,12 +400,6 @@ mat-horizontal-stepper {
     margin: 12px 0;
   }
 
-  .payment-form-container {
-    margin: 0;
-    padding: 16px 12px;
-    border-radius: 0;
-    box-shadow: none;
-  }
 }
 
 @media (max-width: 360px) {
@@ -532,87 +410,6 @@ mat-horizontal-stepper {
   .mat-step-header {
     min-height: 50px !important;
   }
-
-  ::ng-deep .mat-horizontal-content-container {
-    overflow: hidden;
-    padding: 0 0 0 0 !important;
-  }
 }
 
-/* Mensaje de advertencia arriba del formulario IziPay */
-.important-warning-card-izipay {
-  margin: 20px 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #ffe8cc 0%, #ffb84d 100%);
-  border: 3px solid #ff6b35;
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
-}
 
-.warning-content-izipay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  text-align: center;
-}
-
-.warning-icon-izipay {
-  color: #ff6b35;
-  font-size: 48px !important;
-  width: 48px !important;
-  height: 48px !important;
-  flex-shrink: 0;
-}
-
-.warning-text-izipay {
-  color: #c0392b;
-  font-size: 1.3rem;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.warning-text-izipay strong {
-  display: block;
-  color: #c0392b;
-  font-weight: 900;
-  font-size: 2rem;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-@media (max-width: 768px) {
-  .warning-icon-izipay {
-    font-size: 40px !important;
-    width: 40px !important;
-    height: 40px !important;
-  }
-  .warning-text-izipay {
-    font-size: 1.1rem;
-  }
-  .warning-text-izipay strong {
-    font-size: 1.6rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .important-warning-card-izipay {
-    padding: 12px;
-  }
-  .warning-content-izipay {
-    flex-direction: column;
-    gap: 12px;
-  }
-  .warning-icon-izipay {
-    font-size: 36px !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-  .warning-text-izipay {
-    font-size: 1rem;
-  }
-  .warning-text-izipay strong {
-    font-size: 1.4rem;
-  }
-}

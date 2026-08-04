@@ -1,3 +1,4 @@
+/*
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { PeriodoService } from "../../services/periodo.service";
 import { RegistroService } from "../../services/registro.service";
@@ -308,3 +309,4 @@ export class DeudaComponent implements OnInit {
     }
   }
 }
+*/

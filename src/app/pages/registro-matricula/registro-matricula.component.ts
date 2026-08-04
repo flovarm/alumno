@@ -28,6 +28,7 @@ import { MatInputModule } from "@angular/material/input";
 import { environment } from "../../../environments/environment.development";
 import { MatOption, MatSelectModule } from "@angular/material/select";
 import { PostulanteService } from "../../_services/postulante.service";
+import { NiubizService } from "../../services/niubiz.service";
 
 @Component({
   selector: "app-registro-matricula",
@@ -383,20 +384,6 @@ import { PostulanteService } from "../../_services/postulante.service";
                           </span>
                         </div>
 
-                        <div style="margin-top:1rem; text-align:center;">
-                          <div class="payment-status">
-                            @if (procesandoPago) {
-                              <mat-icon class="spinning"
-                                >hourglass_empty</mat-icon
-                              >
-                              <span>Preparando formulario de pago...</span>
-                            } @else if (formularioIziPayAbierto) {
-                              <mat-icon color="primary">payment</mat-icon>
-                              <span>Complete el formulario de pago →</span>
-                            }
-                          </div>
-                        </div>
-
                         <!-- Mensaje de pago -->
                         <div
                           id="payment-message"
@@ -406,48 +393,24 @@ import { PostulanteService } from "../../_services/postulante.service";
                         >
                           {{ paymentMessage }}
                         </div>
+                          <div
+                              class="payment-form-container"
+                              [class.visible]="formularioNiubizAbierto || procesandoPago"
+                            >
+                        <div id="iframeContainer"></div>
+                        </div>
                       </mat-card-content>
                     </mat-card>
                   </div>
 
-                  <!-- Columna derecha: Formulario de pago (4 columnas) -->
-                  <div
-                    class="payment-form-container"
-                    [class.visible]="formularioIziPayAbierto || procesandoPago"
-                  >
-                    <mat-card>
+                  <!-- Formulario de pago Niubiz -->
+
+                    <!-- <mat-card>
                       <mat-card-content>
-                        @if (procesandoPago && !formularioIziPayAbierto) {
-                          <div class="loading-payment">
-                            <mat-spinner diameter="40"></mat-spinner>
-                            <p>Preparando formulario de pago seguro...</p>
-                          </div>
-                        } @else {
-                          <div class="payment-form-info">
-                            <mat-icon color="primary">security</mat-icon>
-                            <span>Formulario seguro procesado por IziPay</span>
-                          </div>
 
-                          <!-- Mensaje importante arriba del formulario -->
-                          <div class="important-warning-card-izipay">
-                            <div class="warning-content-izipay">
-                              <mat-icon class="warning-icon-izipay"
-                                >warning</mat-icon
-                              >
-                              <div class="warning-text-izipay">
-                                <strong>¡IMPORTANTE!</strong> No cerrar y permanezca en esta
-                                ventana hasta que se genere el comprobante de
-                                pago
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- Container para el formulario de IziPay -->
-                          <div id="iframeContainer"></div>
-                        }
                       </mat-card-content>
-                    </mat-card>
-                  </div>
+                    </mat-card> -->
+
                 </div>
               }
             </div>
@@ -520,20 +483,19 @@ export class RegistroMatriculaComponent implements OnInit {
   selectedHorario: any = null;
   stepIndex = 0;
   procesandoPago = false;
-  formularioIziPayAbierto = false; // Nueva propiedad para controlar el estado
+  formularioNiubizAbierto = false;
   procesandoMatricula = false; // Nueva flag para evitar duplicados de matrícula
   paymentMessage: string = "";
   paymentMessageClass: string = "";
-  private izipayLoaded = false;
-  private currentTransactionId: string | null = null; // Para rastrear transacción actual
-  private currentOrderNumber: string | null = null; // Para rastrear order number actual
-  private processedTransactions = new Set<string>(); // Para rastrear transacciones ya procesadas
+  private sessionKeyActual: string | null = null;
+  private montoActual: number = 0;
+  private orderNumberActual: string | null = null;
   private postulanteService = inject(PostulanteService);
   private periodoService = inject(PeriodoService);
   private registroService = inject(RegistroService);
   private horarioService = inject(HorarioService);
   private router = inject(Router);
-  private paymentSpinner = inject(PaymentSpinnerService);
+  private niubizService = inject(NiubizService);
 
   cargarHorariosPorUltimoRegistro(idCurso: number, idPeriodo: number) {
     this.horarioService
@@ -563,9 +525,8 @@ export class RegistroMatriculaComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Verificar si viene de un retorno de pago
-    // this.verificarRetornoDePago();
-    // Verificar si hay una matrícula pendiente por cierre de página durante el pago
+    this.cargarCheckoutNiubiz();
+    this.verificarRetornoPagoNiubiz();
     this.verificarMatriculaPendiente();
 
     // Configurar filtro personalizado para buscar en múltiples campos
@@ -603,7 +564,7 @@ export class RegistroMatriculaComponent implements OnInit {
             }
           }
           const idCursoExamen = examen?.idCurso;
-          
+
           let idCursoSeleccionado: number | undefined;
 
           if (
@@ -638,6 +599,21 @@ export class RegistroMatriculaComponent implements OnInit {
         }
       },
     });
+  }
+
+  private verificarRetornoPagoNiubiz() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const payment = urlParams.get("payment");
+    if (!payment) return;
+
+    console.log('=== Retorno de pago Niubiz ===', {
+      payment,
+      transactionId: urlParams.get("transactionId"),
+      statusCode: urlParams.get("statusCode"),
+      message: urlParams.get("message"),
+    });
+
+    this.limpiarParametrosURL();
   }
 
   private verificarMatriculaPendiente() {
@@ -717,7 +693,7 @@ export class RegistroMatriculaComponent implements OnInit {
     this.resumen = null;
     this.selectedHorario = horario;
     this.procesandoPago = false;
-    this.formularioIziPayAbierto = false;
+    this.formularioNiubizAbierto = false;
 
     setTimeout(() => {
       this.mostrarResumen(horario.idHorario, this.user.userName);
@@ -758,7 +734,7 @@ export class RegistroMatriculaComponent implements OnInit {
   private waitForContainerAndProcessPayment(amount: number) {
     const checkContainer = () => {
       const container = document.getElementById("iframeContainer");
-      if (container && this.formularioIziPayAbierto === false) {
+      if (container && this.formularioNiubizAbierto === false) {
         this.procesarPago(amount);
       } else {
         // Reintentar después de 500ms
@@ -769,11 +745,10 @@ export class RegistroMatriculaComponent implements OnInit {
   }
 
   procesarPago(precio: number) {
-    // Validar si ya se está procesando un pago o matrícula
     if (
       this.procesandoPago ||
       this.procesandoMatricula ||
-      this.formularioIziPayAbierto
+      this.formularioNiubizAbierto
     ) {
       return;
     }
@@ -781,17 +756,12 @@ export class RegistroMatriculaComponent implements OnInit {
     this.procesandoPago = true;
     this.paymentMessage = "";
 
-    // Mostrar spinner de pago
-    // Pago real
-    const transactionId =
-      Date.now().toString() + Math.random().toString().substr(2, 5);
+    const merchantId = environment.niubiz.merchantId;
+    //   Date.now().toString() + Math.random().toString().substr(2, 5);
     const orderNumber = this.resumen.idHorario + this.user.userName;
 
-    // Guardar el ID de transacción y order number actuales
-    this.currentTransactionId = transactionId;
-    this.currentOrderNumber = orderNumber;
+  //  this.currentTransactionId = transactionId;
 
-    // Preparar datos de matrícula para guardar como pendiente
     const matriculaData = {
       docid: this.user.userName,
       IdHorario: this.resumen.idHorario,
@@ -802,60 +772,31 @@ export class RegistroMatriculaComponent implements OnInit {
       Turno: this.resumen.turno,
       Aula: this.resumen.aula,
       Profesor: this.resumen.docente,
-      TransactionId: transactionId,
+      TransactionId:  merchantId,
       OrderNumber: orderNumber,
     };
 
-    // Primero guardar la matrícula pendiente
-    this.registroService
-      .guardarMatriculaPendiente(transactionId, orderNumber, matriculaData)
-      .subscribe({
-        next: () => {
-          // Guardar en localStorage para recuperar si el alumno cierra la página
-          localStorage.setItem(
-            "matricula_pendiente",
-            JSON.stringify({
-              transactionId,
-              orderNumber,
-              matriculaData,
-              timestamp: Date.now(),
-            }),
-          );
-          // Luego obtener el token de pago
-          this.registroService
-            .obtenerTokenPago(precio, transactionId, orderNumber)
+
+          this.niubizService.crearSession(this.user.codigo, merchantId, precio)
             .subscribe({
-              next: (tokenResponse: any) => {
-                if (tokenResponse.code === "00") {
-                  this.initializeIziPay(
-                    tokenResponse,
-                    precio,
-                    transactionId,
-                    orderNumber,
-                  );
-                } else {
-                  this.showPaymentMessage(
-                    "Error al obtener token de pago",
-                    "error",
-                  );
-                  this.currentTransactionId = null;
-                }
+              next: (sessionResponse) => {
+                console.log('=== Sesión Niubiz creada ===', sessionResponse);
                 this.procesandoPago = false;
+                this.formularioNiubizAbierto = true;
+                setTimeout(() => {
+                  this.renderizarFormularioNiubiz(
+                    sessionResponse.sessionKey,
+                    precio,
+                    merchantId
+                  );
+                }, 100);
               },
               error: (err) => {
-                this.showPaymentMessage("Error al procesar el pago", "error");
+                console.error('Error al crear sesión Niubiz', err);
+                this.showPaymentMessage("Error al obtener sesión de pago", "error");
                 this.procesandoPago = false;
-                this.currentTransactionId = null;
               },
             });
-        },
-        error: (err) => {
-          this.paymentSpinner.hideSpinner();
-          this.showPaymentMessage("Error al preparar el pago", "error");
-          this.procesandoPago = false;
-          this.currentTransactionId = null;
-        },
-      });
   }
 
   applyFilter(event: Event) {
@@ -881,393 +822,75 @@ export class RegistroMatriculaComponent implements OnInit {
     this.horarios.filter = `${searchText}|${selectedSede}`;
   }
 
-  private async initializeIziPay(
-    tokenResponse: any,
+  private renderizarFormularioNiubiz(
+    sessionKey: string,
     amount: number,
-    transactionId: string,
-    orderNumber: string,
+    orderNumber: string
   ) {
-    try {
-      if (!this.izipayLoaded) {
-        await this.loadIziPayScript();
-      }
-      await this.setupIziPayForm(
-        tokenResponse,
-        amount,
-        transactionId,
-        orderNumber,
-      );
-    } catch (error) {
-      console.error("Error initializing IziPay:", error);
-      this.formularioIziPayAbierto = false;
-      this.procesandoPago = false;
-      this.showPaymentMessage(
-        "Error al cargar el formulario de pago. Inténtelo nuevamente.",
-        "error",
-      );
-    }
-  }
-
-  private waitForContainer(
-    maxAttempts: number = 10,
-  ): Promise<HTMLElement | null> {
-    return new Promise((resolve) => {
-      let attempts = 0;
-      const checkContainer = () => {
-        const container = document.getElementById("iframeContainer");
-        if (container) {
-          resolve(container);
-        } else if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(checkContainer, 300);
-        } else {
-          resolve(null);
-        }
-      };
-      checkContainer();
-    });
-  }
-
-  private loadIziPayScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if ((window as any).Izipay) {
-        this.izipayLoaded = true;
-        this.configureIziPayGlobally();
-        resolve();
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = environment.izipay.scriptUrl;
-      script.onload = () => {
-        this.izipayLoaded = true;
-        this.configureIziPayGlobally();
-        resolve();
-      };
-      script.onerror = () => reject(new Error("Error cargando IziPay script"));
-      document.head.appendChild(script);
-    });
-  }
-
-  private configureIziPayGlobally() {
-    // Add minimal styles to ensure embedded mode works properly
-    if ((window as any).Izipay) {
-      const globalStyle = document.createElement("style");
-      globalStyle.id = "izipay-embedded-styles";
-      globalStyle.innerHTML = `
-        #iframeContainer .izipay-form,
-        #iframeContainer .izipay-embedded {
-          width: 100% !important;
-          height: auto !important;
-          border: none !important;
-          border-radius: 8px !important;
-        }
-      `;
-
-      if (!document.getElementById("izipay-embedded-styles")) {
-        document.head.appendChild(globalStyle);
-      }
-    }
-  }
-
-  private async setupIziPayForm(
-    tokenResponse: any,
-    amount: number,
-    transactionId: string,
-    orderNumber: string,
-  ) {
-    const dateTimeTransaction = (Date.now() * 1000).toString();
-
-    // Configuración específica para sandbox vs producción
-    const isSandbox = !environment.production;
-
-    // Wait for container to be available in DOM
-    const container = await this.waitForContainer();
+    const container = document.getElementById("iframeContainer");
     if (!container) {
-      throw new Error("Container #iframeContainer not found after waiting");
+      this.showPaymentMessage("Error al cargar el contenedor del formulario de pago", "error");
+      return;
     }
 
-    const webhookNotificationUrl = this.buildWebhookNotificationUrl();
-    const successUrl = `${window.location.origin}/pago-exitoso`;
-    const errorUrl = `${window.location.origin}/registro-matricula?payment=error`;
-    const cancelUrl = `${window.location.origin}/registro-matricula?payment=cancel`;
+    container.innerHTML = "";
 
-    const iziConfig = {
-      config: {
-        transactionId: transactionId,
-        action: "pay",
-        merchantCode: environment.izipay.merchantCode,
-        order: {
-          orderNumber: orderNumber,
-          showAmount: true,
-          currency: "PEN",
-          amount: amount.toFixed(2),
-          payMethod: "all",
-          channel: "web",
-          processType: "AT",
-          merchantBuyerId: this.user?.userName || "12345678",
-          dateTimeTransaction: dateTimeTransaction,
-        },
-        billing: {
-          firstName: this.resumen?.nombres || "Juan",
-          lastName: this.resumen?.apellidoPaterno || "Perez",
-          email: this.getValidEmail(this.resumen?.correo),
-          phoneNumber: this.user?.telefono || "999666333",
-          street: "Av. Venezuela 128",
-          city: "Trujillo",
-          state: "La Libertad",
-          country: "PE",
-          postalCode: "13001",
-          document: this.user?.userName || "12345678",
-          documentType:
-            this.user?.userName && this.user.userName.length > 8 ? "CE" : "DNI",
-        },
-        shipping: {
-          firstName: "",
-          lastName: "",
-          email: "",
-          phoneNumber: "",
-          street: "",
-          city: "",
-          state: "",
-          country: "",
-          postalCode: "",
-          document: "",
-          documentType: "",
-        },
-        language: {
-          init: "ESP",
-          showControlMultiLang: false,
-        },
-        render: {
-          typeForm: "embedded",
-          container: "#iframeContainer",
-          showButtonProcessForm: true,
-          autoResize: false,
-          layout: "tabs",
-          redirectUrls: {
-            onSuccess: successUrl,
-            onError: errorUrl,
-            onCancel: cancelUrl,
-          },
-        },
-        urlRedirect: successUrl,
-        urlIPN: webhookNotificationUrl,
-        appearance: {
-          styleInput: "normal",
-          logo: "https://elcultural.edu.pe/images/asset6.png",
-          theme: "green",
-          customize: {
-            visibility: {
-              hideOrderNumber: false,
-              hideResultScreen: false,
-              hideLogo: false,
-              hideMessageActivateOnlinePurchases: false,
-              hideTestCards: false,
-              hideShakeValidation: false,
-              hideGlobalErrors: false,
-            },
-            elements: [
-              {
-                paymentMethod: "CARD",
-                order: 1,
-                fields: [
-                  {
-                    name: "cardNumber",
-                    order: 1,
-                    visible: true,
-                    groupName: "",
-                  },
-                ],
-                changeButtonText: {
-                  actionPay: "Pagar",
-                },
-              },
-            ],
-          },
-        },
-      },
-    };
-    try {
-      const checkout = new (window as any).Izipay(iziConfig);
+    this.sessionKeyActual = sessionKey;
+    this.montoActual = amount;
+    this.orderNumberActual = orderNumber;
 
-      // Ocultar spinner cuando se abre IziPay (IziPay tiene su propio loading)
-      this.paymentSpinner.hideSpinner();
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "niubizPayButton";
+    btn.textContent = `Pagar S/ ${amount.toFixed(2)}`;
+    btn.classList.add("niubiz-pay-button");
+    btn.addEventListener("click", () => this.abrirPagoNiubiz());
+    container.appendChild(btn);
 
-      // Activar el formulario y ocultar procesando
-      this.procesandoPago = false;
-      this.formularioIziPayAbierto = true;
-
-      // Clear container before loading
-      if (container) {
-        container.innerHTML = "";
+    setTimeout(() => {
+      const paymentFormContainer = document.querySelector(".payment-form-container");
+      if (paymentFormContainer) {
+        paymentFormContainer.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
-
-      checkout.LoadForm({
-        authorization: tokenResponse.response.token,
-        keyRSA: "RSA",
-        callbackResponse: (response: any) => {
-          // Desbloquear botón cuando se recibe respuesta
-          this.formularioIziPayAbierto = false;
-          this.handlePaymentResponse(response);
-        },
-        callbackError: (error: any) => {
-          this.formularioIziPayAbierto = false;
-          this.procesandoPago = false;
-          this.paymentSpinner.hideSpinner();
-          this.showPaymentMessage(
-            "No se pudo completar la comunicación con la pasarela. Inténtelo nuevamente.",
-            "error",
-          );
-        },
-      });
-
-      // Scroll to the embedded form after it loads
-      setTimeout(() => {
-        const paymentFormContainer = document.querySelector(
-          ".payment-form-container",
-        );
-        if (paymentFormContainer) {
-          paymentFormContainer.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        }
-      }, 1000);
-    } catch (error) {
-      this.formularioIziPayAbierto = false;
-      this.procesandoPago = false;
-
-      // Mensaje específico para diferentes tipos de errores
-      let errorMessage = "Error al inicializar el formulario de pago";
-
-      if (error?.toString().includes("CORS")) {
-        errorMessage =
-          "Error de CORS detectado. Esto es común en sandbox. El pago puede funcionar normalmente.";
-      } else if (error?.message?.includes("allowedValues")) {
-        errorMessage =
-          "Error de configuración en el formulario de pago. Contacte soporte técnico.";
-      } else if (error?.message?.includes("Container")) {
-        errorMessage = "Error al cargar el contenedor del formulario de pago.";
-      }
-
-      this.showPaymentMessage(errorMessage, "error");
-    }
+    }, 1000);
   }
 
-  private buildWebhookNotificationUrl(): string {
-    const configuredIpnUrl = (environment as any).izipay?.ipnUrl;
-
-    if (configuredIpnUrl) {
-      return this.toAbsoluteUrl(configuredIpnUrl);
-    }
-
-    const webhookBase = (environment as any).webhookUrl || "/";
-    const absoluteWebhookBase = this.ensureTrailingSlash(
-      this.toAbsoluteUrl(webhookBase),
-    );
-
-    return new URL("registro/webhook/izipay", absoluteWebhookBase).toString();
-  }
-
-  private toAbsoluteUrl(url: string): string {
-    // Resuelve URLs relativas (por ejemplo /api/...) usando la URL actual.
-    return new URL(url, window.location.href).toString();
-  }
-
-  private ensureTrailingSlash(value: string): string {
-    return value.endsWith("/") ? value : `${value}/`;
-  }
-
-  private handlePaymentResponse(response: any) {
-    if (response.code === "00") {
-      // Validar que no se haya procesado ya esta transacción
-      const transactionKey = `${this.currentTransactionId}_${this.selectedHorario.idHorario}_${this.user.userName}`;
-
-      if (this.processedTransactions.has(transactionKey)) {
-        return;
-      }
-
-      // Validar que no se esté procesando ya una matrícula
-      if (this.procesandoMatricula) {
-        return;
-      }
-
-      // Marcar como procesando matrícula
-      this.procesandoMatricula = true;
-
-      // Agregar a transacciones procesadas
-      this.processedTransactions.add(transactionKey);
-
+  private abrirPagoNiubiz() {
+    const w = window as any;
+    if (!w.VisanetCheckout || !this.sessionKeyActual) {
       this.showPaymentMessage(
-        "Pago exitoso. Procesando matrícula...",
-        "success",
-      );
-
-      // Preparar datos para la matrícula
-      const matriculaData = {
-        docid: this.user.userName,
-        IdHorario: this.selectedHorario.idHorario,
-        Costo: this.resumen.costo,
-        Modalidad: this.resumen.modalidad,
-        Periodo: this.resumen.periodo,
-        Curso: this.resumen.curso,
-        Turno: this.resumen.turno,
-        Aula: this.resumen.aula,
-        Profesor: this.resumen.docente,
-        TransactionId: this.currentTransactionId,
-        OrderNumber: this.currentOrderNumber,
-      };
-
-      // Mostrar spinner solo cuando inicia el registro de matrícula
-      this.paymentSpinner.showSpinner("Registrando matrícula...");
-
-      // Llamar al endpoint de matrícula
-      this.registroService.matricularAlumno(matriculaData).subscribe({
-        next: (matriculaResponse: any) => {
-          matriculaResponse.fechaInicio = this.resumen?.fechaInicio;
-          matriculaResponse.fechaFinal = this.resumen?.fechaFinal;
-          // Limpiar transacción pendiente del localStorage
-          localStorage.removeItem("matricula_pendiente");
-          // Redirigir directamente a la boleta electrónica
-          this.paymentSpinner.hideSpinner();
-          this.router.navigate(["/boleta-electronica"], {
-            state: matriculaResponse,
-            replaceUrl: true,
-          });
-          // Limpiar flags después de la navegación
-          this.procesandoMatricula = false;
-          this.currentTransactionId = null;
-        },
-        error: (matriculaError) => {
-          this.paymentSpinner.hideSpinner();
-          // Si el error es por duplicado, no mostrar error severo
-          if (matriculaError.status === 409 ||matriculaError.error?.message?.includes("ya existe") ) {
-            localStorage.removeItem("matricula_pendiente");
-            this.showPaymentMessage(
-              "La matrícula ya fue registrada. Redirigiendo...",
-              "success",
-            );
-            this.router.navigate(["/home"]);
-          } else {
-            this.showPaymentMessage(
-              "Error al procesar la matrícula. Contacte soporte.",
-              "error",
-            );
-            // Remover de transacciones procesadas si hubo error real
-            this.processedTransactions.delete(transactionKey);
-         
-          this.procesandoMatricula = false;
-        }
-      }})
-    } else {
-      this.paymentSpinner.hideSpinner();
-      this.showPaymentMessage(
-        `Error en el pago: ${response.message || JSON.stringify(response)}`,
+        "El formulario de pago aún no está disponible. Intente nuevamente.",
         "error",
       );
-    
+      return;
     }
+
+    w.VisanetCheckout.configure({
+      sessiontoken: this.sessionKeyActual,
+      channel: "web",
+      merchantid: environment.niubiz.merchantId,
+      purchasenumber: this.orderNumberActual,
+      amount: this.montoActual,
+      expirationminutes: "20",
+      timeouturl: `${window.location.origin}/registro-matricula`,
+      merchantlogo: "https://elcultural.edu.pe/images/navbarLogo.png",
+      formbuttoncolor: "#1C04A4",
+      action: `${environment.apiUrl}Pago/ProcesarPagoNiubiz?merchantId=${environment.niubiz.merchantId}
+      &purchaseNumber=${this.orderNumberActual}&monto=${this.montoActual}&currency=PEN`,
+    });
+    w.VisanetCheckout.open();
+  }
+
+  private cargarCheckoutNiubiz() {
+    const w = window as any;
+    if (w.VisanetCheckout) return;
+    if (document.getElementById("niubizCheckoutScript")) return;
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.id = "niubizCheckoutScript";
+    script.src = environment.niubiz.scriptUrl;
+    document.head.appendChild(script);
   }
 
   private showPaymentMessage(message: string, type: "success" | "error") {
@@ -1276,9 +899,8 @@ export class RegistroMatriculaComponent implements OnInit {
       type === "success" ? "payment-success" : "payment-error";
     // Desbloquear botón y resetear flags en caso de error
     if (type === "error") {
-      this.formularioIziPayAbierto = false;
+      this.formularioNiubizAbierto = false;
       this.procesandoMatricula = false;
-      this.currentTransactionId = null;
     }
   }
 
@@ -1302,33 +924,4 @@ export class RegistroMatriculaComponent implements OnInit {
     }
   }
 
-  private isValidEmail(email: string): boolean {
-    if (!email) return false;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  private getValidEmail(emailString: string): string {
-    if (!emailString) return "test@example.com";
-
-    // Si contiene múltiples emails separados por " / ", tomar el primero
-    const emails = emailString.split(" / ");
-    const firstEmail = emails[0].trim();
-
-    // Validar el primer email
-    if (this.isValidEmail(firstEmail)) {
-      return firstEmail;
-    }
-
-    // Si el primer email no es válido, intentar con el segundo si existe
-    if (emails.length > 1) {
-      const secondEmail = emails[1].trim();
-      if (this.isValidEmail(secondEmail)) {
-        return secondEmail;
-      }
-    }
-
-    // Si ningún email es válido, usar el fallback
-    return "test@example.com";
-  }
 }

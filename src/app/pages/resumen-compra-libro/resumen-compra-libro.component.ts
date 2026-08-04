@@ -1,3 +1,4 @@
+/**
 import { Component, OnInit, signal, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
@@ -665,3 +666,4 @@ export class ResumenCompraLibroComponent implements OnInit {
     return "test@example.com";
   }
 }
+**/
