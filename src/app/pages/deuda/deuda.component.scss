@@ -1,19 +1,39 @@
-   .payment-message {
-      margin-top: 1rem;
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 500;
-    }
-
-    .payment-success {
-      background: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
-      border: 1px solid var(--mat-sys-primary);
-    }
-
-    .payment-error {
-      background: var(--mat-sys-error-container);
-      color: var(--mat-sys-on-error-container);
-      border: 1px solid var(--mat-sys-error);
-    }
+﻿:host { display: block; color: var(--mat-sys-on-surface); }
+.page-container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+app-page-header { display: block; margin-bottom: 24px; }
+.deuda-card { background: var(--mat-sys-surface-container-low); border: 1px solid var(--mat-sys-outline-variant); border-radius: 18px; box-shadow: none; overflow: hidden; }
+.deuda-card mat-card-header { padding: 20px 24px; border-bottom: 1px solid var(--mat-sys-outline-variant); background: var(--mat-sys-surface-container); }
+.deuda-card mat-card-title { color: var(--mat-sys-primary); font-size: 1.15rem; font-weight: 700; }
+.deuda-card mat-card-subtitle { color: var(--mat-sys-on-surface-variant); margin-top: 4px; font-size: 0.875rem; }
+.deuda-card mat-icon[mat-card-avatar] { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; margin-bottom: 0; border-radius: 12px; background: var(--mat-sys-primary-container); color: var(--mat-sys-primary); }
+.deuda-card mat-card-content { padding: 24px; }
+.deuda-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.detalle-item { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 16px; border-radius: 12px; background: var(--mat-sys-surface-container); }
+.detalle-item mat-icon { flex-shrink: 0; color: var(--mat-sys-primary); }
+.detalle-item dl { min-width: 0; margin: 0; }
+.detalle-item dt { margin: 0 0 4px; font-size: 0.75rem; color: var(--mat-sys-on-surface-variant); }
+.detalle-item dd { margin: 0; font-size: 0.95rem; line-height: 1.4; font-weight: 600; color: var(--mat-sys-primary); overflow-wrap: anywhere; }
+.terms-notice { display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding: 16px; border-radius: 12px; background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); font-size: 0.875rem; line-height: 1.6; }
+.terms-icon { flex-shrink: 0; color: var(--mat-sys-primary); }
+.terms-link { color: var(--mat-sys-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.external-link-icon { font-size: 16px; width: 16px; height: 16px; vertical-align: middle; }
+.centered-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-top: 1px solid var(--mat-sys-outline-variant); background: var(--mat-sys-surface-container); }
+.payment-label { color: var(--mat-sys-primary); font-size: 1rem; font-weight: 600; }
+.centered-actions button { min-width: 220px; min-height: 48px; font-size: 1rem; font-weight: 700; }
+.payment-message { margin-top: 16px; padding: 16px; border-radius: 12px; line-height: 1.5; font-weight: 500; }
+.payment-success { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
+.payment-error { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+.no-deuda-message { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 40px 24px; margin-top: 20px; background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); border-radius: 18px; }
+.no-deuda-message > mat-icon { width: 48px; height: 48px; font-size: 48px; flex-shrink: 0; color: var(--mat-sys-primary); }
+.no-deuda-message h2 { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; }
+.no-deuda-message p { margin: 0; line-height: 1.5; }
+@media (max-width: 600px) {
+  .page-container { padding: 16px 12px; }
+  .deuda-card mat-card-header { padding: 16px; }
+  .deuda-card mat-card-content { padding: 16px; }
+  .deuda-list { grid-template-columns: 1fr; gap: 8px; }
+  .detalle-item { padding: 10px 12px; }
+  .centered-actions { flex-direction: column; align-items: stretch; padding: 16px; }
+  .centered-actions button { width: 100%; min-width: 0; }
+  .no-deuda-message { flex-direction: column; text-align: center; padding: 32px 20px; }
+}

@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  padding: 1.5rem clamp(1rem, 3vw, 3rem);
+  border-top: 1px solid var(--mat-sys-outline-variant, #e5e7eb);
+  background: var(--mat-sys-surface, #fff);
+  color: var(--mat-sys-on-surface, #1c1b1f);
+}
+
+.footer-brands {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+  max-width: 100%;
+}
+
+img {
+  display: block;
+  height: auto;
+  object-fit: contain;
+  // Preserve the original brand colors and contrast in both themes.
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+}
+
+.cultural-logo {
+  width: 150px;
+  min-width: 0;
+}
+
+.american-spaces-logo {
+  width: 65px;
+  min-width: 0;
+}
+
+.footer-slogan {
+  width: 320px;
+  max-width: 100%;
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .site-footer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .footer-slogan {
+    margin-left: 0;
+  }
+}

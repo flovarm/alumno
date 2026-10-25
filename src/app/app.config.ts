@@ -25,10 +25,9 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withViewTransitions()),
     provideHttpClient(
-      withInterceptors([ErrorInterceptor, jwtInterceptor, LoadingInterceptor]),
+      withInterceptors([ErrorInterceptor, jwtInterceptor]),
     ),
     provideAnimations(),
-    importProvidersFrom(NgxSpinnerModule),
     importProvidersFrom(A11yModule),
   ],
 };

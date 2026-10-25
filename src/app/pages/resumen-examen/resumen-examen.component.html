@@ -1,0 +1,68 @@
+<div class="page-container">
+  <app-page-header
+    title="Resumen del examen"
+    description="Revisa el horario seleccionado antes de realizar el pago"
+    icon="quiz"
+  />
+
+  @if (horario && tipoExamen) {
+    <div class="resumen-grid">
+      <mat-card class="resumen-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>event_note</mat-icon>
+          <mat-card-title>Examen seleccionado</mat-card-title>
+          <mat-card-subtitle>Detalle del horario y del importe a pagar</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="datos-grid">
+            <div class="dato"><span>Tipo de examen</span><strong>{{ tipoExamen.descripcion }}</strong></div>
+            <div class="dato"><span>Fecha</span><strong>{{ horario.dia | date:'dd/MM/yyyy' }}</strong></div>
+            <div class="dato"><span>Día</span><strong>{{ horario.descripcionDia || '—' }}</strong></div>
+            <div class="dato"><span>Hora</span><strong>{{ horario.hora || '—' }}</strong></div>
+            <div class="dato"><span>Profesor</span><strong>{{ horario.nombreCompleto?.trim() || 'Sin profesor asignado' }}</strong></div>
+            <div class="dato"><span>Sede</span><strong>{{ horario.nombreSed?.trim() || 'Sin sede informada' }}</strong></div>
+            <div class="dato"><span>Aula</span><strong>{{ horario.descripcion?.trim() || 'Sin aula informada' }}</strong></div>
+            <div class="dato"><span>Vacantes disponibles</span><strong>{{ vacantes(horario) }}</strong></div>
+            <div class="dato identificador"><span>Id del horario</span><strong>{{ horario.idHorarioExamen }}</strong></div>
+            <div class="dato costo"><span>Costo del examen</span><strong>{{ horario.costo | currency:'PEN':'S/ ' }}</strong></div>
+          </div>
+
+          <div class="terms-notice">
+            <mat-checkbox
+              [checked]="terminosAceptados"
+              [disabled]="cargandoPago || pagoEnviado"
+              (change)="actualizarAceptacion($event.checked)"
+            >
+              He leído y acepto los términos y condiciones del servicio.
+            </mat-checkbox>
+          </div>
+
+          @if (mensaje) {
+            <p class="payment-message" [class.payment-error]="mensajeClase === 'error'" [class.payment-success]="mensajeClase === 'success'" role="alert">{{ mensaje }}</p>
+          }
+
+          <div class="acciones-pago">
+            @if (!formularioAbierto) {
+              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados" (click)="iniciarPago()">
+                {{ cargandoPago ? 'Preparando pago…' : 'Continuar con el pago' }}
+              </button>
+            } @else {
+              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados || pagoEnviado" (click)="abrirPagoNiubiz()">
+                {{ cargandoPago ? 'Procesando pago…' : 'Pagar con Niubiz' }}
+              </button>
+            }
+            <button mat-stroked-button type="button" [disabled]="cargandoPago" (click)="volver()">Volver a horarios</button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <p>No se encontró un examen seleccionado.</p>
+        <button mat-flat-button color="primary" type="button" (click)="volver()">Volver a exámenes</button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

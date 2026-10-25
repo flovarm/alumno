@@ -12,6 +12,7 @@ export interface DocumentoAlumnoReturn {
 }
 
 export interface BoletaElectronicaResponse {
+  idTipoPago?: string | number;
   serie?: string;
   numero?: string;
   fechaEmision?: string;
@@ -31,6 +32,14 @@ export interface BoletaElectronicaResponse {
   descuento?: number;
   deuda?: number;
   total?: number;
+  idMoneda?: string;
+  purchaseNumber?: string;
+  transactionDate?: string;
+  amount?: string;
+  tipoMoneda?: string;
+  currency?: string;
+  denegacion?: string;
+  fecha?: string;
 }
 
 @Injectable({

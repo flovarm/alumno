@@ -1,0 +1,39 @@
+export interface PagoNiubiz {
+  id: number;
+  actionCode?: string;
+  authorizationCode?: string;
+  purchaseNumber?: string;
+  amount: number;
+  currency?: string;
+  terminal?: string;
+  brandActionCode?: string;
+  brandHostDateTime?: string;
+  traceNumber?: string;
+  cardType?: string;
+  eciDescription?: string;
+  signature?: string; // Guid en C# se representa como string en TypeScript
+  card?: string;
+  merchant?: string;
+  status?: string;
+  installmentsInfo?: string;
+  actionDescription?: string;
+  idUnico?: string;
+  amountDataMap?: number;
+  quotaNumber?: string;
+  brandHostId?: string;
+  authorizationCodeDataMap?: string;
+  yapeId?: string;
+  currencyDataMap?: string;
+  transactionDate?: string;
+  actionCodeDataMap?: string;
+  cvv2ValidationResult?: string;
+  eci?: string;
+  idResolutor?: string;
+  brand?: string;
+  adquirente?: string;
+  quotaAmount?: number;
+  brandName?: string;
+  processCode?: string;
+  transactionId?: string;
+  fechaRegistro: Date;
+}

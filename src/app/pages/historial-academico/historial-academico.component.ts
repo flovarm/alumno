@@ -65,6 +65,8 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
     "modalidad",
     "estado",
     "notaReg",
+    "detalle",
+    "codigoPlataforma",
   ];
   dataSource = new MatTableDataSource<any>([]);
   private alumnoService = inject(AlumnoService);
@@ -79,7 +81,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
 
     const userStr = localStorage.getItem("alumno_currentUser");
       this.obtenerCodigoYHistorial(userStr ? JSON.parse(userStr).codigo : "");
-  
+
   }
 
   ngAfterViewInit() {
@@ -100,7 +102,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
               console.error("Error al obtener historial académico:", err);
             },
           });
-   } 
+   }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
@@ -123,7 +125,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
     const idHorario = element.idHorario ?? element.IdHorario;
     const idFormatoNota = element.idFormatoNota ?? element.IdFormatoNota;
     const idRegistro = element.idregistro ?? element.Idregistro;
-
+    const idTurno = element.idTurno ?? element.IdTurno
     if (!idHorario || !idFormatoNota) return;
 
     try {
@@ -139,7 +141,8 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
             encuesta: response.encuesta,
             idRegistro,
             nombreDocente: response.nombreDocente,
-            nombreCurso: response.nombreCurso
+            nombreCurso: response.nombreCurso,
+            idTurno: response.idTurno
           },
         });
 
@@ -154,11 +157,15 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
       // No hay encuesta pendiente, continuar con el detalle normal
     }
 
+    // PROVISIONAL: obtener las notas del controlador Nota/Detalle.
+    // Retirar esta consulta cuando el diálogo utilice únicamente element.itemDetalle.
     const notas: any = await this.alumnoService
       .listarNotas(idHorario, idFormatoNota, idRegistro)
       .toPromise();
     this.dialog.open(NotasDetalleDialogComponent, {
-      width: "600px",
+      width: "760px",
+      maxWidth: "95vw",
+      maxHeight: "90dvh",
       data: { notas, element },
     });
   }
@@ -285,7 +292,7 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
         nombreAula: item.nombreAula,
         nombreCompleto: item.nombreCompleto,
         notaReg: item.notaReg,
-        estado: item.estado,
+        estado: item.estado
       }));
 
       autoTable(doc, {

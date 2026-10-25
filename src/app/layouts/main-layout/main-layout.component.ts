@@ -2,7 +2,7 @@ import { Component, HostListener } from "@angular/core";
 // <-- Importa CommonModule
 import { RouterModule, RouterOutlet } from "@angular/router";
 import { NavbarComponent } from "../../components/navbar/navbar.component";
-import { Router } from "@angular/router";
+import { FooterComponent } from "../../components/footer/footer.component";
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatListModule } from "@angular/material/list";
 import { MatTooltipModule } from "@angular/material/tooltip";
@@ -12,7 +12,11 @@ interface MenuItem {
   icon: string;
   label: string;
   route: string;
-  description?: string;
+}
+
+interface MenuSection {
+  label: string;
+  items: MenuItem[];
 }
 
 @Component({
@@ -21,6 +25,7 @@ interface MenuItem {
   imports: [
     RouterOutlet,
     NavbarComponent,
+    FooterComponent,
     MatSidenavModule,
     MatListModule,
     RouterModule,
@@ -35,46 +40,39 @@ export class MainLayoutComponent {
   isSidenavCollapsed = false;
   isMobile = false;
 
-  menuItems: MenuItem[] = [
+  menuSections: MenuSection[] = [
     {
-      icon: "school",
-      label: "Historial Académico",
-      route: "/historial-academico",
-      description: "Consulta tus calificaciones",
+      label: 'Principal',
+      items: [
+        { icon: 'home', label: 'Inicio', route: '/home' },
+        { icon: 'video_call', label: 'Clases virtuales', route: '/clases-virtuales' },
+      ],
     },
     {
-      icon: "payment",
-      label: "Historial de Pagos",
-      route: "/historial-pagos",
-      description: "Revisa tus pagos y estados de cuenta",
+      label: 'Historial',
+      items: [
+        { icon: 'school', label: 'Historial académico', route: '/historial-academico' },
+        { icon: 'payment', label: 'Historial de pagos', route: '/historial-pagos' },
+      ],
     },
     {
-      icon: "assignment",
-      label: "Registro de Matrícula",
-      route: "/registro-matricula",
-      description: "Gestiona tu matrícula y horarios",
+      label: 'Pagos virtuales',
+      items: [
+        { icon: 'assignment', label: 'Registro de matrícula', route: '/registro-matricula' },
+        { icon: 'book', label: 'Compra de libros', route: '/compra-libros' },
+        { icon: 'quiz', label: 'Exámenes', route: '/examenes' },
+        { icon: 'money_off', label: 'Pago de deuda', route: '/pago-deuda' },
+      ],
     },
     {
-      icon: "book",
-      label: "Compra de Libros",
-      route: "/compra-libros",
-      description: "Adquiere libros y material académico",
-    },
-    {
-      icon: "money_off",
-      label: "Pago de Deuda",
-      route: "/pago-deuda",
-      description: "Paga tus deudas pendientes",
-    },
-    {
-      icon: "event",
-      label: "Eventos",
-      route: "/eventos",
-      description: "Descubre nuestros próximos eventos",
+      label: 'Actividades',
+      items: [{ icon: 'event', label: 'Eventos', route: '/eventos' }],
     },
   ];
 
-  constructor(private router: Router) {
+
+
+  constructor() {
     this.checkScreenSize();
   }
 
@@ -95,11 +93,10 @@ export class MainLayoutComponent {
     this.isSidenavCollapsed = !this.isSidenavCollapsed;
   }
 
-  onNavItemClick(route: string) {
-    this.router.navigate([route]);
-    // if (this.isMobile) {
-    //   this.isSidenavOpen = false;
-    // }
+  onNavItemClick() {
+    if (this.isMobile) {
+      this.isSidenavOpen = false;
+    }
   }
 
   onBackdropClick(): void {

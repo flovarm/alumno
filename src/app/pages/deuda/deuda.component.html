@@ -1,4 +1,3 @@
-<!--
 <div class="page-container">
   <app-page-header
     title="Pago de Deuda"
@@ -10,124 +9,98 @@
   @if (resumen) {
     <mat-card class="deuda-card">
       <mat-card-header>
-        <div class="header-title">
-          <mat-icon mat-card-avatar>receipt</mat-icon>
-          <mat-card-title>Resumen de Deuda</mat-card-title>
-          <mat-card-subtitle
-            >Detalle de la deuda a regularizar</mat-card-subtitle
-          >
-        </div>
+        <mat-icon mat-card-avatar>receipt</mat-icon>
+        <mat-card-title>Resumen de Deuda</mat-card-title>
+        <mat-card-subtitle
+          >Detalle de la deuda a regularizar</mat-card-subtitle
+        >
       </mat-card-header>
       <mat-card-content>
-        <div class="deuda-grid">
-          <div class="deuda-item">
-            <mat-icon>school</mat-icon>
-            <div>
-              <div class="deuda-label">Curso</div>
-              <div class="deuda-value">
-                {{
-                  resumen.nombreCurso.charAt(0).toUpperCase() +
-                    resumen.nombreCurso.slice(1)
-                }}
-              </div>
-            </div>
+        <div class="deuda-list">
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">school</mat-icon>
+            <dl><dt>Curso</dt><dd>{{ resumen.curso | titlecase }}</dd></dl>
           </div>
 
-          <div class="deuda-item">
-            <mat-icon>person</mat-icon>
-            <div>
-              <div class="deuda-label">Docente</div>
-              <div class="deuda-value">
-                {{
-                  resumen.nombreProfesor.charAt(0).toUpperCase() +
-                    resumen.nombreProfesor.slice(1)
-                }}
-              </div>
-            </div>
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">person</mat-icon>
+            <dl><dt>Docente</dt><dd>{{ resumen.docente | titlecase }}</dd></dl>
           </div>
 
-          <div class="deuda-item">
-            <mat-icon>schedule</mat-icon>
-            <div>
-              <div class="deuda-label">Turno</div>
-              <div class="deuda-value">{{ resumen.turno }}</div>
-            </div>
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">schedule</mat-icon>
+            <dl><dt>Turno</dt><dd>{{ resumen.turno }}</dd></dl>
           </div>
 
-          <div class="deuda-item">
-            <mat-icon>meeting_room</mat-icon>
-            <div>
-              <div class="deuda-label">Aula</div>
-              <div class="deuda-value">{{ resumen.aula }}</div>
-            </div>
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">meeting_room</mat-icon>
+            <dl><dt>Aula</dt><dd>{{ resumen.aula }}</dd></dl>
           </div>
 
-          <div class="deuda-item">
-            <mat-icon>date_range</mat-icon>
-            <div>
-              <div class="deuda-label">Inicio</div>
-              <div class="deuda-value">
-                {{ resumen.fechaInicio | date : "dd/MM/yyyy" }}
-              </div>
-            </div>
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">date_range</mat-icon>
+            <dl><dt>Inicio</dt><dd>{{
+              resumen.fechaInicio | date : "dd/MM/yyyy"
+            }}</dd></dl>
           </div>
 
-          <div class="deuda-item">
-            <mat-icon>date_range</mat-icon>
-            <div>
-              <div class="deuda-label">Fin</div>
-              <div class="deuda-value">
-                {{ resumen.fechaFinal | date : "dd/MM/yyyy" }}
-              </div>
-            </div>
+          <div class="detalle-item">
+            <mat-icon aria-hidden="true">date_range</mat-icon>
+            <dl><dt>Fin</dt><dd>{{
+              resumen.fechaFinal | date : "dd/MM/yyyy"
+            }}</dd></dl>
           </div>
 
-          <div class="deuda-item deuda-monto">
-            <mat-icon>attach_money</mat-icon>
-            <div>
-              <div class="deuda-label">Deuda</div>
-              <div class="deuda-value monto">S/ {{ resumen.costo }}</div>
-            </div>
-          </div>
+
         </div>
 
         <div class="terms-notice">
-          <mat-icon class="terms-icon">info</mat-icon>
-          <span>
-            Al registrar tu matrícula estás aceptando nuestros
+          <mat-checkbox
+            [checked]="terminosAceptados"
+            (change)="terminosAceptados = $event.checked"
+            [disabled]="procesandoPago"
+          >
+            He leído y acepto los
             <a
               href="https://www.elcultural.com.pe/terminos-y-condiciones-del-servicio/"
               target="_blank"
               rel="noopener noreferrer"
               class="terms-link"
+              (click)="$event.stopPropagation()"
             >
               Términos y Condiciones
               <mat-icon class="external-link-icon">open_in_new</mat-icon>
             </a>
-          </span>
+          </mat-checkbox>
         </div>
       </mat-card-content>
       <mat-card-actions class="centered-actions">
+        <span class="payment-label">Total a regularizar</span>
         <button
           mat-flat-button
           color="primary"
           (click)="procesarPago(resumen.costo)"
-          [disabled]="procesandoPago"
+          [disabled]="procesandoPago || !terminosAceptados"
+          [attr.aria-busy]="procesandoPago"
         >
           <mat-icon>payment</mat-icon>
-          {{ procesandoPago ? "Procesando..." : "PAGAR S/ " + resumen.costo }}
+          {{ procesandoPago ? "Procesando pago..." : "PAGAR S/ " + resumen.costo }}
         </button>
       </mat-card-actions>
     </mat-card>
+  } @else if (resumenCargado) {
+    <div class="no-deuda-message">
+      <mat-icon>check_circle</mat-icon>
+      <div>
+        <h2>Estás al día</h2>
+        <p>No tienes ninguna deuda registrada actualmente.</p>
+      </div>
+    </div>
   }
 
-  <div class="payment-section">
-    @if (paymentMessage) {
-      <div class="payment-message" [ngClass]="paymentMessageClass">
-        {{ paymentMessage }}
-      </div>
-    }
-    <div id="iframeContainer"></div>
-  </div>
+  @if (paymentMessage) {
+    <div class="payment-message" [ngClass]="paymentMessageClass" role="status" aria-live="polite">
+      {{ paymentMessage }}
+    </div>
+  }
 </div>
--->

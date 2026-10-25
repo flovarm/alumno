@@ -71,20 +71,27 @@
                 </ng-container>
 
                 <!-- Acción: Ver detalle -->
-                <ng-container matColumnDef="accion">
-                  <th mat-header-cell *matHeaderCellDef> ACCIONES </th>
+                <ng-container matColumnDef="detalle">
+                  <th mat-header-cell *matHeaderCellDef> DETALLE </th>
                   <td mat-cell *matCellDef="let item">
                     <button mat-icon-button color="primary" (click)="verDetalle(item)" matTooltip="Ver detalle de notas">
                       <mat-icon>visibility</mat-icon>
                     </button>
+                    
+                  </td>
+                </ng-container>
+                <!-- Acción: Ver detalle -->
+                <ng-container matColumnDef="codigoPlataforma">
+                  <th mat-header-cell *matHeaderCellDef> CÓDIGO PLATAFORMA </th>
+                  <td mat-cell *matCellDef="let item">
                     <button mat-icon-button (click)="abrirModalCodigoPlataforma(item)" matTooltip="Ver código de plataforma">
                       <mat-icon>code</mat-icon>
                     </button>
                   </td>
                 </ng-container>
 
-                <tr mat-header-row *matHeaderRowDef="displayedColumns.concat(['accion'])"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns.concat(['accion'])"
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns"
                   [ngClass]="{
                           'fila-red': row.apruebaReg == 'F',
                           'fila-green': row.apruebaReg == 'P'

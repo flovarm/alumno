@@ -12,6 +12,23 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
+        path: "clases-virtuales",
+        loadComponent: () =>
+          import("./pages/clases-virtuales/clases-virtuales.component").then(
+            (m) => m.ClasesVirtualesComponent,
+          ),
+      },
+      {
+        path: "examenes",
+        loadComponent: () => import("./pages/examenes/examenes.component").then(m => m.ExamenesComponent),
+        canActivate: [perfilCompletoGuard],
+      },
+      {
+        path: "resumen-examen",
+        loadComponent: () => import("./pages/resumen-examen/resumen-examen.component").then(m => m.ResumenExamenComponent),
+        canActivate: [perfilCompletoGuard],
+      },
+      {
         path: "home",
         loadComponent: () =>
           import("./pages/home/home.component").then((m) => m.HomeComponent),
@@ -46,6 +63,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "error-pago",
+        loadComponent: () =>
+          import("./pages/error-pago/error-pago.component").then(
+            (m) => m.ErrorPagoComponent,
+          ),
+      },
+      {
         path: "boleta-electronica",
         loadComponent: () =>
           import("./pages/boleta-electronica/boleta-electronica.component").then(
@@ -59,25 +83,19 @@ export const routes: Routes = [
             (m) => m.BoletaElectronicaComponent,
           ),
       },
-      // {
-      //   path: "compra-libros",
-      //   loadComponent: () =>
-      //     import("./pages/compra-libros/compra-libros.component").then(
-      //       (m) => m.CompraLibrosComponent,
-      //     ),
-      // },
-      // {
-      //   path: "resumen-compra-libro",
-      //   loadComponent: () =>
-      //     import("./pages/resumen-compra-libro/resumen-compra-libro.component").then(
-      //       (m) => m.ResumenCompraLibroComponent,
-      //     ),
-      // },
-      // {
-      //   path: "pago-deuda",
-      //   loadComponent: () =>
-      //     import("./pages/deuda/deuda.component").then((m) => m.DeudaComponent),
-      // },
+      {
+        path: "compra-libros",
+        loadComponent: () =>
+          import("./pages/compra-libros/compra-libros.component").then(
+            (m) => m.CompraLibrosComponent,
+          ),
+        canActivate: [perfilCompletoGuard],
+      },
+      {
+        path: "pago-deuda",
+        loadComponent: () =>
+          import("./pages/deuda/deuda.component").then((m) => m.DeudaComponent),
+      },
       {
         path: "eventos",
         loadComponent: () =>

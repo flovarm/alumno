@@ -101,7 +101,7 @@ import {
                 <span class="label">Cliente:</span>
                 <span class="value">{{ boletaData?.completo }}</span>
               </div>
-              @if (esVentaLibro()) {
+              @if (esNotaCredito() || esVentaLibro()) {
                 <div class="info-row">
                   <span class="label">Concepto:</span>
                   <span class="value">{{ boletaData?.concepto }}</span>
@@ -115,7 +115,7 @@ import {
               <div class="info-row total-row">
                 <span class="label">Total Pagado:</span>
                 <span class="value total-amount"
-                  >S/ {{ boletaData?.total | number: "1.2-2" }}</span
+                  >{{boletaData?.idMoneda}} {{ boletaData?.total | number: "1.2-2" }}</span
                 >
               </div>
             </div>
@@ -125,20 +125,10 @@ import {
                 <mat-icon class="message-icon">info</mat-icon>
                 <div class="message-text">
                   <p>
-                    <strong>{{
-                      esVentaLibro()
-                        ? "¡Tu libro ha sido adquirido!"
-                        : "¡Tu matrícula está confirmada!"
-                    }}</strong>
+                    <strong>{{ getMensajeConfirmacion() }}</strong>
                   </p>
                   <p>Hemos enviado la confirmación a tu correo electrónico.</p>
-                  <p>
-                    {{
-                      esVentaLibro()
-                        ? "Puedes recoger tu libro en nuestras instalaciones. Recuerda presentar el DNI del estudiante o comprobante de pago "
-                        : "¡Éxitos en tus estudios!"
-                    }}
-                  </p>
+                  <p>{{ getDetalleConfirmacion() }}</p>
                   <p><strong>Horario de atención:</strong></p>
                   <p>
                     Lunes a viernes de 8am a 7.15pm y sábado de 8am a 3.45pm
@@ -176,7 +166,7 @@ import {
         <div class="boleta-header">
           <div class="company-info">
             <img
-              src="https://elcultural.edu.pe/images/asset6.png"
+              src="https://elcultural.edu.pe/images/navbarLogo.png"
               alt="Logo"
               class="company-logo"
             />
@@ -189,7 +179,7 @@ import {
           </div>
           <div class="document-info">
             <div class="document-type">
-              <h2>{{ getTipoDocumento() }} DE VENTA ELECTRÓNICA</h2>
+              <h2>{{ getNombreDocumentoElectronico() }}</h2>
               <div class="document-number">
                 {{ boletaData?.serie }}-{{ boletaData?.numero }}
               </div>
@@ -219,7 +209,13 @@ import {
         <div class="course-info">
           <h3>DATOS DEL SERVICIO</h3>
           <div class="course-grid">
-            @if (esVentaLibro()) {
+            @if (esNotaCredito()) {
+              @if (boletaData?.periodo) {
+                <div class="course-item full-width">
+                  <strong>Periodo:</strong> {{ boletaData?.periodo }}
+                </div>
+              }
+            } @else if (esVentaLibro()) {
               <div class="course-item full-width">
                 <strong>Tipo:</strong> Venta de Libro
               </div>
@@ -263,16 +259,19 @@ import {
             <tbody>
               <tr>
                 <td>
-                  {{ boletaData?.concepto }} -
-                  @if (esVentaLibro()) {
-                    {{ boletaData?.nombreLibro || "Libro" }}
-                  } @else {
-                    {{ boletaData?.curso }}
+                  {{ boletaData?.concepto }}
+                  @if (!esNotaCredito()) {
+                    -
+                    @if (esVentaLibro()) {
+                      {{ boletaData?.nombreLibro || "Libro" }}
+                    } @else {
+                      {{ boletaData?.curso }}
+                    }
                   }
                 </td>
                 <td>1</td>
-                <td>S/ {{ boletaData?.costo | number: "1.2-2" }}</td>
-                <td>S/ {{ boletaData?.total | number: "1.2-2" }}</td>
+                <td>{{boletaData?.idMoneda}} {{ boletaData?.costo | number: "1.2-2" }}</td>
+                <td>{{boletaData?.idMoneda}} {{ boletaData?.total | number: "1.2-2" }}</td>
               </tr>
             </tbody>
           </table>
@@ -283,23 +282,23 @@ import {
             <div class="total-row">
               <span class="total-label">Sub Total:</span>
               <span class="total-value"
-                >S/ {{ boletaData?.costo | number: "1.2-2" }}</span
+                >{{boletaData?.idMoneda}} {{ boletaData?.costo | number: "1.2-2" }}</span
               >
             </div>
             <div class="total-row">
               <span class="total-label">IGV (0%):</span>
-              <span class="total-value">S/ 0.00</span>
+              <span class="total-value">{{boletaData?.idMoneda}} 0.00</span>
             </div>
             <div class="total-row final-total">
               <span class="total-label">MONTO CANCELADO:</span>
               <span class="total-value"
-                >S/ {{ boletaData?.total | number: "1.2-2" }}</span
+                >{{boletaData?.idMoneda}} {{ boletaData?.total | number: "1.2-2" }}</span
               >
             </div>
             <div class="total-row">
               <span class="total-label">Deuda:</span>
               <span class="total-value"
-                >S/ {{ boletaData?.deuda | number: "1.2-2" }}</span
+                >{{boletaData?.idMoneda}} {{ boletaData?.deuda | number: "1.2-2" }}</span
               >
             </div>
           </div>
@@ -932,23 +931,7 @@ export class BoletaElectronicaComponent implements OnInit {
       } else {
         console.warn("No se encontraron datos de la boleta");
         // Datos de prueba para debugging
-        this.boletaData = {
-          serie: "B012",
-          numero: "00000001",
-          fechaEmision: new Date().toISOString(),
-          codigo: "A001",
-          docId: "12345678",
-          completo: "Juan Pérez García",
-          curso: "Inglés Básico I",
-          aula: "A-101",
-          profesor: "María García",
-          periodo: "2024-I",
-          concepto: "Matrícula",
-          costo: 200.0,
-          descuento: 50.0,
-          deuda: 0.0,
-          total: 150.0,
-        };
+     
       }
     }
   }
@@ -965,26 +948,7 @@ export class BoletaElectronicaComponent implements OnInit {
       error: (error) => {
         console.error("Error al obtener la boleta:", error);
         this.error = "Error al cargar la boleta electrónica";
-        this.isLoading = false;
-
-        // Fallback a datos de prueba en caso de error
-        this.boletaData = {
-          serie: "B012",
-          numero: "00000001",
-          fechaEmision: new Date().toISOString(),
-          codigo: "A001",
-          docId: "12345678",
-          completo: "Juan Pérez García",
-          curso: "Inglés Básico I",
-          aula: "A-101",
-          profesor: "María García",
-          periodo: "2024-I",
-          concepto: "Matrícula",
-          costo: 200.0,
-          descuento: 50.0,
-          deuda: 0.0,
-          total: 150.0,
-        };
+        this.isLoading = false
       },
     });
   }
@@ -1042,13 +1006,25 @@ export class BoletaElectronicaComponent implements OnInit {
     );
   }
 
+  esNotaCredito(): boolean {
+    return String(this.boletaData?.idTipoPago ?? "").padStart(2, "0") === "07";
+  }
+
   /**
    * Determina el tipo de documento basado en la serie
    * @returns 'FACTURA' si la serie empieza con 'F', 'BOLETA' en otros casos
    */
   getTipoDocumento(): string {
+    if (this.esNotaCredito()) return "NOTA DE CRÉDITO";
+
     const serie = this.boletaData?.serie || "";
     return serie.toUpperCase().startsWith("F") ? "FACTURA" : "BOLETA";
+  }
+
+  getNombreDocumentoElectronico(): string {
+    return this.esNotaCredito()
+      ? "NOTA DE CRÉDITO ELECTRÓNICA"
+      : `${this.getTipoDocumento()} DE VENTA ELECTRÓNICA`;
   }
 
   /**
@@ -1056,10 +1032,30 @@ export class BoletaElectronicaComponent implements OnInit {
    * @returns Título apropiado según el tipo de documento
    */
   getTituloDocumento(): string {
+    if (this.esNotaCredito()) {
+      return "¡Nota de Crédito Generada Exitosamente!";
+    }
+
     const tipo = this.getTipoDocumento();
     return tipo === "FACTURA"
       ? "¡Factura Generada Exitosamente!"
       : "¡Pago Realizado Exitosamente!";
+  }
+
+  getMensajeConfirmacion(): string {
+    if (this.esNotaCredito()) return "¡Tu nota de crédito ha sido generada!";
+    return this.esVentaLibro()
+      ? "¡Tu libro ha sido adquirido!"
+      : "¡Tu matrícula está confirmada!";
+  }
+
+  getDetalleConfirmacion(): string {
+    if (this.esNotaCredito()) {
+      return "Puedes descargar o imprimir tu nota de crédito.";
+    }
+    return this.esVentaLibro()
+      ? "Puedes recoger tu libro en nuestras instalaciones. Recuerda presentar el DNI del estudiante o comprobante de pago."
+      : "¡Éxitos en tus estudios!";
   }
 
   imprimirTicket() {
@@ -1174,21 +1170,6 @@ export class BoletaElectronicaComponent implements OnInit {
     const printContent = document.getElementById("boleta-content");
     if (!printContent) return;
 
-    const servicioContentNormal = this.esVentaLibro()
-      ? `<div class="course-grid">
-           <div class="course-item full-width">
-             <strong>Tipo:</strong> Venta de Libro
-           </div>
-           ${this.boletaData?.nombreLibro ? `<div class="course-item full-width"><strong>Libro:</strong> ${this.boletaData.nombreLibro}</div>` : ""}
-         </div>`
-      : `<div class="course-grid">
-           <div class="course-item"><strong>Periodo:</strong> ${this.boletaData?.periodo || "N/A"}</div>
-           <div class="course-item"><strong>Curso:</strong> ${this.boletaData?.curso || "N/A"}</div>
-           <div class="course-item"><strong>Turno:</strong> ${this.boletaData?.turno || "N/A"}</div>
-           <div class="course-item"><strong>Aula:</strong> ${this.boletaData?.aula || "N/A"}</div>
-           <div class="course-item"><strong>Profesor:</strong> ${this.boletaData?.profesor || "N/A"}</div>
-         </div>`;
-
     const WindowPrt = window.open(
       "",
       "",
@@ -1196,22 +1177,13 @@ export class BoletaElectronicaComponent implements OnInit {
     );
     if (!WindowPrt) return;
 
-    // Modify the HTML content to include conditional service info
-    let htmlContent = printContent.innerHTML;
-    const courseInfoRegex = /<div class="course-info">[\s\S]*?<\/div>/;
-    const newCourseInfo = `
-      <div class="course-info">
-        <h3>DATOS DEL SERVICIO</h3>
-        ${servicioContentNormal}
-      </div>
-    `;
-    htmlContent = htmlContent.replace(courseInfoRegex, newCourseInfo);
+    const htmlContent = printContent.innerHTML;
 
     WindowPrt.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${this.getTipoDocumento()} Electrónica</title>
+        <title>${this.getNombreDocumentoElectronico()}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -1442,7 +1414,7 @@ export class BoletaElectronicaComponent implements OnInit {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Ticket - ${this.getTipoDocumento()} Electrónica</title>
+        <title>Ticket - ${this.getNombreDocumentoElectronico()}</title>
         <style>
           @media print {
             @page {
@@ -1540,24 +1512,30 @@ export class BoletaElectronicaComponent implements OnInit {
       month: "2-digit",
       year: "numeric",
     });
-    const servicioContent = this.esVentaLibro()
-      ? `<div class="small">Tipo: Venta de Libro</div>
-         ${this.boletaData?.nombreLibro ? `<div class="small">Libro: ${this.boletaData.nombreLibro}</div>` : ""}`
-      : `<div class="small">Periodo: ${this.boletaData?.periodo || "N/A"}</div>
-         <div class="small">Curso: ${this.boletaData?.curso || "N/A"}</div>
-         <div class="small">Aula: ${this.boletaData?.aula || "N/A"}</div>
-         <div class="small">Turno: ${this.boletaData?.turno || "N/A"}</div>
-         <div class="small">Prof: ${this.boletaData?.profesor || "N/A"}</div>
-         <div class="small">Fecha Inicio: ${fechaInicioFormateada || "N/A"}</div>
-         <div class="small">Fecha Fin: ${fechaFinalFormateada || "N/A"}</div>`;
-    const descripcionServicio = this.esVentaLibro()
-      ? `${this.boletaData?.concepto || "Venta"} - ${this.boletaData?.nombreLibro || "Libro"}`
-      : `${this.boletaData?.concepto || "Matrícula"} - ${this.boletaData?.curso || "Curso"}`;
+    const servicioContent = this.esNotaCredito()
+      ? this.boletaData?.periodo
+        ? `<div class="small">Periodo: ${this.boletaData.periodo}</div>`
+        : ""
+      : this.esVentaLibro()
+        ? `<div class="small">Tipo: Venta de Libro</div>
+           ${this.boletaData?.nombreLibro ? `<div class="small">Libro: ${this.boletaData.nombreLibro}</div>` : ""}`
+        : `<div class="small">Periodo: ${this.boletaData?.periodo || "N/A"}</div>
+           <div class="small">Curso: ${this.boletaData?.curso || "N/A"}</div>
+           <div class="small">Aula: ${this.boletaData?.aula || "N/A"}</div>
+           <div class="small">Turno: ${this.boletaData?.turno || "N/A"}</div>
+           <div class="small">Prof: ${this.boletaData?.profesor || "N/A"}</div>
+           <div class="small">Fecha Inicio: ${fechaInicioFormateada || "N/A"}</div>
+           <div class="small">Fecha Fin: ${fechaFinalFormateada || "N/A"}</div>`;
+    const descripcionServicio = this.esNotaCredito()
+      ? this.boletaData?.concepto || "Nota de crédito"
+      : this.esVentaLibro()
+        ? `${this.boletaData?.concepto || "Venta"} - ${this.boletaData?.nombreLibro || "Libro"}`
+        : `${this.boletaData?.concepto || "Matrícula"} - ${this.boletaData?.curso || "Curso"}`;
 
     return `
       <div class="ticket-container">
         <div class="center">
-          <img src="https://elcultural.edu.pe/images/asset6.png" alt="Logo" class="logo">
+          <img src="https://elcultural.edu.pe/images/navbarLogo.png" alt="Logo" class="logo">
           <div class="bold">Centro Peruano Americano</div>
           <div class="bold">El Cultural</div>
           <div class="small">RUC: 20132111082</div>
@@ -1568,7 +1546,7 @@ export class BoletaElectronicaComponent implements OnInit {
         <div class="separator"></div>
 
         <div class="center bold">
-          ${this.getTipoDocumento()} DE VENTA ELECTRONICA
+          ${this.getNombreDocumentoElectronico()}
         </div>
         <div class="center bold">
           ${this.boletaData?.serie || "B012"}-${this.boletaData?.numero || "00000001"}
@@ -1592,37 +1570,37 @@ export class BoletaElectronicaComponent implements OnInit {
         <div class="small">${descripcionServicio}</div>
         <div class="row">
           <span>Cant: 1</span>
-          <span>P.Unit: S/${(this.boletaData?.costo || 0).toFixed(2)}</span>
+          <span>P.Unit: ${this.boletaData?.idMoneda} ${(this.boletaData?.costo || 0).toFixed(2)}</span>
         </div>
         <div class="row">
           <span>Descuento:</span>
-          <span>S/${(this.boletaData?.descuento || 0).toFixed(2)}</span>
+          <span>${this.boletaData?.idMoneda} ${(this.boletaData?.descuento || 0).toFixed(2)}</span>
         </div>
 
         <div class="separator"></div>
 
         <div class="row">
           <span>Monto Total:</span>
-          <span>S/${(this.boletaData?.costo || 0).toFixed(2)}</span>
+          <span>${this.boletaData?.idMoneda} ${(this.boletaData?.costo || 0).toFixed(2)}</span>
         </div>
         <div class="row">
           <span>Descuento:</span>
-          <span>S/${(this.boletaData?.descuento || 0).toFixed(2)}</span>
+          <span>${this.boletaData?.idMoneda} ${(this.boletaData?.descuento || 0).toFixed(2)}</span>
         </div>
         <div class="row">
           <span>IGV (0%):</span>
-          <span>S/0.00</span>
+          <span>${this.boletaData?.idMoneda} 0.00</span>
         </div>
 
         <div class="double-separator"></div>
 
         <div class="row bold">
           <span>MONTO CANCELADO:</span>
-          <span>S/${(this.boletaData?.total || 0).toFixed(2)}</span>
+          <span>${this.boletaData?.idMoneda} ${(this.boletaData?.total || 0).toFixed(2)}</span>
         </div>
         <div class="row">
           <span>Deuda:</span>
-          <span>S/${(this.boletaData?.deuda || 0).toFixed(2)}</span>
+          <span>${this.boletaData?.idMoneda} ${(this.boletaData?.deuda || 0).toFixed(2)}</span>
         </div>
 
         <div class="separator"></div>
@@ -1694,7 +1672,8 @@ export class BoletaElectronicaComponent implements OnInit {
 
       const serie = this.boletaData?.serie || "B";
       const numero = this.boletaData?.numero || "00000000";
-      pdf.save(`boleta-${serie}-${numero}.pdf`);
+      const nombreDocumento = this.esNotaCredito() ? "nota-credito" : "boleta";
+      pdf.save(`${nombreDocumento}-${serie}-${numero}.pdf`);
     } catch (error) {
       console.error("Error al descargar el PDF:", error);
       this.imprimirFormatoNormal();

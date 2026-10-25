@@ -61,6 +61,20 @@ html {
 }
 
 /* You can add global styles to this file, and also import other style files */
+// Niubiz replaces inline styles on html/body while its checkout is open.
+html[data-app-theme="light"],
+html[data-app-theme="light"] body {
+  color-scheme: light !important;
+}
+html[data-app-theme="dark"],
+html[data-app-theme="dark"] body {
+  color-scheme: dark !important;
+}
+// The third-party checkout renders its own light interface.
+#visaNetJS {
+  color-scheme: light;
+}
+
 html,
 body {
   height: 100%;
@@ -225,8 +239,8 @@ body {
 }
 
 .importante {
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-error);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-secondary);
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 8px;
@@ -276,7 +290,7 @@ body {
 .ultimo-registro-card .mat-mdc-card-title {
   font-size: 1.25rem !important;
   font-weight: 600 !important;
-  color: var(--mat-sys-on-surface) !important;
+  color: var(--mat-sys-secondary) !important;
   margin: 0 !important;
 }
 
@@ -387,6 +401,46 @@ body {
   font-weight: 500 !important;
   border: 1px solid var(--mat-sys-primary) !important;
   text-align: center !important;
+}
+
+// === LISTA DE RESUMEN / DETALLE (mat-list global) ===
+
+// Contenedor de la lista
+.deuda-list {
+  background: var(--mat-sys-surface) !important;
+  border: 1px solid var(--mat-sys-outline-variant) !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+// Separadores entre filas
+.deuda-list .mat-mdc-list-item {
+  border-bottom: 1px solid var(--mat-sys-outline-variant) !important;
+}
+
+.deuda-list .mat-mdc-list-item:last-child {
+  border-bottom: none !important;
+}
+
+// Iconos de la lista
+.deuda-list mat-icon {
+  color: var(--mat-sys-primary) !important;
+}
+
+// Fila destacada del monto total
+.deuda-monto-item {
+  background: var(--mat-sys-primary-container) !important;
+}
+
+.deuda-monto-item mat-icon {
+  color: var(--mat-sys-primary) !important;
+}
+
+.deuda-monto-item .monto-value {
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+  color: var(--mat-sys-primary) !important;
 }
 
 // === ESTILOS DE ALERTAS DEL CURSO ===

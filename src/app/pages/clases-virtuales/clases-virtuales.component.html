@@ -1,0 +1,71 @@
+<div class="virtual-page">
+  <app-page-header title="Clases virtuales" description="Encuentra tu cuenta, ingresa a tus clases y consulta cómo conectarte." icon="video_call" />
+
+  <div class="virtual-grid">
+    <section class="virtual-card account-card" aria-labelledby="teams-title" [attr.aria-busy]="loading">
+      <div class="card-heading">
+        <span class="card-icon"><mat-icon aria-hidden="true">groups</mat-icon></span>
+        <div><span class="eyebrow">Tu aula virtual</span><h2 id="teams-title">Microsoft Teams</h2></div>
+      </div>
+      <p class="card-intro">Todo listo para conectarte con tu clase.</p>
+      @if (loading) {
+        <div class="loading" role="status">
+          <mat-spinner diameter="32" />
+          <span>Cargando tu cuenta de Teams...</span>
+        </div>
+      } @else if (teamsEmail) {
+        <p class="field-label">Cuenta de Teams</p>
+        <div class="credential">
+          <span>{{ teamsEmail }}</span>
+          <button mat-icon-button type="button" (click)="copiarTexto(teamsEmail)" aria-label="Copiar cuenta de Teams"><mat-icon>content_copy</mat-icon></button>
+        </div>
+        <p class="field-label">Contraseña inicial</p>
+        <div class="credential">
+          <span class="password-value">{{ passwordVisible ? initialPassword : '••••••••••••' }}</span>
+          <div class="credential-actions">
+            <button mat-icon-button type="button" class="password-reveal"
+              (pointerdown)="mostrarPassword($event)" (pointerup)="ocultarPassword()"
+              (pointerleave)="ocultarPassword()" (pointercancel)="ocultarPassword()"
+              (lostpointercapture)="ocultarPassword()" (blur)="ocultarPassword()"
+              (keydown)="mostrarPasswordConTeclado($event)" (keyup)="ocultarPasswordConTeclado($event)"
+              (contextmenu)="$event.preventDefault()"
+              aria-label="Mantén pulsado para mostrar la contraseña inicial" [attr.aria-pressed]="passwordVisible"
+              title="Mantén pulsado para mostrar">
+              <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <button mat-icon-button type="button" (click)="copiarTexto(initialPassword)" aria-label="Copiar contraseña inicial"><mat-icon>content_copy</mat-icon></button>
+          </div>
+        </div>
+        <div class="account-note"><mat-icon aria-hidden="true">info_outline</mat-icon><p>Si ya cambiaste tu contraseña, utiliza la que elegiste.</p></div>
+        <a class="teams-action" mat-flat-button href="https://teams.microsoft.com/v2/" target="_blank" rel="noopener noreferrer"><mat-icon>open_in_new</mat-icon> Ingresar a Teams</a>
+      } @else {
+        <div class="account-note" role="status"><mat-icon aria-hidden="true">info_outline</mat-icon><p>{{ errorMessage }}</p></div>
+        <button mat-stroked-button type="button" (click)="cargarCuenta()"><mat-icon>refresh</mat-icon> Reintentar</button>
+      }
+
+    </section>
+
+    <section class="virtual-card guide-card" aria-labelledby="guide-title">
+      <div class="card-heading">
+        <span class="card-icon"><mat-icon aria-hidden="true">login</mat-icon></span>
+        <div><span class="eyebrow">Paso a paso</span><h2 id="guide-title">Conéctate a tu clase</h2></div>
+      </div>
+      <ol class="steps">
+        <li><div><h3>Abre Microsoft Teams</h3><p>Ingresa con la cuenta de Teams que aparece en esta página.</p></div></li>
+        <li><div><h3>Inicia sesión</h3><p>Usa tu contraseña actual o la inicial si aún no la cambiaste.</p></div></li>
+        <li><div><h3>Únete a tu clase</h3><p>Selecciona tu equipo y conéctate en el horario indicado.</p></div></li>
+      </ol>
+      <div class="account-note"><mat-icon aria-hidden="true">tips_and_updates</mat-icon><p>Si tienes problemas para ingresar, prueba desde otro navegador.</p></div>
+    </section>
+  </div>
+
+  <section class="virtual-card tutorial" aria-labelledby="tutorial-title">
+    <div class="card-heading">
+      <span class="card-icon"><mat-icon aria-hidden="true">play_circle</mat-icon></span>
+      <div><span class="eyebrow">Guía en video</span><h2 id="tutorial-title">Aprende a ingresar a Teams</h2></div>
+    </div>
+    <div class="video-wrapper">
+      <iframe src="https://www.youtube.com/embed/7noft_v65n8" title="Tutorial de acceso a Microsoft Teams" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+    </div>
+  </section>
+</div>

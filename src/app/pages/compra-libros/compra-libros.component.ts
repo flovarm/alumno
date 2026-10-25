@@ -1,19 +1,21 @@
-/*
-import { Component, OnInit, signal, inject } from "@angular/core";
+import { UltimoCursoComponent } from "../../components/ultimo-curso/ultimo-curso.component";
+import { UltimoRegistro } from "../../models/ultimo-registro";
+import { ChangeDetectorRef, Component, OnInit, signal, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
+import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatSelectModule } from "@angular/material/select";
 import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatCheckboxModule } from "@angular/material/checkbox";
 import { ReactiveFormsModule, FormControl } from "@angular/forms";
 import { PageHeaderComponent } from "../../components/page-header/page-header.component";
 import { PeriodoService } from "../../services/periodo.service";
 import { RegistroService } from "../../services/registro.service";
 import { LibroService } from "../../services/libro.service";
 import { PaymentSpinnerService } from "../../services/loading.service";
+import { NiubizService } from "../../services/niubiz.service";
 import { Router } from "@angular/router";
 import { environment } from "../../../environments/environment.development";
 
@@ -25,12 +27,13 @@ import { environment } from "../../../environments/environment.development";
     MatCardModule,
     MatIconModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatChipsModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatCheckboxModule,
     ReactiveFormsModule,
     PageHeaderComponent,
+    UltimoCursoComponent,
   ],
   template: `
     <div class="page-container">
@@ -43,83 +46,18 @@ import { environment } from "../../../environments/environment.development";
 
       <!-- Último Registro -->
       @if (ultimoRegistro()) {
-        <mat-card class="ultimo-registro-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>history</mat-icon>
-            <mat-card-title>Último Registro Académico</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="ultimo-registro-grid">
-              <div class="registro-item">
-                <mat-icon>calendar_today</mat-icon>
-                <div>
-                  <div class="registro-label">Período</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.periodo }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>book</mat-icon>
-                <div>
-                  <div class="registro-label">Curso</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.curso | titlecase }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>grade</mat-icon>
-                <div>
-                  <div class="registro-label">Nota</div>
-                  <div
-                    class="registro-value"
-                    [style.color]="
-                      ultimoRegistro()?.apruebaReg === 'P'
-                        ? 'var(--mat-sys-primary)'
-                        : 'var(--mat-sys-secondary)'
-                    "
-                  >
-                    {{ ultimoRegistro()?.notaRegistro }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>location_on</mat-icon>
-                <div>
-                  <div class="registro-label">Sede</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.nombreSed }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>schedule</mat-icon>
-                <div>
-                  <div class="registro-label">Turno</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.turno }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+        <app-ultimo-curso [registro]="ultimoRegistro()" />
       }
 
+      <div class="compra-layout">
       <!-- Lista de Libros -->
       @if (libros() && libros().length > 0) {
-        <mat-card class="libros-section" style="margin-bottom: 2rem;">
+        <mat-card class="libros-section">
           <mat-card-header>
             <mat-icon mat-card-avatar>library_books</mat-icon>
             <mat-card-title>Libros Disponibles</mat-card-title>
             <mat-card-subtitle
-              >Material académico para tu curso -
-              {{ getTipoSeleccionado() }}</mat-card-subtitle
+              >Material académico para tu curso</mat-card-subtitle
             >
           </mat-card-header>
           <mat-card-content>
@@ -138,33 +76,28 @@ import { environment } from "../../../environments/environment.development";
                   class="libro-card"
                   [class.selected]="isLibroSeleccionado(libro.idProducto)"
                 >
-                  <div class="checkbox-overlay">
-                    <mat-checkbox
-                      [checked]="isLibroSeleccionado(libro.idProducto)"
-                      (change)="toggleLibroSeleccion(libro.idProducto)"
-                      color="primary"
-                      disabled="true"
-                    >
-                    </mat-checkbox>
+                  <div class="libro-cover">
+                    @if (isLibroSeleccionado(libro.idProducto)) {
+                      <span class="included-badge"><mat-icon aria-hidden="true">check_circle</mat-icon> Incluido</span>
+                    }
+                    <img
+                      [src]="obtenerPortada(libro)"
+                      [alt]="libro.nombreProducto"
+                      loading="lazy"
+                      (error)="onImgError($event)"
+                    />
                   </div>
-                  <mat-card-header>
-                    <mat-icon mat-card-avatar>menu_book</mat-icon>
-                    <mat-card-title>{{ libro.nombreProducto }}</mat-card-title>
-                    <mat-card-subtitle
-                      >Código: {{ libro.codigoProducto }}</mat-card-subtitle
-                    >
-                  </mat-card-header>
                   <mat-card-content>
                     <div class="libro-info">
+                      <h3 class="libro-nombre">{{ libro.nombreProducto }}</h3>
                       @if (libro.descripcion) {
                         <div class="descripcion">
-                          <mat-icon>description</mat-icon>
                           <p>{{ libro.descripcion }}</p>
                         </div>
                       }
                       <div class="precio">
                         <span class="precio-valor"
-                          >S/ {{ libro.precioVenta }}</span
+                          >S/ {{ formatearPrecio(libro.precioVenta) }}</span
                         >
                       </div>
                     </div>
@@ -178,7 +111,7 @@ import { environment } from "../../../environments/environment.development";
 
       <!-- Resumen de Compra -->
       @if (getLibrosSeleccionados().length > 0) {
-        <mat-card class="resumen-compra-card" style="margin-bottom: 2rem;">
+        <mat-card class="resumen-compra-card">
           <mat-card-header>
             <mat-icon mat-card-avatar>shopping_cart</mat-icon>
             <mat-card-title>Resumen de Compra</mat-card-title>
@@ -192,9 +125,16 @@ import { environment } from "../../../environments/environment.development";
                   track libro.idProducto
                 ) {
                   <div class="libro-seleccionado-item">
-                    <mat-icon>book</mat-icon>
+                    <img
+                      class="libro-miniatura"
+                      [src]="obtenerPortada(libro)"
+                      [alt]="libro.nombreProducto"
+                      (error)="onImgError($event)"
+                    />
                     <span>{{ libro.nombreProducto }}</span>
-                    <span class="precio-item">S/ {{ libro.precioVenta }}</span>
+                    <span class="precio-item"
+                      >S/ {{ formatearPrecio(libro.precioVenta) }}</span
+                    >
                   </div>
                 }
               </div>
@@ -202,9 +142,26 @@ import { environment } from "../../../environments/environment.development";
                 <div class="total-precio">
                   <mat-icon>calculate</mat-icon>
                   <span class="total-label">Total:</span>
-                  <span class="total-valor">S/ {{ getPrecioTotal() }}</span>
+                  <span class="total-valor"
+                    >S/ {{ formatearPrecio(getPrecioTotal()) }}</span
+                  >
                 </div>
               </div>
+            </div>
+            <div class="mt-2">
+              <mat-checkbox
+                [checked]="terminosAceptados"
+                (change)="terminosAceptados = $event.checked"
+                [disabled]="procesandoPago"
+              >
+                He leído y acepto los
+                <a
+                  href="https://www.elcultural.com.pe/terminos-y-condiciones-del-servicio/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  (click)="$event.stopPropagation()"
+                >Términos y Condiciones</a>
+              </mat-checkbox>
             </div>
             <div class="importante mt-2">
               <mat-icon>info</mat-icon>
@@ -220,27 +177,25 @@ import { environment } from "../../../environments/environment.development";
               color="primary"
               (click)="procederCompra()"
               [disabled]="
-                procesandoPago ||
-                formularioIziPayAbierto ||
-                getLibrosSeleccionados().length === 0
+                procesandoPago || !terminosAceptados || getLibrosSeleccionados().length === 0
               "
             >
               <mat-icon>payment</mat-icon>
               {{
                 procesandoPago
-                  ? "Procesando..."
-                  : "PAGAR S/ " + getPrecioTotal()
+                  ? "Procesando pago..."
+                  : "PAGAR S/ " + formatearPrecio(getPrecioTotal())
               }}
             </button>
           </mat-card-actions>
         </mat-card>
       }
 
-      <!-- Información de productos -->
+      </div>
 
       <!-- Mensaje de pago -->
       @if (paymentMessage) {
-        <div class="payment-message" [ngClass]="paymentMessageClass">
+        <div class="payment-message" [ngClass]="paymentMessageClass" role="status" aria-live="polite">
           {{ paymentMessage }}
 
           @if (
@@ -252,7 +207,7 @@ import { environment } from "../../../environments/environment.development";
                 mat-raised-button
                 color="accent"
                 (click)="procesarPago()"
-                [disabled]="procesandoPago || formularioIziPayAbierto"
+                [disabled]="procesandoPago || !terminosAceptados"
               >
                 <mat-icon>refresh</mat-icon>
                 Reintentar Pago
@@ -262,9 +217,6 @@ import { environment } from "../../../environments/environment.development";
         </div>
       }
 
-      <!-- Container para el formulario de IziPay -->
-      <div id="iframeContainer"></div>
-
       <!-- Mensaje cuando no hay libros -->
       @if (!libros() || libros().length === 0) {
         <mat-card class="no-libros-card">
@@ -273,8 +225,7 @@ import { environment } from "../../../environments/environment.development";
               <mat-icon>library_books</mat-icon>
               <h3>No hay libros disponibles</h3>
               <p>
-                No se encontraron libros del tipo seleccionado para tu curso en
-                esta sede.
+                No se encontraron libros para tu curso en esta sede.
               </p>
             </div>
           </mat-card-content>
@@ -284,285 +235,200 @@ import { environment } from "../../../environments/environment.development";
   `,
   styles: [
     `
+      :host { display: block; }
       .page-container {
         max-width: 1200px;
         margin: 0 auto;
+        padding: 24px;
+        color: var(--mat-sys-on-surface);
       }
-
-      .tipo-libro-section {
-        background: var(--mat-sys-surface-container);
+      app-page-header { display: block; margin-bottom: 24px; }
+      mat-card { box-shadow: none; }
+      .ultimo-registro-card, .libros-section, .resumen-compra-card, .no-libros-card {
+        min-width: 0;
         border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
+        border-radius: 18px;
+        background: var(--mat-sys-surface-container-low);
+        overflow: hidden;
       }
-
-      .libros-section {
+      mat-card-header { padding: 20px 20px 16px; }
+      mat-card-title { font-size: 1.05rem; font-weight: 700; color: var(--mat-sys-primary); }
+      mat-card-subtitle { margin-top: 4px; color: var(--mat-sys-on-surface-variant); font-size: 0.85rem; }
+      mat-icon[mat-card-avatar] {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        margin-bottom: 0;
+        border-radius: 12px;
+        background: var(--mat-sys-primary-container);
+        color: var(--mat-sys-primary);
+      }
+      mat-card-content { padding: 0 20px 20px; }
+      .ultimo-registro-card { margin-bottom: 24px; }
+      .ultimo-registro-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .registro-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
         background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 16px;
+        min-width: 0;
       }
-
+      .registro-item mat-icon { flex-shrink: 0; color: var(--mat-sys-primary); }
+      .registro-item > div { min-width: 0; overflow-wrap: anywhere; }
+      .registro-label { font-size: 0.75rem; color: var(--mat-sys-on-surface-variant); margin-bottom: 3px; }
+      .registro-value { font-size: 0.875rem; font-weight: 600; line-height: 1.4; }
+      .compra-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+        align-items: stretch;
+        gap: 24px;
+      }
       .libros-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 16px;
       }
-
       .libro-card {
-        background: var(--mat-sys-surface);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
         border: 1px solid var(--mat-sys-outline-variant);
-        border-radius: 12px;
-        transition:
-          box-shadow 0.2s,
-          transform 0.2s,
-          border-color 0.2s;
+        border-radius: 14px;
+        background: var(--mat-sys-surface);
+      }
+      .libro-card.selected { border-color: var(--mat-sys-primary); }
+      .libro-cover {
         position: relative;
-      }
-
-      .libro-card:hover {
-        box-shadow: 0 4px 16px var(--mat-sys-shadow);
-        transform: translateY(-2px);
-      }
-
-      .libro-card.selected {
-        border: 2px solid var(--mat-sys-primary);
-        background: var(--mat-sys-primary-container);
-      }
-
-      .checkbox-overlay {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        z-index: 1;
-        background: var(--mat-sys-surface);
-        border-radius: 4px;
-        padding: 4px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .selection-info {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-        background: var(--mat-sys-tertiary-container);
-        border-radius: 8px;
-        color: var(--mat-sys-on-tertiary-container);
-      }
-
-      .selection-info mat-icon {
-        color: var(--mat-sys-tertiary);
-      }
-
-      .resumen-compra-card {
+        display: grid;
+        place-items: center;
+        height: 260px;
+        padding: 44px 24px 20px;
         background: var(--mat-sys-surface-container);
-        border: 1px solid var(--mat-sys-primary);
-        border-radius: 16px;
       }
-
-      .resumen-content {
-        margin-top: 1rem;
-      }
-
-      .libro-seleccionado {
-        margin-bottom: 1.5rem;
-      }
-
-      .libro-seleccionado-item {
-        display: flex;
+      .libro-cover img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+      .included-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: inline-flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        background: var(--mat-sys-surface-container-high);
-        border-radius: 8px;
-        border: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      .libro-seleccionado-item mat-icon {
-        color: var(--mat-sys-primary);
-        font-size: 1.2rem;
-      }
-
-      .libro-seleccionado-item span:first-of-type {
-        flex: 1;
-        font-weight: 500;
-      }
-
-      .precio-item {
-        font-weight: 600;
-        color: var(--mat-sys-primary);
-      }
-
-      .total-section {
-        border-top: 2px solid var(--mat-sys-outline);
-        padding-top: 1rem;
-      }
-
-      .total-precio {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
+        gap: 5px;
+        padding: 4px 8px;
+        border-radius: 20px;
         background: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .included-badge mat-icon { width: 16px; height: 16px; font-size: 16px; }
+      .libro-card mat-card-content { display: flex; flex: 1; padding: 18px; }
+      .libro-info { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+      .libro-nombre { margin: 0 0 8px; font-size: 1rem; font-weight: 700; color: var(--mat-sys-primary); line-height: 1.4; overflow-wrap: anywhere; }
+      .descripcion p { margin: 0 0 12px; font-size: 0.875rem; line-height: 1.5; color: var(--mat-sys-on-surface-variant); }
+      .precio { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--mat-sys-outline-variant); }
+      .precio-valor { color: var(--mat-sys-secondary); font-size: 1.25rem; font-weight: 700; }
+      .selection-info, .importante {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px;
         border-radius: 12px;
-        border: 1px solid var(--mat-sys-primary);
-      }
-
-      .total-precio mat-icon {
-        color: var(--mat-sys-primary);
-        font-size: 1.5rem;
-      }
-
-      .total-label {
-        flex: 1;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--mat-sys-on-primary-container);
-      }
-
-      .total-valor {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--mat-sys-primary);
-      }
-
-      .payment-message {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: 8px;
-        text-align: center;
-        font-weight: 500;
-      }
-
-      .payment-success {
+        font-size: 0.85rem;
+        line-height: 1.5;
         background: var(--mat-sys-primary-container);
         color: var(--mat-sys-on-primary-container);
-        border: 1px solid var(--mat-sys-primary);
       }
-
-      .payment-error {
-        background: var(--mat-sys-error-container);
-        color: var(--mat-sys-on-error-container);
-        border: 1px solid var(--mat-sys-error);
-      }
-
-      .retry-section {
-        margin-top: 1rem;
-        text-align: center;
-      }
-
-      .centered-actions {
-        display: flex;
-        justify-content: center;
-        padding: 1.5rem;
-      }
-
-      .centered-actions button {
-        font-size: 1.1rem;
-        padding: 12px 32px;
-        min-width: 200px;
-      }
-
-      .selection-controls {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--mat-sys-outline-variant);
-      }
-
-      @media (max-width: 700px) {
-        .horario-card-grid {
-          grid-template-columns: 1fr;
-          gap: 0.5rem;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .full-width {
-          width: 100% !important;
-        }
-
-        .libros-grid {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-        }
-
-        .mdc-list-item--with-trailing-radio.mdc-list-item,
-        .mdc-list-item--with-trailing-checkbox.mdc-list-item {
-          padding-left: 8px;
-          padding-right: 0;
-          height: 300px;
-        }
-
-        .schedule-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .schedule-day {
-          padding: 0.75rem;
-        }
-      }
-
-      .full-width {
-        width: 50%;
-        font-size: 1rem;
-      }
-
-      .tipo-libro-section .mat-mdc-form-field {
-        font-size: 1rem;
-      }
-
-      .tipo-libro-section .mat-mdc-select {
-        font-size: 1rem;
-      }
-
-      .option-text {
-        font-weight: 500;
-        color: var(--mat-sys-on-surface);
-        font-size: 1rem;
-      }
-
-      .option-status {
-        font-size: 0.9rem;
-        color: var(--mat-sys-error);
-        font-style: italic;
-      }
-
-      .tipo-libro-section .mat-mdc-select-value {
-        display: flex;
+      .selection-info { margin-bottom: 20px; }
+      .selection-info mat-icon, .importante mat-icon { flex-shrink: 0; }
+      .resumen-compra-card { border-color: var(--mat-sys-primary); }
+      .libro-seleccionado-item {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
+        gap: 10px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--mat-sys-outline-variant);
+        font-size: 0.85rem;
+      }
+      .libro-seleccionado-item span:first-of-type { overflow-wrap: anywhere; line-height: 1.4; }
+      .libro-miniatura { width: 40px; height: 56px; object-fit: contain; border-radius: 4px; }
+      .precio-item { color: var(--mat-sys-secondary); font-weight: 600; white-space: nowrap; }
+      .total-section { margin: 20px 0 16px; }
+      .total-precio { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+      .total-precio mat-icon { color: var(--mat-sys-primary); }
+      .total-label { flex: 1; color: var(--mat-sys-primary); font-weight: 600; }
+      .total-valor { font-size: 1.75rem; font-weight: 750; color: var(--mat-sys-secondary); }
+      .precio-item, .precio-valor, .total-valor { font-variant-numeric: tabular-nums; }
+      .centered-actions { margin-top: auto; padding: 0 20px 20px; }
+      .centered-actions button { width: 100%; min-height: 48px; font-weight: 700; }
+      .payment-message { margin-top: 20px; padding: 16px; border-radius: 12px; line-height: 1.5; }
+      .payment-success { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
+      .payment-error { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+      .retry-section { margin-top: 12px; }
+      .no-libros-card { margin-top: 20px; }
+      .no-libros-content { padding: 40px 16px 20px; text-align: center; }
+      .no-libros-content mat-icon { width: 48px; height: 48px; font-size: 48px; color: var(--mat-sys-primary); }
+      .no-libros-content h3 { color: var(--mat-sys-primary); font-size: 1.15rem; margin: 16px 0 8px; }
+      .no-libros-content p { color: var(--mat-sys-on-surface-variant); margin: 0; }
+      @media (max-width: 960px) {
+        .ultimo-registro-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .compra-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 600px) {
+        .page-container { padding: 16px 12px; }
+        .ultimo-registro-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .registro-item:last-child { grid-column: 1 / -1; }
+        mat-card-header { padding: 16px; }
+        mat-card-content { padding: 0 16px 16px; }
+        .libros-grid { grid-template-columns: 1fr; }
+        .centered-actions { padding: 0 16px 16px; }
+        .libro-cover { height: 240px; }
       }
     `,
   ],
 })
 export class CompraLibrosComponent implements OnInit {
-  ultimoRegistro = signal<any>(null);
+  ultimoRegistro = signal<UltimoRegistro | null>(null);
   periodoActual = signal<any>(null);
   libros = signal<any[]>([]);
   librosSeleccionados = signal<Set<number>>(new Set());
   tipoLibros = signal<any[]>([]);
 
   tipoLibroControl = new FormControl<number | null>(null);
+  private changeDetector = inject(ChangeDetectorRef);
+  private pagoEnviado = false;
   procesandoPago = false;
-  formularioIziPayAbierto = false;
+  terminosAceptados = false;
   paymentMessage: string = "";
   paymentMessageClass: string = "";
-  private izipayLoaded = false;
+  private sessionKeyActual: string | null = null;
+  private montoActual = "0";
+  private orderNumberActual: string | null = null;
+  private idCursoActual: number | null = null;
+  private idSedeActual: string | null = null;
 
   private periodoService = inject(PeriodoService);
   private registroService = inject(RegistroService);
   private libroService = inject(LibroService);
+  private niubizService = inject(NiubizService);
   private router = inject(Router);
   private paymentSpinner = inject(PaymentSpinnerService);
 
   user = JSON.parse(localStorage.getItem("alumno_currentUser"));
 
   ngOnInit(): void {
+    this.cargarCheckoutNiubiz();
+    this.verificarRetornoPagoNiubiz();
+
     this.periodoService.ultimos12Periodos().subscribe((periodos: any) => {
       if (Array.isArray(periodos) && periodos.length > 0) {
         this.periodoActual.set(periodos[0]);
@@ -571,13 +437,16 @@ export class CompraLibrosComponent implements OnInit {
 
     this.registroService
       .obtenerUltimoRegistroPorAlumno(this.user.userName)
-      .subscribe((registro: any) => {
+      .subscribe((registro) => {
         this.ultimoRegistro.set(registro);
-        this.cargarLibros(registro);
+        if (registro) this.cargarLibros(registro);
       });
   }
 
-  cargarLibros(registro: any): void {
+  cargarLibros(registro: UltimoRegistro): void {
+    this.idCursoActual = registro.idCurso;
+    this.idSedeActual = registro.idSede;
+
     this.libroService
       .obtenerLibroUltimoCurso(registro.idCurso, registro.idSede)
       .subscribe((libros: any[]) => {
@@ -606,14 +475,16 @@ export class CompraLibrosComponent implements OnInit {
     return this.librosSeleccionados().has(idProducto);
   }
 
-  toggleLibroSeleccion(idProducto: number): void {
-    const seleccionados = new Set(this.librosSeleccionados());
-    if (seleccionados.has(idProducto)) {
-      seleccionados.delete(idProducto);
-    } else {
-      seleccionados.add(idProducto);
-    }
-    this.librosSeleccionados.set(seleccionados);
+  obtenerPortada(libro: any): string {
+    return libro?.imgUrl || "/images/PortadaNoDisponible.png";
+  }
+
+  onImgError(event: Event): void {
+    (event.target as HTMLImageElement).src = "/images/PortadaNoDisponible.png";
+  }
+
+  formatearPrecio(valor: number): string {
+    return valor.toFixed(2);
   }
 
   getTipoSeleccionado(): string {
@@ -631,305 +502,163 @@ export class CompraLibrosComponent implements OnInit {
   }
 
   procesarPago(): void {
+    if (!this.terminosAceptados) return;
     if (this.getLibrosSeleccionados().length === 0) return;
+    if (this.procesandoPago) return;
 
     this.procesandoPago = true;
     this.paymentMessage = "";
 
-    // Mostrar spinner de pago para libros
-
-    // Pago real - usar el precio total de todos los libros
     const total = this.getPrecioTotal();
-    const transactionId =
-      Date.now().toString() + Math.random().toString().substr(2, 5);
-
-    // Validar que ultimoRegistro tenga los datos necesarios
-    const registro = this.ultimoRegistro();
-
-    if (!registro) {
+    const merchantId = environment.niubiz.merchantId;
+    const periodoId =
+      this.periodoActual()?.idPeriodo || Date.now().toString().slice(-8);
+    const purchaseNumber = this.obtenerPurchaseNumber(periodoId);
+    if (!purchaseNumber) {
       this.showPaymentMessage(
-        "Error: No se encontró información del registro del alumno",
+        "No se pudo generar el número de compra. Intente nuevamente.",
         "error",
       );
       this.procesandoPago = false;
       return;
     }
 
-    // Usar un enfoque más simple como en registro-matrícula
-    // El orderNumber será: período + userName (como backup siempre funcional)
-    const periodoId =
-      this.periodoActual()?.idPeriodo || Date.now().toString().slice(-8);
-    const userDoc = this.user?.userName || "unknown";
-    const orderNumber = `LIB${periodoId}${userDoc}`;
-
-    this.registroService
-      .obtenerTokenPago(total, transactionId, orderNumber)
+    this.niubizService.prepararYCrearSession(
+      {
+        purchaseNumber,
+        amount: total,
+        merchantId,
+        tipoOperacion: "libro",
+        docid: this.user?.userName,
+        idCurso: this.idCursoActual ?? undefined,
+        idSede: this.idSedeActual ?? undefined,
+      },
+      this.user.codigo,
+    )
       .subscribe({
-        next: (tokenResponse: any) => {
-          if (tokenResponse.code === "00") {
-            this.initializeIziPay(
-              tokenResponse,
-              total,
-              transactionId,
-              orderNumber,
-            );
-          } else {
-            this.showPaymentMessage("Error al obtener token de pago", "error");
-          }
+        next: (sessionResponse) => {
           this.procesandoPago = false;
+          this.sessionKeyActual = sessionResponse.sessionKey;
+          this.montoActual = total.toFixed(2);
+          this.orderNumberActual = purchaseNumber;
+          this.abrirPagoNiubiz();
         },
         error: (err) => {
-          this.showPaymentMessage("Error al procesar el pago", "error");
+          console.error("Error al crear sesión Niubiz", err);
+          this.showPaymentMessage("Error al obtener sesión de pago", "error");
           this.procesandoPago = false;
         },
       });
   }
 
-  private initializeIziPay(
-    tokenResponse: any,
-    amount: number,
-    transactionId: string,
-    orderNumber: string,
-  ): void {
-    if (!this.izipayLoaded) {
-      this.loadIziPayScript().then(() => {
-        this.setupIziPayForm(tokenResponse, amount, transactionId, orderNumber);
-      });
-    } else {
-      this.setupIziPayForm(tokenResponse, amount, transactionId, orderNumber);
-    }
-  }
-
-  private loadIziPayScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if ((window as any).Izipay) {
-        this.izipayLoaded = true;
-        resolve();
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = environment.izipay.scriptUrl;
-      script.onload = () => {
-        this.izipayLoaded = true;
-        resolve();
-      };
-      script.onerror = () => reject(new Error("Error cargando IziPay script"));
-      document.head.appendChild(script);
-    });
-  }
-
-  private setupIziPayForm(
-    tokenResponse: any,
-    amount: number,
-    transactionId: string,
-    orderNumber: string,
-  ): void {
-    // Separar el nombreCompleto para obtener nombres y apellidos
-    const nombreCompleto = this.user?.nombreCompleto || "";
-    const partesNombre = nombreCompleto.split(" ");
-    let firstName = "Usuario";
-    let lastName = "Apellido";
-
-    if (partesNombre.length >= 3) {
-      // Formato: ApellidoPaterno ApellidoMaterno Nombres
-      lastName = partesNombre[0]; // Apellido Paterno
-      firstName = partesNombre.slice(2).join(" "); // Nombres
-    } else if (partesNombre.length === 2) {
-      firstName = partesNombre[1];
-      lastName = partesNombre[0];
-    }
-
-    const dateTimeTransaction = (Date.now() * 1000).toString();
-
-    const iziConfig = {
-      config: {
-        transactionId: transactionId,
-        action: (window as any).Izipay.enums.payActions.PAY,
-        merchantCode: environment.izipay.merchantCode,
-        order: {
-          orderNumber: orderNumber,
-          currency: "PEN",
-          amount: amount.toFixed(2),
-          processType: (window as any).Izipay.enums.processType.AUTHORIZATION,
-          merchantBuyerId: environment.izipay.merchantCode,
-          dateTimeTransaction: dateTimeTransaction,
-          payMethod: (window as any).Izipay.enums.showMethods.ALL,
-        },
-        billing: {
-          firstName: firstName,
-          lastName: lastName,
-          email: this.user?.correo || "test@example.com",
-          phoneNumber: this.user?.telefono || "999666333",
-          street: "Av. Venezuela 128",
-          city: "trujillo",
-          state: "Trujillo",
-          country: "PE",
-          postalCode: "13001",
-          document: this.user?.userName || "12345678",
-          documentType:
-            this.user?.userName && this.user.userName.length > 8
-              ? (window as any).Izipay.enums.documentType.CE
-              : (window as any).Izipay.enums.documentType.DNI,
-        },
-        render: {
-          typeForm: (window as any).Izipay.enums.typeForm.POP_UP,
-          container: "#iframeContainer",
-        },
-        appearance: {
-          logo: "https://elcultural.edu.pe/images/asset6.png",
-        },
-      },
-    };
-
-    try {
-      const checkout = new (window as any).Izipay(iziConfig);
-
-      // Ocultar spinner de carga y mostrar spinner de pago
-
-      this.formularioIziPayAbierto = true;
-
-      checkout.LoadForm({
-        authorization: tokenResponse.response.token,
-        keyRSA: "RSA",
-        callbackResponse: (response: any) => {
-          this.formularioIziPayAbierto = false;
-          this.handlePaymentResponse(response);
-        },
-        callbackError: (error: any) => {
-          this.formularioIziPayAbierto = false;
-          this.showPaymentMessage(
-            "Error en el procesamiento del pago. La pasarela de pagos no está disponible temporalmente.",
-            "error",
-          );
-        },
-      });
-
-      // Timeout para cerrar el formulario si no hay respuesta en 5 minutos
-      setTimeout(() => {
-        if (this.formularioIziPayAbierto) {
-          this.formularioIziPayAbierto = false;
-          this.showPaymentMessage(
-            "El tiempo de espera para el pago ha expirado. Por favor, intente nuevamente.",
-            "error",
-          );
-        }
-      }, 300000); // 5 minutos
-    } catch (error) {
-      this.formularioIziPayAbierto = false;
+  private abrirPagoNiubiz(): void {
+    if (!this.terminosAceptados || this.pagoEnviado) return;
+    const w = window as any;
+    if (!w.VisanetCheckout || !this.sessionKeyActual) {
       this.showPaymentMessage(
-        "Error al inicializar el formulario de pago",
-        "error",
-      );
-    }
-  }
-
-  private handlePaymentResponse(response: any): void {
-    // Validar si la respuesta es válida
-    if (!response || typeof response !== "object") {
-      this.showPaymentMessage(
-        "Error: Respuesta inválida del sistema de pagos. Por favor, contacte soporte.",
+        "El formulario de pago aún no está disponible. Intente nuevamente.",
         "error",
       );
       return;
     }
 
-    if (response.code === "00") {
+    const merchantId = environment.niubiz.merchantId;
+    const purchaseNumber = this.orderNumberActual;
+    if (!purchaseNumber) {
       this.showPaymentMessage(
-        "¡Pago exitoso! Registrando tu compra...",
-        "success",
-      );
-
-      // Registrar la compra de todos los libros
-      this.registrarCompraLibros(response);
-    } else if (
-      response.code === "504" ||
-      response.message?.includes("timeout")
-    ) {
-      this.paymentSpinner.hideSpinner();
-      this.showPaymentMessage(
-        "La pasarela de pagos no está respondiendo. Por favor, intente nuevamente en unos minutos.",
+        "No se pudo obtener el número de compra. Intente nuevamente.",
         "error",
       );
-    } else {
-      this.paymentSpinner.hideSpinner();
-      const errorMessage =
-        response.message ||
-        response.error ||
-        "Error desconocido en el procesamiento del pago";
-      this.showPaymentMessage(`Error en el pago: ${errorMessage}`, "error");
+      return;
     }
-  }
+    const actionUrl = `${environment.apiUrl}Pago/ProcesarPagoLibroNiubiz/${merchantId}/${this.user.userName}/${this.idCursoActual}/${this.idSedeActual}/${purchaseNumber}`;
+    sessionStorage.setItem("niubiz_purchase_number", purchaseNumber);
 
-  private registrarCompraLibros(paymentResponse: any): void {
-    const registro = this.ultimoRegistro();
-    const libros = this.getLibrosSeleccionados();
+    w.VisanetCheckout.configure({
+      sessiontoken: this.sessionKeyActual,
+      channel: "web",
+      merchantid: merchantId,
+      purchasenumber: purchaseNumber,
+      amount: parseFloat(this.montoActual),
+      expirationminutes: "20",
+      timeouturl: `${window.location.origin}/compra-libros`,
+      merchantlogo: "https://elcultural.edu.pe/images/navbarLogo.png",
+      formbuttoncolor: "#1C04A4",
+      action: actionUrl,
+      complete: (params: any) => {
+        if (this.pagoEnviado) return;
+        this.pagoEnviado = true;
+        this.procesandoPago = true;
+        // El callback del SDK puede ejecutarse fuera de Angular.
+        this.changeDetector.detectChanges();
+        const formData = new FormData();
+        formData.append("channel", "web");
+        formData.append("order.tokenId", params.transactionToken || "");
+        formData.append("order.purchaseNumber", purchaseNumber);
+        formData.append("order.amount", this.montoActual);
+        formData.append("order.currency", "PEN");
 
-    // Crear un solo DTO con todos los productos
-    const compraLibrosDto = {
-      idRegistro: registro.idRegistro,
-      idProductos: libros.map((libro) => libro.idProducto.toString()),
-      codigo: parseInt(this.user?.userName) || 0,
-      docid: this.user?.userName || "",
-      nombreLibro: libros.map((libro) => libro.nombreProducto).join(", "), // Concatenar nombres de libros
-      idtipod: "03",
-      serie: "B012",
-      fecha: new Date().toISOString(),
-      pCompra: libros.reduce(
-        (total, libro) => total + (libro.precioCompra || 0),
-        0,
-      ),
-      pVenta: this.getPrecioTotal(),
-      cantidad: libros.length,
-      subTotal: this.getPrecioTotal(),
-      operacion: "S",
-      estado: "A",
-      id_sede: registro.idSede?.toString() || "1",
-      usuario: "SISTEMAS",
-      fechaU_pro: null,
-      usuarioU_pro: "",
-      fechae: new Date().toISOString(),
-      estadoe: "P",
-    };
-
-    // Mostrar spinner solo cuando inicia el registro de compra
-    this.paymentSpinner.showSpinner("Registrando compra...");
-
-    // Enviar una sola petición con todos los libros
-    this.libroService.registrarLibro(compraLibrosDto).subscribe({
-      next: (boletaData: any) => {
-        setTimeout(() => {
-          this.paymentSpinner.hideSpinner();
-          this.router.navigate(["/boleta-electronica"], {
-            state: boletaData,
-            replaceUrl: false,
-          });
-        }, 500);
-      },
-      error: (error) => {
-        this.paymentSpinner.hideSpinner();
-        this.showPaymentMessage(
-          "Pago exitoso, pero hubo un error al registrar la compra. Contacte soporte.",
-          "error",
-        );
-
-        setTimeout(() => {
-          this.router.navigate(["/compra-libros"], {
-            replaceUrl: true,
-          });
-        }, 5000);
+        // El backend procesa el pago, genera la boleta y redirige a
+        // /pago-exitoso?idDocumento=... con los datos del documento.
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = actionUrl;
+        form.style.display = "none";
+        formData.forEach((value, key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value.toString();
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
       },
     });
+
+    w.VisanetCheckout.open();
+  }
+
+  private obtenerPurchaseNumber(periodoId: number | string): string | null {
+    const usuario = String(this.user?.userName ?? "").trim();
+    const periodo = String(periodoId ?? "").trim();
+    if (!usuario || !periodo) return null;
+
+    const purchaseNumber = `${periodo}${usuario}`.trim();
+    return purchaseNumber || null;
+  }
+
+  private cargarCheckoutNiubiz(): void {
+    const w = window as any;
+    if (w.VisanetCheckout) return;
+    if (document.getElementById("niubizCheckoutScript")) return;
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.id = "niubizCheckoutScript";
+    script.src = environment.niubiz.scriptUrl;
+    document.head.appendChild(script);
+  }
+
+  private verificarRetornoPagoNiubiz(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const payment = urlParams.get("payment");
+    if (!payment) return;
+    this.limpiarParametrosURL();
+  }
+
+  private limpiarParametrosURL(): void {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("payment");
+    url.searchParams.delete("transactionId");
+    url.searchParams.delete("statusCode");
+    url.searchParams.delete("message");
+    window.history.replaceState({}, document.title, url.toString());
   }
 
   private showPaymentMessage(message: string, type: "success" | "error"): void {
     this.paymentMessage = message;
     this.paymentMessageClass =
       type === "success" ? "payment-success" : "payment-error";
-
-    if (type === "error") {
-      this.formularioIziPayAbierto = false;
-    }
   }
 }
-*/

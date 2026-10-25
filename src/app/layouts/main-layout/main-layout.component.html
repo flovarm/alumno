@@ -7,18 +7,18 @@
     <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="isSidenavOpen"
       (backdropClick)="onBackdropClick()" class="custom-sidenav" position="start" [fixedInViewport]="true"
       [fixedTopGap]="80" style="width: 300px; min-width: 300px; box-shadow: 2px 0 8px rgba(0,0,0,0.08);">
+      <div class="sidenav-shell">
       <mat-divider></mat-divider>
       <mat-nav-list class="navigation-list">
-        @for (item of menuItems; track item.route) {
-        <mat-list-item class="nav-item" [routerLink]="item.route" routerLinkActive="active-item"
-          (click)="onNavItemClick(item.route)" [matTooltip]="item.description || ''" matTooltipPosition="right"
-          matTooltipClass="custom-tooltip">
+        @for (section of menuSections; track section.label) {
+        <h2 class="nav-section-title">{{ section.label }}</h2>
+        @for (item of section.items; track item.route) {
+        <a mat-list-item class="nav-item" [routerLink]="item.route" routerLinkActive="active-item"
+          (click)="onNavItemClick()" ariaCurrentWhenActive="page">
           <mat-icon matListItemIcon class="sidebar-icon">{{ item.icon }}</mat-icon>
           <span matListItemTitle class="nav-label">{{ item.label }}</span>
-          @if (item.description) {
-          <span matListItemLine class="nav-description">{{ item.description }}</span>
-          }
-        </mat-list-item>
+        </a>
+        }
         <mat-divider class="item-divider"></mat-divider>
         }
       </mat-nav-list>
@@ -32,12 +32,13 @@
             </div>
           </div>
         </div>
-      </div>
       <div class="expand-button-container">
         <button mat-icon-button (click)="onToggleSidenav()" class="expand-button" matTooltip="Ocultar menú"
           matTooltipPosition="right">
           <mat-icon>chevron_left</mat-icon>
         </button>
+      </div>
+      </div>
       </div>
     </mat-sidenav>
 
@@ -46,6 +47,7 @@
       <div class="main-content-wrapper">
         <router-outlet />
       </div>
+      <app-footer />
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>

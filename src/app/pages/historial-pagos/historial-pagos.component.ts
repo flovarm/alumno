@@ -79,7 +79,7 @@ import { PageHeaderComponent } from "../../components/page-header/page-header.co
                       TOTAL
                     </th>
                     <td mat-cell *matCellDef="let doc">
-                      S/ {{ doc.total | number: "1.2-2" }}
+                      {{doc.idMoneda}} {{ doc.total | number: "1.2-2" }}
                     </td>
                   </ng-container>
                   <!-- Detalle Documento -->
@@ -296,20 +296,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
   }
 
   private async descargarPdfConDatos(boletaData: BoletaElectronicaResponse) {
-    const servicioContentNormal = this.esVentaLibro(boletaData)
-      ? `<div class="course-grid">
-           <div class="course-item full-width">
-             <strong>Tipo:</strong> Venta de Libro
-           </div>
-           ${boletaData?.nombreLibro ? `<div class="course-item full-width"><strong>Libro:</strong> ${boletaData.nombreLibro}</div>` : ""}
-         </div>`
-      : `<div class="course-grid">
-           <div class="course-item"><strong>Periodo:</strong> ${boletaData?.periodo || "N/A"}</div>
-           <div class="course-item"><strong>Curso:</strong> ${boletaData?.curso || "N/A"}</div>
-           <div class="course-item"><strong>Turno:</strong> ${boletaData?.turno || "N/A"}</div>
-           <div class="course-item"><strong>Aula:</strong> ${boletaData?.aula || "N/A"}</div>
-           <div class="course-item"><strong>Profesor:</strong> ${boletaData?.profesor || "N/A"}</div>
-         </div>`;
+    const servicioContentNormal = this.generarContenidoServicio(boletaData);
 
     const htmlCompleto = this.generarHTMLCompleto(boletaData, servicioContentNormal);
     const styleMatch = htmlCompleto.match(/<style>([\s\S]*?)<\/style>/i);
@@ -367,7 +354,10 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
 
       const serie = boletaData?.serie || "B";
       const numero = boletaData?.numero || "00000000";
-      pdf.save(`boleta-${serie}-${numero}.pdf`);
+      const nombreDocumento = this.esNotaCredito(boletaData)
+        ? "nota-credito"
+        : "boleta";
+      pdf.save(`${nombreDocumento}-${serie}-${numero}.pdf`);
     } catch (error) {
       console.error("Error al generar PDF:", error);
       alert("No se pudo generar el PDF. Inténtalo nuevamente.");
@@ -404,20 +394,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
    * @param boletaData Datos de la boleta a imprimir
    */
   private imprimirFormatoNormalConDatos(boletaData: BoletaElectronicaResponse) {
-    const servicioContentNormal = this.esVentaLibro(boletaData)
-      ? `<div class="course-grid">
-           <div class="course-item full-width">
-             <strong>Tipo:</strong> Venta de Libro
-           </div>
-           ${boletaData?.nombreLibro ? `<div class="course-item full-width"><strong>Libro:</strong> ${boletaData.nombreLibro}</div>` : ""}
-         </div>`
-      : `<div class="course-grid">
-           <div class="course-item"><strong>Periodo:</strong> ${boletaData?.periodo || "N/A"}</div>
-           <div class="course-item"><strong>Curso:</strong> ${boletaData?.curso || "N/A"}</div>
-           <div class="course-item"><strong>Turno:</strong> ${boletaData?.turno || "N/A"}</div>
-           <div class="course-item"><strong>Aula:</strong> ${boletaData?.aula || "N/A"}</div>
-           <div class="course-item"><strong>Profesor:</strong> ${boletaData?.profesor || "N/A"}</div>
-         </div>`;
+    const servicioContentNormal = this.generarContenidoServicio(boletaData);
 
     const WindowPrt = window.open(
       "",
@@ -455,16 +432,16 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${this.getTipoDocumento(boletaData)} Electrónica</title>
+        <title>${this.getNombreDocumentoElectronico(boletaData)}</title>
         <style>
           :root {
-            --inst-primary: #003384;
-            --inst-primary-container: #dae2ff;
+            --inst-primary: #1C04A4;
+            --inst-primary-container: #e2dfff;
             --inst-on-primary: #ffffff;
-            --inst-secondary: #c50e08;
+            --inst-secondary: #FF0B04;
             --mat-sys-secondary: var(--inst-secondary);
-            --inst-tertiary: #fac52a;
-            --inst-surface: #f6f6fa;
+            --inst-tertiary: #E2E2E2;
+            --inst-surface: #F6F6FA;
             --inst-border: #c6c6ca;
             --inst-text: #1a1c1f;
             --inst-text-muted: #45474a;
@@ -550,14 +527,14 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
             padding: 1.25rem 1.5rem;
             border: 1px solid var(--inst-border);
             border-radius: 14px;
-            background: #eef0ff;
+            background: var(--inst-primary-container);
           }
 
           .client-info h3, .course-info h3 {
             margin: 0 0 1rem 0;
             font-size: 1.1rem;
             color: var(--inst-primary);
-            border-bottom: 2px solid #dae2ff;
+            border-bottom: 2px solid var(--inst-primary-container);
             padding-bottom: 0.5rem;
           }
 
@@ -597,7 +574,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
             background: linear-gradient(
               135deg,
               var(--inst-primary-container) 0%,
-              #eef0ff 100%
+              #f2efff 100%
             );
             font-weight: bold;
             text-align: center;
@@ -605,7 +582,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
           }
 
           .service-table tbody tr:nth-child(even) {
-            background: #f8f9fd;
+            background: #f9f9fd;
           }
 
           .service-table td:nth-child(2),
@@ -642,7 +619,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
             font-size: 1.1rem;
             margin-top: 0.5rem;
             padding: 0.75rem 0.5rem;
-            background: #fff3cf;
+            background: var(--inst-primary-container);
             color: var(--inst-text);
             border-radius: 8px;
           }
@@ -703,7 +680,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
           <!-- Header -->
           <div class="boleta-header">
             <div class="company-info">
-              <img src="https://elcultural.edu.pe/images/asset6.png" alt="Logo" class="company-logo" />
+              <img src="https://elcultural.edu.pe/images/navbarLogo.png" alt="Logo" class="company-logo" />
               <div class="company-details">
                 <h1>Centro Peruano Americano El Cultural</h1>
                 <p>RUC: 20132111082</p>
@@ -713,7 +690,7 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
             </div>
             <div class="document-info">
               <div class="document-type">
-                <h2>${this.getTipoDocumento(boletaData)} DE VENTA ELECTRÓNICA</h2>
+                <h2>${this.getNombreDocumentoElectronico(boletaData)}</h2>
                 <div class="document-number">
                   ${boletaData?.serie || "N/A"}-${boletaData?.numero || "N/A"}
                 </div>
@@ -751,12 +728,11 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
               <tbody>
                 <tr>
                   <td>
-                    ${boletaData?.concepto || "N/A"} -
-                    ${this.esVentaLibro(boletaData) ? boletaData?.nombreLibro || "Libro" : boletaData?.curso || "N/A"}
+                    ${this.generarDescripcionServicio(boletaData)}
                   </td>
                   <td>1</td>
-                  <td>S/ ${(boletaData?.costo || 0).toFixed(2)}</td>
-                  <td>S/ ${(boletaData?.total || 0).toFixed(2)}</td>
+                  <td> ${boletaData.idMoneda}${(boletaData?.costo || 0).toFixed(2)}</td>
+                  <td> ${boletaData.idMoneda}${(boletaData?.total || 0).toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -767,15 +743,15 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
             <div class="totals-grid">
               <div class="total-row">
                 <span class="total-label">Sub Total:</span>
-                <span class="total-value">S/ ${(boletaData?.costo || 0).toFixed(2)}</span>
+                <span class="total-value">${boletaData?.idMoneda} ${(boletaData?.costo || 0).toFixed(2)}</span>
               </div>
               <div class="total-row">
                 <span class="total-label">IGV (0%):</span>
-                <span class="total-value">S/ 0.00</span>
+                <span class="total-value">${boletaData?.idMoneda} 0.00</span>
               </div>
               <div class="total-row final-total">
                 <span class="total-label">MONTO CANCELADO:</span>
-                <span class="total-value">S/ ${(boletaData?.total || 0).toFixed(2)}</span>
+                <span class="total-value">${boletaData?.idMoneda} ${(boletaData?.total || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -811,6 +787,51 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
     );
   }
 
+  private esNotaCredito(
+    boletaData: BoletaElectronicaResponse | null,
+  ): boolean {
+    return String(boletaData?.idTipoPago ?? "").padStart(2, "0") === "07";
+  }
+
+  private generarContenidoServicio(
+    boletaData: BoletaElectronicaResponse,
+  ): string {
+    if (this.esNotaCredito(boletaData)) {
+      return boletaData.periodo
+        ? `<div class="course-grid">
+             <div class="course-item full-width"><strong>Periodo:</strong> ${boletaData.periodo}</div>
+           </div>`
+        : "";
+    }
+
+    if (this.esVentaLibro(boletaData)) {
+      return `<div class="course-grid">
+                <div class="course-item full-width"><strong>Tipo:</strong> Venta de Libro</div>
+                ${boletaData.nombreLibro ? `<div class="course-item full-width"><strong>Libro:</strong> ${boletaData.nombreLibro}</div>` : ""}
+              </div>`;
+    }
+
+    return `<div class="course-grid">
+              <div class="course-item"><strong>Periodo:</strong> ${boletaData.periodo || "N/A"}</div>
+              <div class="course-item"><strong>Curso:</strong> ${boletaData.curso || "N/A"}</div>
+              <div class="course-item"><strong>Turno:</strong> ${boletaData.turno || "N/A"}</div>
+              <div class="course-item"><strong>Aula:</strong> ${boletaData.aula || "N/A"}</div>
+              <div class="course-item"><strong>Profesor:</strong> ${boletaData.profesor || "N/A"}</div>
+            </div>`;
+  }
+
+  private generarDescripcionServicio(
+    boletaData: BoletaElectronicaResponse,
+  ): string {
+    const concepto = boletaData.concepto || "N/A";
+    if (this.esNotaCredito(boletaData)) return concepto;
+
+    const detalle = this.esVentaLibro(boletaData)
+      ? boletaData.nombreLibro || "Libro"
+      : boletaData.curso || "N/A";
+    return `${concepto} - ${detalle}`;
+  }
+
   /**
    * Determina el tipo de documento basado en la serie
    * @param boletaData Datos de la boleta
@@ -820,8 +841,18 @@ export class HistorialPagosComponent implements OnInit, AfterViewInit {
     boletaData: BoletaElectronicaResponse | null,
   ): string {
     if (!boletaData) return "BOLETA";
+    if (this.esNotaCredito(boletaData)) return "NOTA DE CRÉDITO";
+
     const serie = boletaData?.serie || "";
     return serie.toUpperCase().startsWith("F") ? "FACTURA" : "BOLETA";
+  }
+
+  private getNombreDocumentoElectronico(
+    boletaData: BoletaElectronicaResponse | null,
+  ): string {
+    return this.esNotaCredito(boletaData)
+      ? "NOTA DE CRÉDITO ELECTRÓNICA"
+      : `${this.getTipoDocumento(boletaData)} DE VENTA ELECTRÓNICA`;
   }
 
   /**

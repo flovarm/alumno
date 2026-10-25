@@ -34,6 +34,7 @@ export class ThemeService {
    private applySystemTheme() {
     const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const colorScheme = darkQuery.matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-app-theme', colorScheme);
     document.body.style.setProperty('color-scheme', 'light dark');
     document.body.setAttribute('data-bs-theme', colorScheme);
     
@@ -56,6 +57,7 @@ export class ThemeService {
       if (appTheme === 'system') {
         this.applySystemTheme();
       } else {
+        document.documentElement.setAttribute('data-app-theme', appTheme);
         document.body.style.setProperty('color-scheme', appTheme);
         document.body.setAttribute('data-bs-theme', appTheme);
         

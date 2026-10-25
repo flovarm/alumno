@@ -1,0 +1,21 @@
+.page-container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.resumen-grid { margin-top: 24px; }
+.resumen-card { border-radius: 20px; }
+.resumen-card mat-card-content { padding-top: 24px; }
+.datos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dato { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 12px; background: var(--mat-sys-surface-container); }
+.dato span { color: var(--mat-sys-on-surface-variant); font-size: .8rem; }
+.dato strong { color: var(--mat-sys-primary); font-weight: 600; }
+.dato.costo { grid-column: 1 / -1; background: var(--mat-sys-primary-container); }
+.dato.costo strong { font-size: 1.5rem; color: var(--mat-sys-secondary); }
+.terms-notice { margin-top: 20px; padding: 14px; border-radius: 12px; background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
+.acciones-pago { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.payment-message { margin-top: 16px; padding: 12px; border-radius: 10px; }
+.payment-error { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
+.payment-success { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); }
+@media (max-width: 600px) {
+  .page-container { padding: 12px; }
+  .datos-grid { grid-template-columns: 1fr; }
+  .dato.costo { grid-column: auto; }
+  .acciones-pago button { width: 100%; }
+}

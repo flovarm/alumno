@@ -41,8 +41,15 @@
   .login-button:disabled { background: #ccc !important; color: #666 !important; }
 }
 
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .login-container { 
-  min-height: 100vh; 
+  flex: 1;
+  box-sizing: border-box;
   width: 100%; 
   display: flex; 
   align-items: center; 

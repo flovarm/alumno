@@ -1,4 +1,7 @@
+import { UltimoCursoComponent } from "../../components/ultimo-curso/ultimo-curso.component";
+import { UltimoRegistro } from "../../models/ultimo-registro";
 import {
+  ChangeDetectorRef,
   Component,
   inject,
   OnInit,
@@ -12,6 +15,7 @@ import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
+import { MatCheckboxModule } from "@angular/material/checkbox";
 import { PageHeaderComponent } from "../../components/page-header/page-header.component";
 import { PeriodoService } from "../../services/periodo.service";
 import { RegistroService } from "../../services/registro.service";
@@ -39,7 +43,9 @@ import { NiubizService } from "../../services/niubiz.service";
     MatCardModule,
     MatIconModule,
     MatButtonModule,
+    MatCheckboxModule,
     PageHeaderComponent,
+    UltimoCursoComponent,
     MatTableModule,
     ReactiveFormsModule,
     MatStepperModule,
@@ -62,72 +68,7 @@ import { NiubizService } from "../../services/niubiz.service";
 
       <!-- Último Registro -->
       @if (ultimoRegistro()) {
-        <mat-card class="ultimo-registro-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar>history</mat-icon>
-            <mat-card-title>Último Registro Académico</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="ultimo-registro-grid">
-              <div class="registro-item">
-                <mat-icon>calendar_today</mat-icon>
-                <div>
-                  <div class="registro-label">Período</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.periodo }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>book</mat-icon>
-                <div>
-                  <div class="registro-label">Curso</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.curso | titlecase }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>grade</mat-icon>
-                <div>
-                  <div class="registro-label">Nota</div>
-                  <div
-                    class="registro-value"
-                    [style.color]="
-                      ultimoRegistro()?.apruebaReg === 'P'
-                        ? 'var(--mat-sys-primary)'
-                        : 'var(--mat-sys-secondary)'
-                    "
-                  >
-                    {{ ultimoRegistro()?.notaRegistro }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>location_on</mat-icon>
-                <div>
-                  <div class="registro-label">Sede</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.nombreSed }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="registro-item">
-                <mat-icon>schedule</mat-icon>
-                <div>
-                  <div class="registro-label">Turno</div>
-                  <div class="registro-value">
-                    {{ ultimoRegistro()?.turno }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
+        <app-ultimo-curso [registro]="ultimoRegistro()" />
         <div class="curso-calificacion">
           Nota mínima aprobatoria: {{ ultimoRegistro()?.notaMinimaAprobatoria }}
         </div>
@@ -139,7 +80,7 @@ import { NiubizService } from "../../services/niubiz.service";
         }
         @if (
           ultimoRegistro()?.mesesDejoEstudiar > 6 &&
-          !examenCalificacion()?.idCurso
+          !porExamenClasificacion()
         ) {
           <div class="curso-danger">
             <mat-icon>warning</mat-icon>
@@ -157,9 +98,9 @@ import { NiubizService } from "../../services/niubiz.service";
         }
       }
 
-      @if (examenCalificacion()?.idCurso) {
+      @if (porExamenClasificacion()) {
         <div class="curso-calificacion">
-          Cargando Horarios según examen de clasificación
+          Horarios obtenidos por Examen de clasificación
         </div>
       }
 
@@ -170,8 +111,12 @@ import { NiubizService } from "../../services/niubiz.service";
       >
         <mat-step label="Selecciona horario">
           <form [formGroup]="form">
+            <div class="section-heading">
+              <h2>Encuentra tu próximo horario</h2>
+              <p>Filtra por sede o busca tu curso y revisa las vacantes disponibles.</p>
+            </div>
             <div class="filter-container">
-              <mat-form-field class="filter-field">
+              <mat-form-field appearance="outline" class="filter-field">
                 <mat-label>Buscar</mat-label>
                 <input
                   matInput
@@ -182,7 +127,7 @@ import { NiubizService } from "../../services/niubiz.service";
                 />
                 <mat-icon matSuffix>search</mat-icon>
               </mat-form-field>
-              <mat-form-field class="filter-field">
+              <mat-form-field appearance="outline" class="filter-field">
                 <mat-label>Seleccionar Sede</mat-label>
                 <mat-select
                   formControlName="sede"
@@ -195,11 +140,11 @@ import { NiubizService } from "../../services/niubiz.service";
                 <mat-icon matSuffix>location_on</mat-icon>
               </mat-form-field>
             </div>
-            <div class="table-container">
+            <div class="table-container" role="region" aria-label="Horarios disponibles" tabindex="0">
               <table
                 mat-table
                 [dataSource]="horarios"
-                class="mat-elevation-z1"
+                class="horarios-table"
                 style="width:100%;margin-bottom:1rem;"
               >
                 <!-- MODALIDAD -->
@@ -242,7 +187,9 @@ import { NiubizService } from "../../services/niubiz.service";
                 <ng-container matColumnDef="vacantesDisponibles">
                   <th mat-header-cell *matHeaderCellDef>DISPONIBLES</th>
                   <td mat-cell *matCellDef="let h">
-                    {{ h.vacantes - h.matriculados }}
+                    <span class="vacantes-badge" [class.sin-vacantes]="h.vacantes - h.matriculados <= 0">
+                      {{ h.vacantes - h.matriculados }}
+                    </span>
                   </td>
                 </ng-container>
                 <!-- ACCIONES -->
@@ -252,13 +199,7 @@ import { NiubizService } from "../../services/niubiz.service";
                     <button
                       mat-flat-button
                       color="primary"
-                      [disabled]="
-                        h.vacantes - h.matriculados <= 0 ||
-                        !h.cursoAbierto ||
-                        (ultimoRegistro()?.mesesDejoEstudiar > 6 &&
-                          !examenCalificacion()) ||
-                        ultimoRegistro()?.deudaReg > 0
-                      "
+                      [disabled]="isRowDisabled(h)"
                       (click)="seleccionarHorarioFila(h)"
                       matStepperNext
                     >
@@ -285,109 +226,110 @@ import { NiubizService } from "../../services/niubiz.service";
                   <div class="payment-summary">
                     <mat-card>
                       <mat-card-header>
+                        <mat-icon mat-card-avatar>event_note</mat-icon>
                         <mat-card-title>Horario Seleccionado</mat-card-title>
+                        <mat-card-subtitle
+                          >Detalle del horario a matricular</mat-card-subtitle
+                        >
                       </mat-card-header>
                       <mat-card-content>
-                        <mat-list style="margin-top:1rem;">
+                        <mat-list class="deuda-list" style="margin-top:1rem;">
                           <mat-list-item>
                             <mat-icon matListItemIcon>meeting_room</mat-icon>
-                            <div matListItemTitle>Aula</div>
-                            <div matListItemLine>
-                              {{ formatearAula(resumen.aula) }}
-                            </div>
+                            <span matListItemTitle>{{
+                              formatearAula(resumen.aula)
+                            }}</span>
+                            <span matListItemLine>Aula</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>school</mat-icon>
-                            <div matListItemTitle>Modalidad</div>
-                            <div matListItemLine>{{ resumen.modalidad }}</div>
+                            <span matListItemTitle>{{
+                              resumen.modalidad
+                            }}</span>
+                            <span matListItemLine>Modalidad</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>book</mat-icon>
-                            <div matListItemTitle>Curso</div>
-                            <div matListItemLine>{{ resumen.curso }}</div>
+                            <span matListItemTitle>{{
+                              resumen.curso
+                            }}</span>
+                            <span matListItemLine>Curso</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>person</mat-icon>
-                            <div matListItemTitle>Docente</div>
-                            <div matListItemLine>{{ resumen.docente }}</div>
+                            <span matListItemTitle>{{
+                              resumen.docente
+                            }}</span>
+                            <span matListItemLine>Docente</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>schedule</mat-icon>
-                            <div matListItemTitle>Horario</div>
-                            <div matListItemLine>
-                              {{ resumen.turno }}
-                            </div>
+                            <span matListItemTitle>{{ resumen.turno }}</span>
+                            <span matListItemLine>Turno</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <!-- <mat-list-item>
                             <mat-icon matListItemIcon>calendar_today</mat-icon>
                             <div matListItemTitle>Días</div>
                             <div matListItemLine>{{ resumen.dias }}</div>
-                          </mat-list-item>
-                          <mat-divider></mat-divider> -->
+                          </mat-list-item> -->
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>date_range</mat-icon>
-                            <div matListItemTitle>Fecha de inicio</div>
-                            <div matListItemLine>
-                              {{ resumen.fechaInicio | date: "dd/MM/yyyy" }}
-                            </div>
+                            <span matListItemTitle>{{
+                              resumen.fechaInicio | date: "dd/MM/yyyy"
+                            }}</span>
+                            <span matListItemLine>Fecha de inicio</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
-                          <mat-list-item>
-                            <mat-icon matListItemIcon>date_range</mat-icon>
-                            <div matListItemTitle>Fecha de fin</div>
-                            <div matListItemLine>
-                              {{ resumen.fechaFinal | date: "dd/MM/yyyy" }}
-                            </div>
-                          </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
-                            <mat-icon matListItemIcon>attach_money</mat-icon>
-                            <div matListItemTitle>Costo</div>
-                            <div matListItemLine>S/ {{ resumen.costo }}</div>
+                            <mat-icon matListItemIcon>date_range</mat-icon>
+                            <span matListItemTitle>{{
+                              resumen.fechaFinal | date: "dd/MM/yyyy"
+                            }}</span>
+                            <span matListItemLine>Fecha de fin</span>
                           </mat-list-item>
-                          <mat-divider></mat-divider>
 
                           <mat-list-item>
                             <mat-icon matListItemIcon>location_on</mat-icon>
-                            <div matListItemTitle>Sede</div>
-                            <div matListItemLine>{{ resumen.sede }}</div>
+                            <span matListItemTitle>{{ resumen.sede }}</span>
+                            <span matListItemLine>Sede</span>
                           </mat-list-item>
+
                         </mat-list>
 
                         <div class="terms-notice">
-                          <mat-icon class="terms-icon">info</mat-icon>
-                          <span>
-                            Al registrar tu matrícula estás aceptando nuestros
+                          <mat-checkbox
+                            [checked]="terminosAceptados"
+                            (change)="actualizarAceptacionTerminos($event.checked)"
+                            [disabled]="procesandoPago"
+                          >
+                            He leído y acepto los
                             <a
                               href="https://www.elcultural.com.pe/terminos-y-condiciones-del-servicio/"
                               target="_blank"
                               rel="noopener noreferrer"
                               class="terms-link"
+                              (click)="$event.stopPropagation()"
                             >
                               Términos y Condiciones
                               <mat-icon class="external-link-icon"
                                 >open_in_new</mat-icon
                               >
                             </a>
-                          </span>
+                          </mat-checkbox>
                         </div>
 
                         <!-- Mensaje de pago -->
                         <div
                           id="payment-message"
                           class="payment-message"
+                          role="status"
+                          aria-live="polite"
                           [style.display]="paymentMessage ? 'block' : 'none'"
                           [ngClass]="paymentMessageClass"
                         >
@@ -415,11 +357,11 @@ import { NiubizService } from "../../services/niubiz.service";
               }
             </div>
           } @else {
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+            <div class="seleccion-notice">
               <div class="flex">
                 <div class="flex-shrink-0">
                   <svg
-                    class="h-5 w-5 text-yellow-400"
+                    class="h-5 w-5"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -431,8 +373,8 @@ import { NiubizService } from "../../services/niubiz.service";
                   </svg>
                 </div>
                 <div class="ml-3">
-                  <p class="text-sm text-yellow-700 font-medium">Atención</p>
-                  <p class="text-sm text-yellow-600">
+                  <p class="text-sm font-medium">Atención</p>
+                  <p class="text-sm">
                     Primero debe seleccionar un horario para poder realizar el
                     pago. Regrese al paso anterior y elija un horario
                     disponible.
@@ -457,8 +399,8 @@ import { NiubizService } from "../../services/niubiz.service";
 })
 export class RegistroMatriculaComponent implements OnInit {
   periodoActual = signal<any>(null);
-  ultimoRegistro = signal<any>(null);
-  examenCalificacion = signal<any>(null);
+  ultimoRegistro = signal<UltimoRegistro | null>(null);
+  porExamenClasificacion = signal(false);
   horariosData = signal<any[]>([]);
   horarios = new MatTableDataSource<any>([]);
   estaRegistrado = signal<boolean>(false);
@@ -482,14 +424,18 @@ export class RegistroMatriculaComponent implements OnInit {
   horarioControl = new FormControl<number | null>(null);
   selectedHorario: any = null;
   stepIndex = 0;
+  private changeDetector = inject(ChangeDetectorRef);
+  private pagoEnviado = false;
   procesandoPago = false;
+  terminosAceptados = false;
   formularioNiubizAbierto = false;
   procesandoMatricula = false; // Nueva flag para evitar duplicados de matrícula
   paymentMessage: string = "";
   paymentMessageClass: string = "";
   private sessionKeyActual: string | null = null;
-  private montoActual: number = 0;
+  private montoActual: string = "0";
   private orderNumberActual: string | null = null;
+  private matriculaDataActual: any = null;
   private postulanteService = inject(PostulanteService);
   private periodoService = inject(PeriodoService);
   private registroService = inject(RegistroService);
@@ -498,6 +444,7 @@ export class RegistroMatriculaComponent implements OnInit {
   private niubizService = inject(NiubizService);
 
   cargarHorariosPorUltimoRegistro(idCurso: number, idPeriodo: number) {
+    this.porExamenClasificacion.set(false);
     this.horarioService
       .obtenerHorarioPorCursoYPeriodo(idCurso, idPeriodo, this.user.userName)
       .subscribe({
@@ -506,9 +453,10 @@ export class RegistroMatriculaComponent implements OnInit {
             this.estaRegistrado.set(true);
             this.horariosData.set([]);
             this.horarios.data = [];
-          } else if (Array.isArray(response)) {
-            this.horariosData.set(response);
-            this.horarios.data = response;
+          } else if (Array.isArray(response?.horarios)) {
+            this.porExamenClasificacion.set(response.porExamenClasificacion === true);
+            this.horariosData.set(response.horarios);
+            this.horarios.data = response.horarios;
             this.estaRegistrado.set(false);
           } else {
             this.horariosData.set([]);
@@ -517,6 +465,7 @@ export class RegistroMatriculaComponent implements OnInit {
           }
         },
         error: (error) => {
+          this.porExamenClasificacion.set(false);
           this.horariosData.set([]);
           this.horarios.data = [];
           this.estaRegistrado.set(false);
@@ -546,46 +495,34 @@ export class RegistroMatriculaComponent implements OnInit {
     this.periodoService.ultimos12Periodos().subscribe((periodos: any) => {
       if (Array.isArray(periodos) && periodos.length > 0) {
         this.periodoActual.set(periodos[0]);
+        this.obtenerUltimoRegistroPorAlumno();
       }
     });
+  }
 
-    this.obtenerExamenCalificacion((examen: any) => {
-      this.registroService
-        .obtenerUltimoRegistroPorAlumno(this.user.userName)
-        .subscribe((registro: any) => {
-          this.ultimoRegistro.set(registro);
+  obtenerUltimoRegistroPorAlumno() {
+    this.registroService
+      .obtenerUltimoRegistroPorAlumno(this.user.userName)
+      .subscribe((registro) => {
+        this.ultimoRegistro.set(registro);
 
-          let idUltimoCurso: number | undefined;
-          if (registro) {
-            if (registro.apruebaReg === "P") {
-              idUltimoCurso = registro.idCursoAprobado;
-            } else if (registro.apruebaReg === "F") {
-              idUltimoCurso = registro.idCursoDesaprobado;
-            }
+        let idUltimoCurso: number | undefined;
+        if (registro) {
+          if (registro.apruebaReg === "P") {
+            idUltimoCurso = registro.idCursoAprobado;
+          } else if (registro.apruebaReg === "F") {
+            idUltimoCurso = registro.idCursoDesaprobado;
           }
-          const idCursoExamen = examen?.idCurso;
-
-          let idCursoSeleccionado: number | undefined;
-
-          if (
-            typeof idCursoExamen === "number" &&
-            typeof idUltimoCurso === "number"
-          ) {
-            idCursoSeleccionado = Math.max(idCursoExamen, idUltimoCurso);
-          } else {
-            idCursoSeleccionado = idCursoExamen ?? idUltimoCurso;
-          }
-
-          if (typeof idCursoSeleccionado === "number") {
-            this.cargarHorariosPorUltimoRegistro(
-              idCursoSeleccionado,
-              this.periodoActual().idPeriodo,
-            );
-          } else if (!registro) {
-            this.obtenerDatosPostulante();
-          }
-        });
-    });
+        }
+        if (typeof idUltimoCurso === "number") {
+          this.cargarHorariosPorUltimoRegistro(
+            idUltimoCurso,
+            this.periodoActual().idPeriodo,
+          );
+        } else if (!registro) {
+          this.obtenerDatosPostulante();
+        }
+      });
   }
 
   obtenerDatosPostulante() {
@@ -605,14 +542,6 @@ export class RegistroMatriculaComponent implements OnInit {
     const urlParams = new URLSearchParams(window.location.search);
     const payment = urlParams.get("payment");
     if (!payment) return;
-
-    console.log('=== Retorno de pago Niubiz ===', {
-      payment,
-      transactionId: urlParams.get("transactionId"),
-      statusCode: urlParams.get("statusCode"),
-      message: urlParams.get("message"),
-    });
-
     this.limpiarParametrosURL();
   }
 
@@ -646,22 +575,6 @@ export class RegistroMatriculaComponent implements OnInit {
     window.history.replaceState({}, document.title, url.toString());
   }
 
-  obtenerExamenCalificacion(callback?: (examen: any) => void) {
-    this.registroService
-      .obtenerExamenDeCalificacion(this.user.userName)
-      .subscribe({
-        next: (examen: any) => {
-          if (examen) {
-            this.examenCalificacion.set(examen);
-          }
-          callback?.(examen);
-        },
-        error: () => {
-          callback?.(null);
-        },
-      });
-  }
-
   getNotaColor(nota: number, estadoReg: string): string {
     if (nota >= 0 && estadoReg === "P") {
       return "var(--mat-sys-primary)";
@@ -690,6 +603,7 @@ export class RegistroMatriculaComponent implements OnInit {
   }
 
   seleccionarHorarioFila(horario: any) {
+    this.terminosAceptados = false;
     this.resumen = null;
     this.selectedHorario = horario;
     this.procesandoPago = false;
@@ -711,7 +625,9 @@ export class RegistroMatriculaComponent implements OnInit {
     return (
       row.vacantes - row.matriculados <= 0 ||
       !row.cursoAbierto ||
-      this.ultimoRegistro()?.mesesDeJoEstudiar >= 6
+      (this.ultimoRegistro()?.mesesDejoEstudiar > 6 &&
+        !this.porExamenClasificacion()) ||
+      this.ultimoRegistro()?.deudaReg > 0
     );
   }
 
@@ -757,37 +673,60 @@ export class RegistroMatriculaComponent implements OnInit {
     this.paymentMessage = "";
 
     const merchantId = environment.niubiz.merchantId;
-    //   Date.now().toString() + Math.random().toString().substr(2, 5);
-    const orderNumber = this.resumen.idHorario + this.user.userName;
+    const purchaseNumber = this.obtenerPurchaseNumber();
+    if (!purchaseNumber) {
+      this.showPaymentMessage(
+        "No se pudo generar el número de compra. Intente nuevamente.",
+        "error",
+      );
+      this.procesandoPago = false;
+      return;
+    }
 
   //  this.currentTransactionId = transactionId;
 
-    const matriculaData = {
-      docid: this.user.userName,
-      IdHorario: this.resumen.idHorario,
-      Costo: precio,
-      Modalidad: this.resumen.modalidad,
-      Periodo: this.resumen.periodo,
-      Curso: this.resumen.curso,
-      Turno: this.resumen.turno,
-      Aula: this.resumen.aula,
-      Profesor: this.resumen.docente,
-      TransactionId:  merchantId,
-      OrderNumber: orderNumber,
-    };
+    // const matriculaData = {
+    //   docid: this.user.userName,
+    //   IdHorario: this.resumen.idHorario,
+    //   Costo: precio,
+    //   Modalidad: this.resumen.modalidad,
+    //   Periodo: this.resumen.periodo,
+    //   Curso: this.resumen.curso,
+    //   Turno: this.resumen.turno,
+    //   Aula: this.resumen.aula,
+    //   Profesor: this.resumen.docente,
+    //   TransactionId:  merchantId,
+    //   OrderNumber: orderNumber,
+    //   transactionToken: '',
+    //   customerEmail: this.user.email || '',
+    //   channel: 'web',
+    //   url: '',
+    //   merchantId: merchantId,
+    //   purchaseNumber: orderNumber,
+    //   monto: precio,
+    //   currency: 'PEN'
+    // };
 
-
-          this.niubizService.crearSession(this.user.codigo, merchantId, precio)
+          this.niubizService.prepararYCrearSession(
+            {
+              purchaseNumber,
+              amount: precio,
+              merchantId,
+              tipoOperacion: "matricula",
+              docid: this.user?.userName,
+              idHorario: this.resumen?.idHorario,
+            },
+            this.user.codigo,
+          )
             .subscribe({
               next: (sessionResponse) => {
-                console.log('=== Sesión Niubiz creada ===', sessionResponse);
                 this.procesandoPago = false;
                 this.formularioNiubizAbierto = true;
                 setTimeout(() => {
                   this.renderizarFormularioNiubiz(
                     sessionResponse.sessionKey,
                     precio,
-                    merchantId
+                    purchaseNumber
                   );
                 }, 100);
               },
@@ -836,14 +775,22 @@ export class RegistroMatriculaComponent implements OnInit {
     container.innerHTML = "";
 
     this.sessionKeyActual = sessionKey;
-    this.montoActual = amount;
+    this.montoActual = amount.toFixed(2);
     this.orderNumberActual = orderNumber;
+
+    // Actualizar matriculaData con los valores finales
+    if (this.matriculaDataActual) {
+      this.matriculaDataActual.monto = amount;
+      this.matriculaDataActual.purchaseNumber = orderNumber;
+      this.matriculaDataActual.OrderNumber = orderNumber;
+    }
 
     const btn = document.createElement("button");
     btn.type = "button";
     btn.id = "niubizPayButton";
     btn.textContent = `Pagar S/ ${amount.toFixed(2)}`;
     btn.classList.add("niubiz-pay-button");
+    btn.disabled = !this.terminosAceptados || this.procesandoPago;
     btn.addEventListener("click", () => this.abrirPagoNiubiz());
     container.appendChild(btn);
 
@@ -855,7 +802,35 @@ export class RegistroMatriculaComponent implements OnInit {
     }, 1000);
   }
 
+  private obtenerPurchaseNumber(): string | null {
+    const idHorario = this.resumen?.idHorario;
+    const codigoAlumno = this.user?.codigo;
+
+    if (
+      idHorario === null ||
+      idHorario === undefined ||
+      codigoAlumno === null ||
+      codigoAlumno === undefined ||
+      String(idHorario).trim() === "" ||
+      String(codigoAlumno).trim() === ""
+    ) {
+      return null;
+    }
+
+    const purchaseNumber = `${idHorario}${codigoAlumno}`.trim();
+    return purchaseNumber || null;
+  }
+
+  actualizarAceptacionTerminos(aceptados: boolean): void {
+    this.terminosAceptados = aceptados;
+    const botonPago = document.getElementById("niubizPayButton") as HTMLButtonElement | null;
+    if (botonPago) {
+      botonPago.disabled = !aceptados || this.procesandoPago || this.pagoEnviado;
+    }
+  }
+
   private abrirPagoNiubiz() {
+    if (!this.terminosAceptados || this.pagoEnviado) return;
     const w = window as any;
     if (!w.VisanetCheckout || !this.sessionKeyActual) {
       this.showPaymentMessage(
@@ -865,19 +840,68 @@ export class RegistroMatriculaComponent implements OnInit {
       return;
     }
 
+    const merchantId = environment.niubiz.merchantId;
+    const idHorario = this.matriculaDataActual?.IdHorario ?? this.resumen?.idHorario;
+    const docid = this.matriculaDataActual?.docid ?? this.user?.userName;
+    const purchaseNumber = this.obtenerPurchaseNumber();
+    if (!purchaseNumber) {
+      this.showPaymentMessage(
+        "No se pudo obtener el número de compra. Intente nuevamente.",
+        "error",
+      );
+      return;
+    }
+    const actionUrl = `${environment.apiUrl}Pago/ProcesarPagoNiubiz/${merchantId}/${idHorario}/${docid}/${purchaseNumber}`;
+    sessionStorage.setItem("niubiz_purchase_number", purchaseNumber);
+
     w.VisanetCheckout.configure({
       sessiontoken: this.sessionKeyActual,
-      channel: "web",
-      merchantid: environment.niubiz.merchantId,
-      purchasenumber: this.orderNumberActual,
-      amount: this.montoActual,
+      channel: this.matriculaDataActual?.channel || "web",
+      merchantid: merchantId,
+      purchasenumber: purchaseNumber,
+      amount: parseFloat(this.montoActual),
       expirationminutes: "20",
       timeouturl: `${window.location.origin}/registro-matricula`,
       merchantlogo: "https://elcultural.edu.pe/images/navbarLogo.png",
       formbuttoncolor: "#1C04A4",
-      action: `${environment.apiUrl}Pago/ProcesarPagoNiubiz?merchantId=${environment.niubiz.merchantId}
-      &purchaseNumber=${this.orderNumberActual}&monto=${this.montoActual}&currency=PEN`,
+      action: actionUrl,
+      complete: (params: any) => {
+        if (this.pagoEnviado) return;
+        this.pagoEnviado = true;
+        this.procesandoPago = true;
+        const botonPago = document.getElementById("niubizPayButton") as HTMLButtonElement | null;
+        if (botonPago) {
+          botonPago.disabled = true;
+          botonPago.textContent = "Procesando pago...";
+          botonPago.setAttribute("aria-busy", "true");
+        }
+        // El callback del SDK puede ejecutarse fuera de Angular.
+        this.changeDetector.detectChanges();
+        const formData = new FormData();
+        formData.append("channel", this.matriculaDataActual?.channel || "web");
+        formData.append("order.tokenId", params.transactionToken || "");
+        formData.append("order.purchaseNumber", purchaseNumber);
+        formData.append("order.amount", this.montoActual);
+        formData.append("order.currency", "PEN");
+
+        // El backend procesa el pago, genera la boleta y redirige a
+        // /pago-exitoso?purchaseNumber=...&boleta=... con los datos de la boleta.
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = actionUrl;
+        form.style.display = "none";
+        formData.forEach((value, key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value.toString();
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+      }
     });
+
     w.VisanetCheckout.open();
   }
 

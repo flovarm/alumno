@@ -5,6 +5,6 @@ export const environment = {
   webhookUrl: 'https://elcultural.edu.pe/intranet2/api/',
   niubiz: {
     scriptUrl: 'https://static-content.vnforapps.com/v2/js/checkout.js',
-    merchantId: 341198210,
+    merchantId: 651065288,
   },
 };

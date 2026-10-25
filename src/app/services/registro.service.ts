@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../environments/environment.development";
+import { UltimoRegistro } from "../models/ultimo-registro";
 
 @Injectable({
   providedIn: "root",
@@ -10,7 +11,7 @@ export class RegistroService {
   apiUrl = environment.apiUrl + "Registro/";
 
   obtenerUltimoRegistroPorAlumno(docid: string) {
-    return this.http.get(this.apiUrl + "ultimo/" + docid);
+    return this.http.get<UltimoRegistro | null>(this.apiUrl + "ultimo/" + encodeURIComponent(docid));
   }
 
   obtenerTokenPago(precio: number, transactionId: string, orderNumber: string) {

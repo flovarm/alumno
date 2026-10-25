@@ -17,8 +17,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PageHeaderComponent } from '../../components/page-header/page-header.component';
-import { TeamsDialogComponent } from '../../components/teams-dialog/teams-dialog.component';
-import { GmailDialogComponent } from '../../components/gmail-dialog/gmail-dialog.component';
 import { AlumnoService } from '../../services/alumno.service';
 import { SnackService } from '../../services/snack.service';
 import { UbigeoService } from '../../services/ubigeo.service';
@@ -125,8 +123,6 @@ export class HomeComponent implements OnInit {
   avatarInitials: string = '';
   avatarColor: string = ''; // css color (ej. hsl(...))
 
-  // Propiedad para manejar idteams
-  idteams: string | null = null;
 
   // Estado de carga para actualización
   isUpdating: boolean = false;
@@ -826,8 +822,6 @@ export class HomeComponent implements OnInit {
           this.cargarDepartamentos();
         }
 
-        // Obtener idteams del perfil
-        this.idteams = perfil.id_teams || null;
 
         // Calcular avatar a partir del nombre completo y un seed (docid/codigo)
         this.computeAvatar();
@@ -1048,19 +1042,4 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  abrirDialogTeams(): void {
-    if (this.idteams) {
-      this.dialog.open(TeamsDialogComponent, {
-        width: '800px',
-        maxWidth: '95vw',
-        data: { idteams: this.idteams },
-      });
-    }
-  }
-
-  abrirDialogGmail(): void {
-    this.dialog.open(GmailDialogComponent, {
-      width: '600px',
-    });
-  }
 }
