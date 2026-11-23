@@ -5,6 +5,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from "@angular/forms";
 import { MatRadioModule } from "@angular/material/radio";
+import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
@@ -21,6 +22,7 @@ import { EncuestaService } from "../../services/encuesta.service";
     MatButtonModule,
     ReactiveFormsModule,
     MatRadioModule,
+    MatCheckboxModule,
     MatInputModule,
     MatFormFieldModule,
     MatSnackBarModule,
@@ -53,11 +55,18 @@ import { EncuestaService } from "../../services/encuesta.service";
             <div [formGroupName]="i" class="pregunta-card">
               <div class="pregunta-header">
                 <span class="pregunta-numero">{{ i + 1 }}.</span>
-                <p class="pregunta-texto">{{ pregunta.descripcion }}</p>
+                <p class="pregunta-texto">
+                  {{ pregunta.descripcion }}
+                  @if (esRequerida(pregunta)) {
+                    <span class="requerida-mark">*</span>
+                  } @else {
+                    <span class="opcional-label">(Opcional)</span>
+                  }
+                </p>
               </div>
 
-              @if (pregunta.tipoPregunta === 'Respuest Libre' || pregunta.tipoPregunta === 'Numerica') {
-                @if (esNumerica(pregunta) || pregunta.tipoPregunta === 'Numerica') {
+              @if (esLibreONumerica(pregunta)) {
+                @if (esNumerica(pregunta)) {
                   <mat-form-field appearance="outline" class="full-width">
                     <input
                       matInput
@@ -66,7 +75,7 @@ import { EncuestaService } from "../../services/encuesta.service";
                       min="0"
                       max="20"
                       placeholder="Ingresa un valor del 0 al 20"
-                      required
+                      [required]="esRequerida(pregunta)"
                     >
                     @if (respuestasArray.at(i).get('respuestaLibre')?.hasError('required') && (respuestasArray.at(i).get('respuestaLibre')?.touched || submitted())) {
                       <mat-error>Este campo es obligatorio</mat-error>
@@ -82,12 +91,27 @@ import { EncuestaService } from "../../services/encuesta.service";
                       formControlName="respuestaLibre"
                       rows="3"
                       placeholder="Escribe tu respuesta..."
-                      required
+                      [required]="esRequerida(pregunta)"
                     ></textarea>
                     @if (respuestasArray.at(i).get('respuestaLibre')?.hasError('required') && (respuestasArray.at(i).get('respuestaLibre')?.touched || submitted())) {
                       <mat-error>Esta respuesta es obligatoria</mat-error>
                     }
                   </mat-form-field>
+                }
+              } @else if (esMultipleRespuesta(pregunta)) {
+                <div class="opciones-group">
+                  @for (opcion of pregunta.opciones; track opcion.id) {
+                    <mat-checkbox
+                      class="opcion-radio"
+                      [checked]="isOpcionSeleccionada(i, opcion.id)"
+                      (change)="onCheckboxChange(i, opcion.id, $event.checked)"
+                    >
+                      {{ opcion.descripcion }}
+                    </mat-checkbox>
+                  }
+                </div>
+                @if (respuestasArray.at(i).get('opcionesIds')?.hasError('required') && (respuestasArray.at(i).get('opcionesIds')?.touched || submitted())) {
+                  <div class="error-text">Selecciona al menos una opción</div>
                 }
               } @else {
                 <mat-radio-group formControlName="opcionId" class="opciones-group">
@@ -206,6 +230,19 @@ import { EncuestaService } from "../../services/encuesta.service";
       line-height: 1.5;
     }
 
+    .requerida-mark {
+      color: var(--mat-sys-error);
+      font-weight: 700;
+      margin-left: 2px;
+    }
+
+    .opcional-label {
+      color: var(--mat-sys-on-surface-variant);
+      font-size: 0.85rem;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
     .opciones-group {
       display: flex;
       flex-direction: column;
@@ -271,11 +308,27 @@ export class EncuestaDialogComponent implements OnInit {
     this.form = this.fb.group({
       respuestas: this.fb.array(
         this.preguntas.map((p) => {
-          const esLibre = p.tipoPregunta === 'Respuest Libre' || p.tipoPregunta === 'Numerica';
+          const requerida = this.esRequerida(p);
+          const esLibre = this.esLibreONumerica(p);
+          const esMultiple = !esLibre && this.esMultipleRespuesta(p);
           return this.fb.group({
             preguntaId: [p.id],
-            opcionId: [null, esLibre ? [] : Validators.required],
-            respuestaLibre: ['', esLibre ? (this.esNumerica(p) ? [Validators.required, Validators.min(0), Validators.max(20)] : Validators.required) : []],
+            opcionId: [
+              null,
+              !esLibre && !esMultiple && requerida ? [Validators.required] : [],
+            ],
+            opcionesIds: [[], esMultiple && requerida ? [Validators.required] : []],
+            respuestaLibre: [
+              '',
+              esLibre
+                ? [
+                    ...(requerida ? [Validators.required] : []),
+                    ...(this.esNumerica(p)
+                      ? [Validators.min(0), Validators.max(20)]
+                      : []),
+                  ]
+                : [],
+            ],
           });
         })
       ),
@@ -284,6 +337,30 @@ export class EncuestaDialogComponent implements OnInit {
 
   get respuestasArray(): FormArray {
     return this.form.get('respuestas') as FormArray;
+  }
+
+  isOpcionSeleccionada(preguntaIndex: number, opcionId: number): boolean {
+    const seleccionadas: number[] =
+      this.respuestasArray.at(preguntaIndex).get('opcionesIds')?.value ?? [];
+    return seleccionadas.includes(opcionId);
+  }
+
+  onCheckboxChange(
+    preguntaIndex: number,
+    opcionId: number,
+    checked: boolean
+  ): void {
+    const control = this.respuestasArray.at(preguntaIndex).get('opcionesIds');
+    if (!control) return;
+    const actuales: number[] = control.value ?? [];
+    const nuevas = checked
+      ? actuales.includes(opcionId)
+        ? actuales
+        : [...actuales, opcionId]
+      : actuales.filter((id) => id !== opcionId);
+    control.setValue(nuevas);
+    control.markAsTouched();
+    control.updateValueAndValidity();
   }
 
   enviarEncuesta(): void {
@@ -301,20 +378,45 @@ export class EncuestaDialogComponent implements OnInit {
     const user = userStr ? JSON.parse(userStr) : null;
     const idUsuarioRegistro = user?.id ?? '';
 
-    const respuestas = this.respuestasArray.value.map((r: any, i: number) => {
+    const respuestas = this.respuestasArray.value.flatMap((r: any, i: number) => {
       const pregunta = this.preguntas[i];
-      if (pregunta.tipoPregunta === 'Respuest Libre' || pregunta.tipoPregunta === 'Numerica') {
-        return {
-          preguntaId: r.preguntaId,
-          opcionesRespuestaId: pregunta.opciones[0]?.id ?? 0,
-          descripcion: this.esNumerica(pregunta) ? String(Number(r.respuestaLibre)) : (r.respuestaLibre || ''),
-        };
+      if (this.esLibreONumerica(pregunta)) {
+        const valorLibre = r.respuestaLibre;
+        if (
+          valorLibre === null ||
+          valorLibre === undefined ||
+          String(valorLibre).trim() === ''
+        ) {
+          return [];
+        }
+        return [
+          {
+            preguntaId: r.preguntaId,
+            opcionesRespuestaId: pregunta.opciones[0]?.id ?? 0,
+            descripcion: this.esNumerica(pregunta)
+              ? String(Number(valorLibre))
+              : String(valorLibre),
+          },
+        ];
       }
-      return {
-        preguntaId: r.preguntaId,
-        opcionesRespuestaId: r.opcionId,
-        descripcion: null as string | null,
-      };
+      if (this.esMultipleRespuesta(pregunta)) {
+        const opcionesIds: number[] = r.opcionesIds ?? [];
+        return opcionesIds.map((opcionId: number) => ({
+          preguntaId: r.preguntaId,
+          opcionesRespuestaId: opcionId,
+          descripcion: null as string | null,
+        }));
+      }
+      if (r.opcionId === null || r.opcionId === undefined) {
+        return [];
+      }
+      return [
+        {
+          preguntaId: r.preguntaId,
+          opcionesRespuestaId: r.opcionId,
+          descripcion: null as string | null,
+        },
+      ];
     });
 
     const payload = {
@@ -343,7 +445,50 @@ export class EncuestaDialogComponent implements OnInit {
     this.dialogRef.close(false);
   }
 
+  private obtenerNombreTipoPregunta(pregunta: any): string {
+    if (typeof pregunta?.tipoPregunta === 'string') {
+      return pregunta.tipoPregunta;
+    }
+    if (pregunta?.tipoPregunta && typeof pregunta.tipoPregunta === 'object') {
+      return (
+        pregunta.tipoPregunta.descripcion ??
+        pregunta.tipoPregunta.Descripcion ??
+        pregunta.tipoPregunta.nombre ??
+        pregunta.tipoPregunta.Nombre ??
+        ''
+      );
+    }
+    return '';
+  }
+
+  esLibreONumerica(pregunta: any): boolean {
+    const tipo = this.obtenerNombreTipoPregunta(pregunta);
+    return (
+      tipo === 'Respuest Libre' ||
+      tipo === 'Numerica' ||
+      this.esNumerica(pregunta)
+    );
+  }
+
   esNumerica(pregunta: any): boolean {
-    return pregunta.tipoPregunta === 'Numerica' || (pregunta.opciones?.some((o: any) => o.descripcion === 'numerica') ?? false);
+    const tipo = this.obtenerNombreTipoPregunta(pregunta);
+    return (
+      tipo === 'Numerica' ||
+      (pregunta.opciones?.some((o: any) => o.descripcion === 'numerica') ??
+        false)
+    );
+  }
+
+  esMultipleRespuesta(pregunta: any): boolean {
+    return Boolean(
+      pregunta?.multipleRespuesta ??
+        pregunta?.MultipleRespuesta ??
+        pregunta?.tipoPregunta?.multipleRespuesta ??
+        pregunta?.tipoPregunta?.MultipleRespuesta
+    );
+  }
+
+  esRequerida(pregunta: any): boolean {
+    return Boolean(pregunta?.requerida ?? pregunta?.Requerida ?? true);
   }
 }

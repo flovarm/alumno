@@ -12,6 +12,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
+        path: "mi-horario",
+        loadComponent: () =>
+          import("./pages/mi-horario/mi-horario.component").then(m => m.MiHorarioComponent),
+      },
+      {
         path: "clases-virtuales",
         loadComponent: () =>
           import("./pages/clases-virtuales/clases-virtuales.component").then(

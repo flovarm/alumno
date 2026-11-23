@@ -4,11 +4,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { AuthService } from '../../services/auth.service';
+import { RouterLink } from '@angular/router';
+import { esHorarioVirtual } from '../../models/horario-alumno';
 
 @Component({
   selector: 'app-detalle-horario',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatListModule, MatButtonModule],
+  imports: [CommonModule, MatCardModule, MatListModule, MatButtonModule, RouterLink],
   template: `
     <div class="detalle-container">
       <mat-card>
@@ -56,6 +58,9 @@ import { AuthService } from '../../services/auth.service';
           </mat-list>
         </mat-card-content>
         <mat-card-actions>
+          @if (esVirtual(horario)) {
+            <a mat-stroked-button routerLink="/clases-virtuales">Ir a Clases virtuales</a>
+          }
           <button mat-raised-button color="primary">Realizar Pago</button>
         </mat-card-actions>
       </mat-card>
@@ -73,6 +78,7 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class DetalleHorarioComponent implements OnInit {
+  readonly esVirtual = esHorarioVirtual;
   @Input() horario: any;
   private readonly authService = inject(AuthService);
   pago = signal<number>(0);

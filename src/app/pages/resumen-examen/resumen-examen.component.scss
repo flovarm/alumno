@@ -19,3 +19,18 @@
   .dato.costo { grid-column: auto; }
   .acciones-pago button { width: 100%; }
 }
+.exam-connection { display: flex; flex-direction: column; gap: .5rem; margin-top: 1.25rem; padding: 1rem; border-radius: 12px; background: var(--mat-sys-surface-container-low); }
+.exam-connection a { color: var(--mat-sys-primary); text-decoration: underline; overflow-wrap: anywhere; }
+.seleccion-nota {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.tabla-notas {
+  width: 100%;
+  border-collapse: collapse;
+
+  caption { text-align: left; margin-bottom: .75rem; }
+  th, td { padding: .75rem .5rem; text-align: left; border-bottom: 1px solid #ddd; }
+}

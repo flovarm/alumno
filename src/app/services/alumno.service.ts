@@ -2,6 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable, tap } from "rxjs";
 import { AsistenciaAlumno } from "../models/AsistenciaAlumno";
+import { DetalleNotasRegistro } from "../models/notas-registro";
 import { environment } from "../../environments/environment.development";
 
 @Injectable({
@@ -10,6 +11,12 @@ import { environment } from "../../environments/environment.development";
 export class AlumnoService {
   private http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
+
+  obtenerNotasRegistro(idHorario: number, idRegistro: number, soloRezagado = false) {
+    return this.http.get<DetalleNotasRegistro>(
+      `${this.apiUrl}Item/horarios/${idHorario}/registros/${idRegistro}/notas${soloRezagado ? "?soloRezagado=true" : ""}`,
+    );
+  }
 
   /**
    * Verifica si existe un alumno por DNI y obtiene su código

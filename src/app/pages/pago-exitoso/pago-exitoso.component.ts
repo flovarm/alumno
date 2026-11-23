@@ -4,7 +4,7 @@ import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { MatDividerModule } from "@angular/material/divider";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Router, ActivatedRoute, RouterLink } from "@angular/router";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import {
@@ -21,6 +21,7 @@ import {
     MatIconModule,
     MatButtonModule,
     MatDividerModule,
+    RouterLink,
   ],
   template: `
     <!-- Loading State -->
@@ -161,6 +162,14 @@ import {
                   </p>
                 </div>
               </div>
+            </div>
+            <div class="schedule-access">
+              <mat-icon aria-hidden="true">calendar_month</mat-icon>
+              <div class="schedule-access-text">
+                <h2>Desde aquí puedes ver tu horario</h2>
+                <p>Consulta las fechas y horas de tus clases y exámenes.</p>
+              </div>
+              <a mat-flat-button routerLink="/mi-horario">Ver mi horario</a>
             </div>
           </mat-card-content>
 
@@ -353,6 +362,27 @@ import {
   `,
   styles: [
     `
+      .schedule-access {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem;
+        margin-top: 1.25rem;
+        border: 1px solid var(--mat-sys-outline-variant);
+        border-radius: 14px;
+        background: var(--mat-sys-surface-container-low);
+        color: var(--mat-sys-on-surface);
+      }
+      .schedule-access > mat-icon { flex-shrink: 0; color: var(--mat-sys-primary); }
+      .schedule-access-text { flex: 1 1 180px; min-width: 0; }
+      .schedule-access h2 { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.5; }
+      .schedule-access p { margin: .25rem 0 0; font-size: .875rem; color: var(--mat-sys-on-surface-variant); }
+      @media (max-width: 600px) {
+        .schedule-access { align-items: flex-start; padding: 1rem; }
+        .schedule-access > a { width: 100%; }
+      }
+
       .loading-container,
       .error-container {
         display: flex;

@@ -1,0 +1,591 @@
+:host {
+  display: block;
+}
+
+.horario-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2.5rem;
+  color: var(--mat-sys-on-surface);
+}
+
+.controls-card,
+.horario-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.controls-card {
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.action-btn {
+  width: 100%;
+}
+
+.summary-pills,
+.navigation,
+.event-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+
+.exam-pill .dot {
+  background: #b45309;
+}
+
+.timezone,
+.event-time,
+.event-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.timezone mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  color: var(--mat-sys-primary);
+}
+
+.horario-status {
+  gap: 0.875rem;
+}
+
+.horario-status button {
+  margin-left: auto;
+}
+
+.horario-error {
+  border-color: var(--mat-sys-error);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.horario-warning {
+  background: var(--mat-sys-tertiary-container);
+}
+
+.empty-icon,
+.day-number,
+.event-icon,
+.empty-day-icon {
+  display: grid;
+  place-items: center;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.empty-text h2,
+.toolbar h2,
+.agenda h2,
+.event-detail h3,
+.event-date,
+.event-content,
+.exam-duration-note,
+.exam-instructions p,
+.empty-day h3,
+.empty-day p {
+  margin: 0;
+}
+
+.empty-text h2 {
+  font-size: 1rem;
+}
+
+.empty-text p {
+  margin: 0.25rem 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.schedule-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(320px, 390px);
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.calendar {
+  container: calendar / inline-size;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 18px;
+  overflow: clip;
+  background: var(--mat-sys-surface);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--mat-sys-surface-container-low);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.toolbar-title,
+.event-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.toolbar-icon,
+.group-title,
+.instruction-link,
+.agenda-eyebrow,
+.more {
+  color: var(--mat-sys-primary);
+}
+
+.toolbar h2 {
+  font-size: clamp(1.05rem, 0.9rem + 0.8vw, 1.25rem);
+  text-transform: capitalize;
+}
+
+.today-btn,
+.month-arrows {
+  border-radius: 999px;
+}
+
+.month-arrows {
+  display: inline-flex;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekday {
+  padding: 0.6rem 0.4rem;
+  text-align: center;
+  background: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.weekday:nth-child(7n),
+.day:nth-child(7n) {
+  border-right: 0;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 116px;
+  padding: 0.5rem;
+  border: 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.day:hover,
+.day.other-month {
+  background: var(--mat-sys-surface-container-low);
+}
+
+.day.other-month .day-number {
+  opacity: 0.55;
+}
+
+.day.selected {
+  box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
+}
+
+.day-header,
+.agenda-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.day.today .day-number {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.today-tag,
+.agenda-count,
+.virtual-badge {
+  border-radius: 999px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  font-weight: 700;
+}
+
+.today-tag {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+}
+
+.day-count {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-high);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.day-events,
+.agenda-list,
+.event-detail,
+.event-badges,
+.event-body,
+.exam-instructions,
+.instruction-section,
+.instruction-group,
+.instruction-important {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.event-chip {
+  --event-color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  border-left: 3.5px solid var(--event-color);
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: var(--mat-sys-surface-container);
+  font-size: 0.7rem;
+  min-width: 0;
+}
+
+.chip-time {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.65rem;
+}
+
+.event-chip span,
+.event-chip strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.agenda {
+  position: sticky;
+  top: 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 18px;
+  background: var(--mat-sys-surface-container-low);
+  padding: 1.25rem;
+}
+
+.agenda-header {
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.agenda-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.agenda h2 {
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+
+.agenda-count {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.agenda-list {
+  gap: 0.85rem;
+}
+
+.event-detail {
+  --event-color: #2563eb;
+  gap: 0.6rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--mat-sys-surface);
+}
+
+.event-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--mat-sys-surface-container);
+  color: var(--event-color);
+}
+
+.event-badges {
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.event-type {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--event-color);
+  text-transform: uppercase;
+}
+
+.virtual-badge {
+  padding: 0.15rem 0.55rem;
+}
+
+.event-time {
+  flex-wrap: wrap;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.event-time mat-icon,
+.event-date mat-icon,
+.exam-duration-note mat-icon {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+}
+
+.exam-duration-note {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
+  font-size: 0.78rem;
+}
+
+.event-detail h3 {
+  font-size: 1rem;
+}
+
+.event-content,
+.exam-instructions {
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: var(--mat-sys-surface-container-low);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.event-content {
+  white-space: pre-wrap;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.exam-instructions {
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.instruction-group {
+  gap: 0.25rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.group-title,
+.instruction-link,
+.instruction-alert,
+.important-title,
+.instruction-list li::marker {
+  font-weight: 700;
+}
+
+.instruction-alert,
+.instruction-list li::marker {
+  color: var(--event-color);
+}
+
+.instruction-important {
+  gap: 0.25rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: var(--mat-sys-surface);
+}
+
+.instruction-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+
+.maps-link {
+  display: inline-flex;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.empty-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: var(--mat-sys-surface);
+}
+
+.empty-day-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-primary);
+}
+
+@container calendar (inline-size <= 640px) {
+  .weekday {
+    padding: 0.5rem 0.1rem;
+    font-size: 0.68rem;
+  }
+
+  .day {
+    align-items: center;
+    justify-content: space-between;
+    min-height: 54px;
+    padding: 0.35rem 0.15rem;
+  }
+
+  .day-header {
+    justify-content: center;
+  }
+
+  .day-number {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+
+  .today-tag,
+  .day-count,
+  .event-chip > * {
+    display: none;
+  }
+
+  .day-events {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .event-chip {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--event-color);
+  }
+
+  .more {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 1080px) {
+  .schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda {
+    position: static;
+  }
+
+  .agenda-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .horario-page {
+    padding: 0 0.75rem 1.5rem;
+  }
+
+  .controls-card,
+  .toolbar,
+  .agenda {
+    padding: 0.85rem 1rem;
+  }
+
+  .schedule-layout {
+    gap: 1rem;
+  }
+}

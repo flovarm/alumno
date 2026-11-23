@@ -1,19 +1,78 @@
 .page-container { max-width: 1440px; margin: 0 auto; padding: 24px; }
 mat-card { border-radius: 20px; }
 mat-card-content { padding-top: 24px; }
-.filtros { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.filtros {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
 .filtros mat-form-field { flex: 1; min-width: 220px; }
-.filtros button { margin-top: 8px; }
-.tabla { width: 100%; overflow-x: auto; }
+.seleccion-nota {
+  flex-basis: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  background: var(--mat-sys-surface-container-low);
+
+  h2 { margin: 0 0 8px; font-size: 1.125rem; font-weight: 600; }
+  p { margin: 0 0 20px; color: var(--mat-sys-on-surface-variant); }
+}
+.lista-notas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+.opcion-nota {
+  display: flex;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+  transition: border-color 150ms, background-color 150ms;
+
+  &:hover:not(.nota-registrada), &:focus-within { border-color: var(--mat-sys-primary); }
+  &.nota-elegida {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-secondary-container);
+  }
+  &.nota-registrada { background: var(--mat-sys-surface-container); }
+}
+.nota-contenido { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 4px 8px; }
+.nota-nombre { font-weight: 500; overflow-wrap: anywhere; }
+.nota-estado {
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: .75rem;
+  line-height: 1.6;
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container-high);
+
+  &.estado-pendiente { color: var(--mat-sys-on-primary-container); background: var(--mat-sys-primary-container); }
+}
+.acciones-consulta { display: flex; justify-content: flex-end; flex-basis: 100%; padding-top: 8px; }
+.boton-consultar { min-height: 48px; min-width: 200px; padding-inline: 28px; }
+.tabla { width: 100%; overflow-x: auto; border: 1px solid var(--mat-sys-outline-variant); border-radius: 12px; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { padding: 16px; border-bottom: 1px solid var(--mat-sys-outline-variant); white-space: nowrap; }
 th { color: var(--mat-sys-on-surface-variant); }
 small { display: block; color: var(--mat-sys-on-surface-variant); }
 .mat-mdc-row.seleccionado { background: var(--mat-sys-secondary-container); }
 .resumen { margin-top: 24px; }
+.exam-connection { display: flex; flex-direction: column; gap: .25rem; margin-top: .5rem; max-width: 280px; white-space: normal; font-size: .875rem; }
+.exam-connection a { color: var(--mat-sys-primary); text-decoration: underline; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   .page-container { padding: 12px; }
   .filtros { flex-direction: column; }
   .filtros mat-form-field { width: 100%; }
-  .filtros button { width: 100%; margin: 0 0 16px; }
+  .seleccion-nota { width: 100%; padding: 16px; }
+  .lista-notas { grid-template-columns: 1fr; }
+  .acciones-consulta { width: 100%; }
+  .boton-consultar { width: 100%; min-width: 0; }
 }

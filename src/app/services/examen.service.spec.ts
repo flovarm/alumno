@@ -16,11 +16,12 @@ describe("ExamenService", () => {
   afterEach(() => http.verify());
 
   it("envía fecha e idTipoExamen como parámetros de consulta", () => {
-    service.obtenerHorariosExamen("2026-10-15", 2).subscribe();
+    service.obtenerHorariosExamen("2026-10-15", 2, "01234567").subscribe();
     const req = http.expectOne(r => r.url === apiUrl + "Horarios");
     expect(req.request.method).toBe("GET");
     expect(req.request.params.get("fecha")).toBe("2026-10-15");
     expect(req.request.params.get("idTipoExamen")).toBe("2");
+    expect(req.request.params.get("docid")).toBe("01234567");
     req.flush([]);
   });
 
@@ -29,5 +30,13 @@ describe("ExamenService", () => {
     const req = http.expectOne(apiUrl + "AlumnoRegistrado/123");
     expect(req.request.params.has("idTipoExamen")).toBeFalse();
     req.flush(false);
+  });
+
+  it("envía idItem al consultar los horarios de un rezagado", () => {
+    service.obtenerHorariosExamen("2026-11-06", 3, "01234567", [10, 11]).subscribe();
+    const req = http.expectOne(r => r.url === apiUrl + "Horarios");
+    expect(req.request.params.getAll("idItems")).toEqual(["10", "11"]);
+    expect(req.request.params.has("idItem")).toBeFalse();
+    req.flush([]);
   });
 });

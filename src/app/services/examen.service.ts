@@ -12,8 +12,12 @@ export class ExamenService {
     return this.http.get<TipoExamen[]>(this.apiUrl + "Tipos");
   }
 
-  obtenerHorariosExamen(fecha: string, idTipoExamen: number) {
-    const params = new HttpParams().set("fecha", fecha).set("idTipoExamen", idTipoExamen);
+  obtenerHorariosExamen(fecha: string, idTipoExamen: number, docid: string, idItems?: number[]) {
+    let params = new HttpParams()
+      .set("fecha", fecha)
+      .set("idTipoExamen", idTipoExamen)
+      .set("docid", docid);
+    idItems?.forEach(id => params = params.append("idItems", id));
     return this.http.get<HorarioExamen[]>(this.apiUrl + "Horarios", { params });
   }
 

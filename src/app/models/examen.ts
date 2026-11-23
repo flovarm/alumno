@@ -8,6 +8,7 @@ export interface TipoExamen {
 }
 
 export interface HorarioExamen {
+  url?: string | null;
   idHorarioExamen: number;
   dia: string;
   hora: string;

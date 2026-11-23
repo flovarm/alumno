@@ -45,6 +45,7 @@ export class MainLayoutComponent {
       label: 'Principal',
       items: [
         { icon: 'home', label: 'Inicio', route: '/home' },
+        { icon: 'calendar_month', label: 'Mi horario', route: '/mi-horario' },
         { icon: 'video_call', label: 'Clases virtuales', route: '/clases-virtuales' },
       ],
     },

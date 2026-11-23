@@ -181,8 +181,7 @@ import { NumeroHorasMaximoTurno, TurnoService } from "../../services/turno.servi
                       formatColumnNameLine1(col) === 'finalGrade',
                   }"
                     >
-                    {{ col === 'finalGrade' ? 'Nota final' : formatColumnNameLine1(col) }}
-                    {{ formatColumnNameLine2(col) }}
+                    {{ col === 'finalGrade' ? 'Nota final' : etiquetasNotas[col] }}
                   </th>
                   <td
                   [ngClass]="{
@@ -199,7 +198,7 @@ import { NumeroHorasMaximoTurno, TurnoService } from "../../services/turno.servi
                     dataSource()[0][col] !== null &&
                     dataSource()[0][col] !== ""
                     ? dataSource()[0][col]
-                    : 0
+                    : 'No se registró'
                     }}
                   </td>
                 </tr>
@@ -537,6 +536,7 @@ import { NumeroHorasMaximoTurno, TurnoService } from "../../services/turno.servi
   ],
 })
 export class NotasDetalleDialogComponent {
+  etiquetasNotas: Record<string, string> = {};
   private destroyRef = inject(DestroyRef);
   private _columns = signal<string[]>([]);
   columns = computed(() => this._columns());
@@ -572,30 +572,21 @@ export class NotasDetalleDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<NotasDetalleDialogComponent>
   ) {
-    // PROVISIONAL: data.notas proviene del controlador Nota/Detalle,
-    // consultado mediante AlumnoService.listarNotas antes de abrir el diálogo.
-    // Cuando itemDetalle incluya las notas, reemplazar esta fuente por la siguiente
-    // y retirar la consulta provisional de verDetalle en el componente de historial.
-    // const result = Array.isArray(data.element?.itemDetalle)
-    //   ? data.element.itemDetalle
-    //   : [];
-    const result = Array.isArray(data.notas) ? data.notas : [];
-    // Lógica para construir columnas y datasource en formato vertical
-    if (result.length > 0) {
-      const notaEjemplo = result[0];
-      let columns = Object.keys(notaEjemplo.notas || {}).filter(
-        (c) => c.toLowerCase() !== "finalgrade",
-      );
-      if ("finalGrade" in notaEjemplo) {
-        columns.push("finalGrade");
+    const items = Array.isArray(data.notas?.items) ? data.notas.items : [];
+    if (items.length > 0) {
+      const columns: string[] = [];
+      const fila: Record<string, number | null> = {};
+      for (const item of items) {
+        const columna = String(item.idItem);
+        columns.push(columna);
+        this.etiquetasNotas[columna] = item.item +
+          (item.valorMaximo != null ? ` (${item.valorMaximo})` : "");
+        fila[columna] = item.tieneNota === true ? item.nota : null;
       }
+      columns.push("finalGrade");
+      fila['finalGrade'] = data.notas.finalGrade ?? data.element?.notaReg ?? null;
       this._columns.set(columns);
-      this._dataSource.set(
-        result.map((n) => ({
-          ...n,
-          ...n.notas,
-        })),
-      );
+      this._dataSource.set([fila]);
     } else {
       this._columns.set([]);
       this._dataSource.set([]);

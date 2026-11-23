@@ -1,0 +1,424 @@
+<div class="horario-page">
+  <app-page-header
+    title="Mi horario"
+    description="Consulta tus clases y exámenes en un solo calendario."
+    icon="calendar_month"
+  />
+
+  <section class="controls-card" aria-label="Resumen de horario">
+    @if (eventos().length) {
+      <div class="summary-pills" aria-label="Resumen del mes">
+        <span class="legend-pill class-pill">
+          <span class="dot" aria-hidden="true"></span>
+          {{ totalClases() }} {{ totalClases() === 1 ? 'clase' : 'clases' }}
+        </span>
+        <span class="legend-pill exam-pill">
+          <span class="dot" aria-hidden="true"></span>
+          {{ totalExamenes() }} {{ totalExamenes() === 1 ? 'examen' : 'exámenes' }}
+        </span>
+      </div>
+    }
+    <span class="timezone">
+      <mat-icon aria-hidden="true">schedule</mat-icon>
+      Hora de Perú · La duración de los exámenes es referencial
+    </span>
+  </section>
+
+  @if (cargando()) {
+    <div class="horario-status" role="status">
+      <mat-spinner diameter="28" />
+      <span>Cargando tu horario académico…</span>
+    </div>
+  } @else if (error()) {
+    <div class="horario-status horario-error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <span>{{ error() }}</span>
+      <button mat-stroked-button (click)="cargarHorario()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    @if (advertencia()) {
+      <div class="horario-status horario-warning" role="status">
+        <mat-icon aria-hidden="true">warning_amber</mat-icon>
+        <span>{{ advertencia() }}</span>
+      </div>
+    }
+
+    @if (!eventos().length) {
+      <div class="horario-status horario-empty" role="status">
+        <span class="empty-icon" aria-hidden="true">
+          <mat-icon>event_busy</mat-icon>
+        </span>
+        <div class="empty-text">
+          <h2>No tienes clases ni exámenes registrados para {{ tituloMes() }}.</h2>
+          <p>Usa los controles del calendario para consultar otro mes.</p>
+        </div>
+      </div>
+    }
+  }
+
+  <div class="schedule-layout">
+      <section class="calendar" aria-label="Calendario de clases y exámenes">
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <mat-icon aria-hidden="true" class="toolbar-icon">calendar_today</mat-icon>
+            <h2 aria-live="polite">{{ tituloMes() }}</h2>
+          </div>
+          <div class="navigation">
+            <button mat-stroked-button class="today-btn" (click)="seleccionarFecha(hoy)">
+              Hoy
+            </button>
+            <div class="month-arrows">
+              <button mat-icon-button aria-label="Mes anterior" (click)="moverMes(-1)">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="Mes siguiente" (click)="moverMes(1)">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-scroll">
+          <div class="month-grid">
+            @for (nombre of diasSemana; track nombre) {
+              <div class="weekday">{{ nombre }}</div>
+            }
+            @for (dia of dias(); track dia.clave) {
+              <button
+                type="button"
+                class="day"
+                [class.other-month]="dia.otroMes"
+                [class.selected]="dia.clave === diaSeleccionado()"
+                [class.today]="dia.clave === hoy"
+                [class.has-events]="dia.eventos.length > 0"
+                [attr.aria-pressed]="dia.clave === diaSeleccionado()"
+                [attr.aria-label]="dia.clave + ', ' + dia.eventos.length + ' eventos'"
+                (click)="seleccionarFecha(dia.clave)"
+              >
+                <div class="day-header">
+                  <span class="day-number">{{ dia.numero }}</span>
+                  @if (dia.clave === hoy) {
+                    <span class="today-tag">Hoy</span>
+                  } @else if (dia.eventos.length > 0) {
+                    <span class="day-count">{{ dia.eventos.length }}</span>
+                  }
+                </div>
+
+                <div class="day-events">
+                  @for (evento of dia.eventos.slice(0, 3); track $index) {
+                    <span
+                      class="event-chip"
+                      [class.is-exam]="evento.esExamen"
+                      [style.--event-color]="evento.colorEvento"
+                      [style.border-left-color]="evento.colorEvento"
+                    >
+                      <span class="chip-time">
+                        {{ evento.start | date:'HH:mm':'-0500' }} · {{ evento.esExamen ? 'Examen' : evento.tipo }}
+                      </span>
+                      <strong>{{ evento.title }}</strong>
+                    </span>
+                  }
+                  @if (dia.eventos.length > 3) {
+                    <span class="more">+{{ dia.eventos.length - 3 }} más</span>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      </section>
+
+      <aside class="agenda" aria-labelledby="agenda-title" aria-live="polite">
+        <div class="agenda-header">
+          <div>
+            <span class="agenda-eyebrow">Detalle del día</span>
+            <h2 id="agenda-title">{{ fechaSeleccionada() }}</h2>
+          </div>
+          <span class="agenda-count">
+            {{ eventosSeleccionados().length }}
+            {{ eventosSeleccionados().length === 1 ? 'evento' : 'eventos' }}
+          </span>
+        </div>
+
+        <div class="agenda-list">
+          @for (evento of eventosSeleccionados(); track $index) {
+            <article
+              class="event-detail"
+              [class.is-exam]="evento.esExamen"
+              [style.--event-color]="evento.colorEvento"
+            >
+              <header class="event-card-header">
+                <span class="event-icon" aria-hidden="true">
+                  <mat-icon>{{ evento.esExamen ? 'quiz' : 'school' }}</mat-icon>
+                </span>
+                <div class="event-badges">
+                  <span class="event-type" [class.virtual-badge]="evento.esVirtual">
+                    {{ evento.esExamen ? (evento.esVirtual ? 'Examen virtual' : 'Examen') : (evento.esVirtual ? evento.tipo + ' · Virtual' : evento.tipo) }}
+                  </span>
+                  <span class="event-time">
+                    <mat-icon aria-hidden="true">schedule</mat-icon>
+                    {{ evento.start | date:'HH:mm':'-0500' }} – {{ evento.end | date:'HH:mm':'-0500' }}
+                    @if (evento.esExamen) {
+                      <span class="time-ref">(referencial)</span>
+                    }
+                  </span>
+                </div>
+              </header>
+
+              <h3>{{ evento.title }}</h3>
+
+              <div class="event-body">
+                <p class="event-date">
+                  <mat-icon aria-hidden="true">event</mat-icon>
+                  {{ evento.start | date:'dd/MM/yyyy':'-0500' }}
+                </p>
+                @if (evento.esExamen) {
+                  <p class="exam-duration-note">
+                    <mat-icon aria-hidden="true">info_outline</mat-icon>
+                    @if (evento.casoClasificacion === 'adultos-presencial') {
+                      <span>La duración del examen escrito: 70 minutos. La entrevista será posterior a la evaluación escrita, según el orden de término.</span>
+                    } @else {
+                      <span>La duración del examen es referencial y depende del nivel y del tipo de examen.</span>
+                    }
+                  </p>
+                }
+                @if (evento.contenidoDetalle) {
+                  <p class="event-content">{{ evento.contenidoDetalle }}</p>
+                }
+
+                @if (evento.esExamen) {
+                  @if (evento.esClasificacion) {
+                    @if (evento.casoClasificacion === 'adultos-virtual') {
+                      <div class="exam-instructions" aria-label="Indicaciones para examen de clasificación virtual">
+                        <ol class="instruction-list">
+                          <li>
+                            <strong>Hora de escrito:</strong> {{ evento.start | date:'h:mm a':'-0500' }}.
+                            Conectarse a través del <strong>AULA VIRTUAL</strong>:
+                            <a href="https://aulavirtual.elcultural.com.pe/" target="_blank" rel="noopener noreferrer" class="instruction-link">
+                              https://aulavirtual.elcultural.com.pe/
+                            </a>
+                            siendo su usuario y contraseña el DNI del estudiante.
+                          </li>
+                          <li>
+                            <strong>La Entrevista:</strong> {{ evento.end | date:'h:mm a':'-0500' }}.
+                            Conectarse a Microsoft Teams desde el botón <strong>Acceder al examen</strong>.
+                          </li>
+                        </ol>
+
+                        <p class="instruction-alert">Leer cuidadosamente las indicaciones</p>
+
+                        <div class="instruction-important">
+                          <p class="important-title">Importante</p>
+                          <ol class="instruction-list">
+                            <li>Presentar su DNI en físico antes que inicie su examen.</li>
+                            <li><strong>NO SE ACEPTAN REPROGRAMACIONES</strong>, tomar sus precauciones.</li>
+                            <li>El mismo día le indicarán a qué nivel clasificó, posterior a ello puede realizar su matrícula.</li>
+                          </ol>
+                        </div>
+                      </div>
+                    } @else if (!evento.esVirtual) {
+                      <div class="exam-instructions presencial-instructions" aria-label="Indicaciones para examen de clasificación presencial">
+                        @if (evento.casoClasificacion === 'ninos-presencial') {
+                          <ol class="instruction-list">
+                            <li><strong>2.° a 6.° de primaria:</strong> solo entrevista.</li>
+                            <li><strong>1.° de secundaria a más:</strong> realizará examen escrito y entrevista. La entrevista será posterior a la evaluación escrita, según el orden de término.</li>
+                          </ol>
+                        }
+
+                        <p class="presencial-address">
+                          <strong>LUGAR:</strong> LABORATORIO MULTIMEDIA – 3ER PISO, Local principal Av. Venezuela 125 Urb. El Recreo
+                        </p>
+                        <a
+                          [href]="googleMapsUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="maps-link"
+                        >
+                          <span>Ver ubicación en Google Maps (Av. Venezuela 125)</span>
+                        </a>
+
+                        <p class="instruction-alert">Leer cuidadosamente las indicaciones</p>
+
+                        <div class="instruction-important">
+                          <p class="important-title">Importante</p>
+                          <ol class="instruction-list">
+                            <li>Presentar su DNI en físico antes que inicie su examen.</li>
+                            <li><strong>NO SE ACEPTAN REPROGRAMACIONES</strong>, tomar sus precauciones.</li>
+                            <li>El mismo día le indicarán a qué nivel clasificó, posterior a ello puede realizar su matrícula.</li>
+                          </ol>
+                        </div>
+                      </div>
+                    }
+                  } @else if (evento.esSustitutorio) {
+                    @if (!evento.esVirtual) {
+                      <div class="exam-instructions presencial-instructions" aria-label="Indicaciones para examen sustitutorio presencial">
+                        <p class="instruction-heading">
+                          <strong>Examen presencial</strong>
+                        </p>
+                        <p class="presencial-address">
+                          <strong>Dirección:</strong> Av. Venezuela 125
+                        </p>
+                        <a
+                          [href]="googleMapsUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="maps-link"
+                        >
+                          <span>Ver ubicación en Google Maps (Av. Venezuela 125)</span>
+                        </a>
+
+                        <p class="instruction-alert">Leer cuidadosamente las indicaciones</p>
+
+                        <div class="instruction-important">
+                          <p class="important-title">Importante</p>
+                          <ol class="instruction-list">
+                            <li>Presentar su DNI en físico antes que inicie su examen.</li>
+                            <li><strong>NO SE ACEPTAN REPROGRAMACIONES</strong>, tomar sus precauciones.</li>
+                            <li>La nota obtenida reemplaza al puntaje final, no promedia.</li>
+                            @if (evento.casoSustitutorio === 'ninos-presencial') {
+                              <li>En el nivel de junior, nota mínima aprobatoria es 70 puntos.</li>
+                            } @else if (evento.casoSustitutorio === 'adultos-presencial') {
+                              <li>En básico e intermedio regular, nota mínima aprobatoria es 70 puntos, en avanzado 1 al 8 es 75 puntos.</li>
+                            }
+                            <li>La nota máxima es 100 puntos.</li>
+                          </ol>
+                        </div>
+
+                        <div class="instruction-important">
+                          <p><strong>CONSULTA DE NOTAS:</strong> Estarán disponibles en 24 horas en la Intranet.</p>
+                        </div>
+                      </div>
+                    }
+                  } @else if (evento.esVirtual) {
+                    @if (evento.idTipoPrograma !== tipoProgramaNinos) {
+                      <div class="exam-instructions" aria-label="Indicaciones para examen rezagado virtual">
+                        <p class="instruction-alert">INDICACIONES IMPORTANTES</p>
+                        <p class="instruction-sub"><strong>Según el examen pendiente:</strong></p>
+
+                        <div class="instruction-section">
+                          <div class="instruction-group">
+                            <p class="group-title">1. 1st y/o 2nd Writing:</p>
+                            <ol class="instruction-list">
+                              <li>Conectarse a Microsoft Teams.</li>
+                            </ol>
+                          </div>
+
+                          <div class="instruction-group">
+                            <p class="group-title">2. Examen Final:</p>
+                            <ol class="instruction-list">
+                              <li>Ingresar al Aula Virtual con usuario y contraseña (DNI del estudiante).</li>
+                              <li>También conectarse a Teams para el monitoreo (<strong>OBLIGATORIO</strong>).</li>
+                            </ol>
+                          </div>
+
+                          <div class="instruction-important">
+                            <p class="important-title">ENLACES DE ACCESO:</p>
+                            <ol class="instruction-list">
+                              <li>
+                                <strong>Aula Virtual:</strong>
+                                <a href="https://aulavirtual.elcultural.com.pe/" target="_blank" rel="noopener noreferrer" class="instruction-link">
+                                  https://aulavirtual.elcultural.com.pe/
+                                </a>
+                              </li>
+                              @if (evento.url?.trim()) {
+                                <li>
+                                  <strong>Teams:</strong>
+                                  <a [href]="evento.url!.trim()" target="_blank" rel="noopener noreferrer" class="instruction-link">
+                                    {{ evento.url!.trim() }}
+                                  </a>
+                                </li>
+                              }
+                              <li>Presentar su DNI físico antes del examen.</li>
+                              <li><strong>No se aceptan reprogramaciones.</strong></li>
+                            </ol>
+                          </div>
+
+                          <div class="instruction-group">
+                            <p class="group-title">3. Homework:</p>
+                            <ol class="instruction-list">
+                              <li>Debe estar unido al curso con el código del docente.</li>
+                              <li>Tiene 2 días desde la fecha programada para completar las actividades.</li>
+                              <li>Al finalizar, comunicarse con el Área Académica al <strong>962 082 994</strong> para registrar sus notas.</li>
+                            </ol>
+                          </div>
+                        </div>
+
+                        <div class="instruction-important">
+                          <p><strong>CONSULTA DE NOTAS:</strong> Estarán disponibles en 24 horas en la Intranet.</p>
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="exam-instructions presencial-instructions" aria-label="Indicaciones para examen presencial">
+                      <p class="instruction-heading">
+                        <strong>Examen presencial</strong>
+                      </p>
+                      <p class="presencial-address">
+                        <strong>Dirección:</strong> Av. Venezuela 125
+                      </p>
+                      <a
+                        [href]="googleMapsUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="maps-link"
+                      >
+                        <span>Ver ubicación en Google Maps (Av. Venezuela 125)</span>
+                      </a>
+
+                      <div class="instruction-important">
+                        <p class="important-title">Importante</p>
+                        <ol class="instruction-list">
+                          <li>Presentar su DNI en físico antes que inicie su examen.</li>
+                          <li><strong>NO SE ACEPTAN REPROGRAMACIONES</strong>, tomar sus precauciones.</li>
+                          @if (evento.casoRezagado === 'ninos-presencial') {
+                            <li>En caso del programa de <strong>NIÑOS Y JUNIORS</strong> debe traer su binder (cuadernillo de prácticas y cartuchera).</li>
+                          } @else {
+                            <li>Si es del programa de <strong>NIÑOS Y JUNIORS</strong> debe traer su binder (cuadernillo de prácticas y cartuchera).</li>
+                          }
+                          <li>Sus notas figuran en 24 hrs, y puede visualizar en su Intranet.</li>
+                        </ol>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+
+              @if (evento.url?.trim() || (evento.esVirtual && !evento.esExamen)) {
+                <footer class="event-actions">
+                  @if (evento.url?.trim()) {
+                    <a
+                      mat-flat-button
+                      [href]="evento.url!.trim()"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="action-btn"
+                    >
+                      <mat-icon>open_in_new</mat-icon>
+                      Acceder al examen
+                    </a>
+                  }
+                  @if (evento.esVirtual && !evento.esExamen) {
+                    <a mat-stroked-button routerLink="/clases-virtuales" class="action-btn virtual-link">
+                      <mat-icon>video_call</mat-icon>
+                      Ir a Clases virtuales
+                    </a>
+                  }
+                </footer>
+              }
+            </article>
+          } @empty {
+            <div class="empty-day">
+              <span class="empty-day-icon" aria-hidden="true">
+                <mat-icon>event_available</mat-icon>
+              </span>
+              <h3>Día libre de actividades</h3>
+              <p>No tienes clases ni exámenes programados para esta fecha.</p>
+            </div>
+          }
+        </div>
+      </aside>
+    </div>
+</div>

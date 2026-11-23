@@ -34,9 +34,44 @@
             placeholder="Selecciona una fecha" (click)="calendario.open()" />
           <mat-datepicker-toggle matIconSuffix [for]="calendario" />
           <mat-datepicker #calendario />
-          <mat-error>Selecciona una fecha válida anterior al 31/12/9999.</mat-error>
+          <mat-error>Selecciona una fecha desde hoy y anterior al 31/12/9999.</mat-error>
         </mat-form-field>
-        <button mat-flat-button type="submit" [disabled]="cargando() || cargandoTipos() || tipos().length === 0">Consultar horarios</button>
+        @if (esRezagado) {
+          <section class="seleccion-nota" aria-labelledby="titulo-notas">
+            <h2 id="titulo-notas">Selecciona hasta dos notas que deseas rendir</h2>
+            @if (cargandoNotas()) {
+              <p role="status">Cargando notas del curso actual…</p>
+            } @else if (errorNotas()) {
+              <p role="alert" class="curso-danger">{{ errorNotas() }}</p>
+              <button mat-stroked-button type="button" (click)="cargarNotas()">Reintentar</button>
+            } @else {
+              <p>Elige una o dos actividades pendientes para un solo pago. El importe es el mismo por pago.</p>
+              <div class="lista-notas" role="group" aria-labelledby="titulo-notas">
+                @for (nota of notas(); track nota.idItem) {
+                  <mat-checkbox class="opcion-nota" [class.nota-elegida]="idItemsSeleccionados().includes(nota.idItem)"
+                    [class.nota-registrada]="nota.tieneNota !== false"
+                    [checked]="idItemsSeleccionados().includes(nota.idItem)"
+                    [disabled]="nota.tieneNota !== false || (idItemsSeleccionados().length >= 2 && !idItemsSeleccionados().includes(nota.idItem))"
+                    (change)="seleccionarNota(nota)">
+                    <span class="nota-contenido">
+                      <span class="nota-nombre">{{ nota.item }}</span>
+                      <span class="nota-estado" [class.estado-pendiente]="nota.tieneNota === false">
+                        {{ nota.tieneNota ? 'Nota: ' + nota.nota : 'Pendiente' }}
+                      </span>
+                    </span>
+                  </mat-checkbox>
+                } @empty {
+                  <p>No se encontraron actividades para el curso actual.</p>
+                }
+              </div>
+            }
+          </section>
+        }
+        <div class="acciones-consulta">
+          <button mat-flat-button class="boton-consultar" type="submit" [disabled]="cargando() || cargandoTipos() || tipos().length === 0 || (esRezagado && (cargandoNotas() || !!errorNotas() || !seleccionValida))">
+            {{ cargando() ? 'Consultando horarios…' : 'Consultar horarios' }}
+          </button>
+        </div>
       </form>
       @if (error()) { <p role="alert" class="curso-danger">{{ error() }}</p> }
       @if (cargando()) { <p role="status">Consultando horarios y disponibilidad…</p> }
@@ -65,6 +100,18 @@
               <th mat-header-cell *matHeaderCellDef>Aula</th>
               <td mat-cell *matCellDef="let horario">{{ horario.descripcion?.trim() || 'Sin aula informada' }}</td>
             </ng-container>
+            <ng-container matColumnDef="modalidad">
+              <th mat-header-cell *matHeaderCellDef>Modalidad</th>
+              <td mat-cell *matCellDef="let horario">
+                {{ horario.descripcion?.trim()?.toUpperCase()?.startsWith('V') ? 'Virtual' : 'Presencial' }}
+                @if (horario.url?.trim()) {
+                  <div class="exam-connection">
+                    <span>Enlace de conexión:</span>
+                    <a [href]="horario.url.trim()" target="_blank" rel="noopener noreferrer">{{ horario.url.trim() }}</a>
+                  </div>
+                }
+              </td>
+            </ng-container>
             <ng-container matColumnDef="costo">
               <th mat-header-cell *matHeaderCellDef>Costo</th>
               <td mat-cell *matCellDef="let horario">{{ horario.costo | currency:'PEN':'S/ ' }}</td>
@@ -88,18 +135,4 @@
       }
     </mat-card-content>
   </mat-card>
-  @if (seleccionado(); as horario) {
-    <mat-card class="resumen" role="status">
-      <mat-card-header><mat-card-title>Horario seleccionado</mat-card-title></mat-card-header>
-      <mat-card-content>
-        <p>Tipo de examen: {{ descripcionTipoExamen(horario) }}</p>
-        <p>Identificador del horario: {{ horario.idHorarioExamen }}</p>
-        <p>{{ horario.dia | date:'dd/MM/yyyy' }} · {{ horario.hora }}</p>
-        <p>Profesor: {{ horario.nombreCompleto?.trim() || 'Sin profesor asignado' }}</p>
-        <p>Sede: {{ horario.nombreSed?.trim() || 'Sin sede informada' }} · Aula: {{ horario.descripcion?.trim() || 'Sin aula informada' }}</p>
-        <p>Costo: {{ horario.costo | currency:'PEN':'S/ ' }} · Vacantes disponibles: {{ vacantes(horario) }}</p>
-        <p>La selección todavía no constituye una inscripción ni reserva una vacante.</p>
-      </mat-card-content>
-    </mat-card>
-  }
 </div>

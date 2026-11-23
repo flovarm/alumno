@@ -23,11 +23,36 @@
             <div class="dato"><span>Profesor</span><strong>{{ horario.nombreCompleto?.trim() || 'Sin profesor asignado' }}</strong></div>
             <div class="dato"><span>Sede</span><strong>{{ horario.nombreSed?.trim() || 'Sin sede informada' }}</strong></div>
             <div class="dato"><span>Aula</span><strong>{{ horario.descripcion?.trim() || 'Sin aula informada' }}</strong></div>
+            <div class="dato"><span>Modalidad</span><strong>{{ horario.descripcion?.trim()?.toUpperCase()?.startsWith('V') ? 'Virtual' : 'Presencial' }}</strong></div>
             <div class="dato"><span>Vacantes disponibles</span><strong>{{ vacantes(horario) }}</strong></div>
             <div class="dato identificador"><span>Id del horario</span><strong>{{ horario.idHorarioExamen }}</strong></div>
             <div class="dato costo"><span>Costo del examen</span><strong>{{ horario.costo | currency:'PEN':'S/ ' }}</strong></div>
           </div>
 
+          @if (horario.url?.trim()) {
+            <div class="exam-connection">
+              <span>Enlace para conectarte al examen:</span>
+              <a [href]="horario.url.trim()" target="_blank" rel="noopener noreferrer">{{ horario.url.trim() }}</a>
+            </div>
+          }
+
+          @if (esRezagado) {
+            <section class="seleccion-nota" aria-labelledby="titulo-notas">
+              <h2 id="titulo-notas">Actividades seleccionadas</h2>
+              @if (cargandoNotas) {
+                <p role="status">Verificando la actividad seleccionada…</p>
+              } @else if (errorNotas) {
+                <p class="payment-message payment-error" role="alert">{{ errorNotas }}</p>
+                <button mat-stroked-button type="button" (click)="volver()">Volver a seleccionar actividad</button>
+              } @else {
+                <p><strong>Curso actual:</strong> {{ cursoActual }}</p>
+                @for (nota of actividadesSeleccionadas; track nota.idItem) {
+                  <p><strong>Actividad:</strong> {{ nota.item }}</p>
+                }
+                <p>Un solo pago para las actividades seleccionadas.</p>
+              }
+            </section>
+          }
           <div class="terms-notice">
             <mat-checkbox
               [checked]="terminosAceptados"
@@ -44,11 +69,11 @@
 
           <div class="acciones-pago">
             @if (!formularioAbierto) {
-              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados" (click)="iniciarPago()">
+              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados || pagoEnviado || !actividadValida || cargandoNotas || !!errorNotas" (click)="iniciarPago()">
                 {{ cargandoPago ? 'Preparando pago…' : 'Continuar con el pago' }}
               </button>
             } @else {
-              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados || pagoEnviado" (click)="abrirPagoNiubiz()">
+              <button mat-flat-button color="primary" type="button" [disabled]="cargandoPago || !terminosAceptados || pagoEnviado || !actividadValida" (click)="abrirPagoNiubiz()">
                 {{ cargandoPago ? 'Procesando pago…' : 'Pagar con Niubiz' }}
               </button>
             }

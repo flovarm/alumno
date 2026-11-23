@@ -324,6 +324,11 @@ import { NiubizService } from "../../services/niubiz.service";
                           </mat-checkbox>
                         </div>
 
+                        <div class="payment-warning" role="alert">
+                          <mat-icon aria-hidden="true">info</mat-icon>
+                          <span>No cierres esta página hasta que el pago se procese.</span>
+                        </div>
+
                         <!-- Mensaje de pago -->
                         <div
                           id="payment-message"
@@ -433,6 +438,7 @@ export class RegistroMatriculaComponent implements OnInit {
   paymentMessage: string = "";
   paymentMessageClass: string = "";
   private sessionKeyActual: string | null = null;
+  private webSessionIDActual: string | null = null;
   private montoActual: string = "0";
   private orderNumberActual: string | null = null;
   private matriculaDataActual: any = null;
@@ -722,6 +728,7 @@ export class RegistroMatriculaComponent implements OnInit {
               next: (sessionResponse) => {
                 this.procesandoPago = false;
                 this.formularioNiubizAbierto = true;
+                this.webSessionIDActual = sessionResponse.webSessionID ?? null;
                 setTimeout(() => {
                   this.renderizarFormularioNiubiz(
                     sessionResponse.sessionKey,
@@ -841,8 +848,6 @@ export class RegistroMatriculaComponent implements OnInit {
     }
 
     const merchantId = environment.niubiz.merchantId;
-    const idHorario = this.matriculaDataActual?.IdHorario ?? this.resumen?.idHorario;
-    const docid = this.matriculaDataActual?.docid ?? this.user?.userName;
     const purchaseNumber = this.obtenerPurchaseNumber();
     if (!purchaseNumber) {
       this.showPaymentMessage(
@@ -851,7 +856,14 @@ export class RegistroMatriculaComponent implements OnInit {
       );
       return;
     }
-    const actionUrl = `${environment.apiUrl}Pago/ProcesarPagoNiubiz/${merchantId}/${idHorario}/${docid}/${purchaseNumber}`;
+    if (!this.webSessionIDActual) {
+      this.showPaymentMessage(
+        "No se pudo obtener la sesión de retorno del pago. Intente nuevamente.",
+        "error",
+      );
+      return;
+    }
+    const actionUrl = `${environment.apiUrl}Pago/RespuestaNiubiz?id=${encodeURIComponent(purchaseNumber)}&WebSessionID=${encodeURIComponent(this.webSessionIDActual)}`;
     sessionStorage.setItem("niubiz_purchase_number", purchaseNumber);
 
     w.VisanetCheckout.configure({

@@ -123,10 +123,8 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
 
   async verDetalle(element: any): Promise<void> {
     const idHorario = element.idHorario ?? element.IdHorario;
-    const idFormatoNota = element.idFormatoNota ?? element.IdFormatoNota;
     const idRegistro = element.idregistro ?? element.Idregistro;
-    const idTurno = element.idTurno ?? element.IdTurno
-    if (!idHorario || !idFormatoNota) return;
+    if (!idHorario || !idRegistro) return;
 
     try {
       const response: any = await this.encuestaService
@@ -157,17 +155,21 @@ export class HistorialAcademicoComponent implements OnInit, AfterViewInit {
       // No hay encuesta pendiente, continuar con el detalle normal
     }
 
-    // PROVISIONAL: obtener las notas del controlador Nota/Detalle.
-    // Retirar esta consulta cuando el diálogo utilice únicamente element.itemDetalle.
-    const notas: any = await this.alumnoService
-      .listarNotas(idHorario, idFormatoNota, idRegistro)
-      .toPromise();
-    this.dialog.open(NotasDetalleDialogComponent, {
-      width: "760px",
-      maxWidth: "95vw",
-      maxHeight: "90dvh",
-      data: { notas, element },
-    });
+    try {
+      const notas = await this.alumnoService
+        .obtenerNotasRegistro(idHorario, idRegistro)
+        .toPromise();
+      this.dialog.open(NotasDetalleDialogComponent, {
+        width: "760px",
+        maxWidth: "95vw",
+        maxHeight: "90dvh",
+        data: { notas, element },
+      });
+    } catch {
+      this.snackBar.open("No se pudieron cargar las notas del registro", "Cerrar", {
+        duration: 4000,
+      });
+    }
   }
 
   abrirModalCodigoPlataforma(element: any): void {

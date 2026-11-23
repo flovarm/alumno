@@ -1,4 +1,7 @@
 export interface UltimoRegistro {
+  idRegistro?: number;
+  idHorario?: number;
+  idPeriodo?: number;
   idCurso: number;
   idSede: string;
   periodo: string;

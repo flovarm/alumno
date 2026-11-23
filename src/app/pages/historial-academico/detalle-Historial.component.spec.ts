@@ -25,6 +25,32 @@ describe('Minutos de asistencia del detalle académico', () => {
     component.minutosClasePorFecha.set({ '2026-10-01': 120, '2026-10-02': 90 });
   });
 
+  it('muestra los items del registro sin confundir cero con una nota pendiente', () => {
+    const detalle = TestBed.runInInjectionContext(() => new NotasDetalleDialogComponent(
+      {
+        element: { notaReg: 80 },
+        notas: {
+          finalGrade: 0,
+          items: [
+            { idItem: 1, item: 'Examen', valorMaximo: 20, nota: 0, tieneNota: true },
+            { idItem: 2, item: 'Examen', valorMaximo: 20, nota: 0, tieneNota: false },
+          ],
+        },
+      }, {} as MatDialogRef<NotasDetalleDialogComponent>,
+    ));
+    expect(detalle.columns()).toEqual(['1', '2', 'finalGrade']);
+    expect(detalle.dataSource()).toEqual([{ '1': 0, '2': null, finalGrade: 0 }]);
+    expect(detalle.etiquetasNotas['1']).toBe('Examen (20)');
+  });
+
+  it('mantiene el estado vacío si el registro no tiene items', () => {
+    const detalle = TestBed.runInInjectionContext(() => new NotasDetalleDialogComponent(
+      { element: {}, notas: { items: [] } }, {} as MatDialogRef<NotasDetalleDialogComponent>,
+    ));
+    expect(detalle.dataSource()).toEqual([]);
+    expect(detalle.columns()).toEqual([]);
+  });
+
   it('descuenta una recuperación parcial en minutos y conserva la falta registrada', () => {
     // Recuperación de 60 minutos con 10 minutos de tardanza: 50 recuperados.
     component.recuperacionesList.set([

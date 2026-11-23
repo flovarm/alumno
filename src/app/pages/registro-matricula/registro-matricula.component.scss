@@ -165,6 +165,20 @@
   margin: 20px 0;
 }
 
+.payment-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  line-height: 1.5;
+}
+
+.payment-warning mat-icon { flex-shrink: 0; }
+
 .payment-message {
   padding: 16px;
   margin: 16px 0;
